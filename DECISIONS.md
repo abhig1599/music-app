@@ -130,4 +130,4 @@ Per Main: nav-bar overlap in the inset fixture is a layout bug. Player now uses 
 ## 2026-11-01 04:12 - Sleep strip inner reads (Frame 45, strip 2)
 - Strip: horizontal auto-layout, pad 6, gap 12, r10, White, 344.13x45.95 hug.
 - Time chip (Frame 1): 65.56x33.95 hug, pad 6.97, gap 2.62, r8.72, fill Bg 2. "1:01" Geist Mono Regular 15.51 (38x20); "M" Inter Regular 12.21 (11x15). Note: Inter, not Helvetica.
-- Tick frame (Frame 3): 168x23 hug, gap 7; Lines rotated, length 23, stroke D3D3D1 2px center => 25 ticks (168/7+1). Orange cluster still estimated.
+- Tick frame (Frame 3): 168x23 hug, gap 7; Lines rotated, length 23, stroke D3D3D1 2px center => 25 ticks (168/7+1); layout width of a line is 0, so drawn pitch is 7 (2dp stroke + 5). Orange cluster still estimated.

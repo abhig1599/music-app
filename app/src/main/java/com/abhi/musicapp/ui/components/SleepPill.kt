@@ -47,7 +47,7 @@ private fun TimeChip(value: String, unit: String) {
 /** Ticks read from Figma: 25 lines, 23 long, 2px stroke D3D3D1, gap 7 (168 wide). Orange cluster position/alpha is an ESTIMATE. */
 @Composable
 private fun Ticks(modifier: Modifier, orangeAt: Int?) {
-    Row(modifier, horizontalArrangement = Arrangement.spacedBy(7.dp), verticalAlignment = Alignment.CenterVertically) {
+    Row(modifier, horizontalArrangement = Arrangement.spacedBy(5.dp), verticalAlignment = Alignment.CenterVertically) { // 2dp stroke + 5 = 7dp pitch (Figma lines have zero layout width, gap 7)
         repeat(25) { i ->
             val o = orangeAt != null && (i == orangeAt || i == orangeAt + 1)
             Box(Modifier.width(2.dp).height(23.dp).background(if (o) Orangs else Color(0xFFD3D3D1)))
@@ -66,7 +66,7 @@ fun SleepStrip(left: String, right: String?, timeUp: Boolean = false, orangeClus
             verticalAlignment = Alignment.CenterVertically,
         ) {
             TimeChip(left, "M")
-            Ticks(Modifier.width(168.dp), if (orangeCluster) 11 else null)
+            Ticks(Modifier.width(170.dp), if (orangeCluster) 11 else null)
             if (timeUp) {
                 Box(Modifier.clip(RoundedCornerShape(8.dp)).background(Orangs).padding(horizontal = 8.dp, vertical = 7.dp)) {
                     Text("Time-up", fontFamily = GeistMono, fontSize = 15.sp, color = PureWhite)
