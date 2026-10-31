@@ -74,7 +74,7 @@ fun PlayerScreen(onBack: () -> Unit, fixture: PlayerUiState? = null) {
         state.positionMs.toFloat() / state.durationMs.toFloat() else 0f
     val circle = com.abhi.musicapp.ui.theme.SurfaceSoft
 
-    val mono = FontFamily.Monospace // Figma: Geist Mono (not bundled until licence check)
+    val mono = com.abhi.musicapp.ui.theme.GeistMono // Figma: Geist Mono (not bundled until licence check)
     // Absolute layout from exact Design-panel reads (390x844 frame, see DECISIONS.md 02:40).
     Box(Modifier.fillMaxSize()) {
         Row(

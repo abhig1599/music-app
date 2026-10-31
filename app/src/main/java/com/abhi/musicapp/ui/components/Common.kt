@@ -87,7 +87,7 @@ fun FilterChip(label: String, count: String?, active: Boolean, onClick: () -> Un
             .padding(horizontal = 7.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(label, color = fg, fontSize = 15.sp, maxLines = 1, softWrap = false, fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace)
+        Text(label, color = fg, fontSize = 15.sp, maxLines = 1, softWrap = false, fontFamily = com.abhi.musicapp.ui.theme.GeistMono)
         if (count != null) {
             Spacer(Modifier.width(2.dp))
             Text(count, color = if (active) PureWhite else GrayText, fontSize = 10.sp,
@@ -224,7 +224,7 @@ fun MiniPlayer(
                     }
                 },
                 color = fg, fontSize = 34.sp,
-                fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
+                fontFamily = com.abhi.musicapp.ui.theme.GeistMono,
             )
             Spacer(Modifier.width(12.dp))
             Icon(Icons.Filled.Pause, contentDescription = "Pause", tint = PureWhite)

@@ -114,3 +114,4 @@ Caveat: chip text/inner paddings and row height not individually read; row pitch
 - Mini-player (song-playing frame): title + small "01:01" under it AND big mono "01:01" with orange colon; x18,y757 355x78 pad 14/18 r14 Black.
 - NOT resolved: exact Bg 2 hex (panel shows style name only; pixel-sampling of the screenshot was unreliable). #F0F0F0 kept from earlier token record and stays UNVERIFIED.
 - Home fixture now the same state as Figma mini-player (01:01 / 03:12).
+- 03:06 Geist Mono bundled: OFL 1.1 verified at github.com/vercel/geist-font LICENSE.txt and google/fonts ofl/geistmono/OFL.txt; licence copy in licenses/GeistMono-OFL.txt. Helvetica Neue still NOT bundled (proprietary, unchecked).

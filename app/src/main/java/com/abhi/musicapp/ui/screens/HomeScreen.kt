@@ -96,7 +96,7 @@ fun HomeScreen(
         // header centre y~65, mosaic y 110-272 / 289-450, chips y 471-507, list from y 528.
         val blockBg = com.abhi.musicapp.ui.theme.GrayLight
         val circleBg = androidx.compose.ui.graphics.Color.White
-        val monoFont = androidx.compose.ui.text.font.FontFamily.Monospace
+        val monoFont = com.abhi.musicapp.ui.theme.GeistMono
         Spacer(Modifier.height(46.dp))
         Row(
             modifier = Modifier.fillMaxWidth().height(37.dp).padding(horizontal = 26.dp),

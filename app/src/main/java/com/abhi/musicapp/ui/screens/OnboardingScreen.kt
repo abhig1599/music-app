@@ -44,7 +44,7 @@ import com.abhi.musicapp.ui.theme.Orangs
 import com.abhi.musicapp.ui.theme.PureWhite
 import com.abhi.musicapp.ui.theme.SurfaceSoft
 
-private val Mono = FontFamily.Monospace
+private val Mono = com.abhi.musicapp.ui.theme.GeistMono
 
 /**
  * Onboarding rebuilt from his Figma frames Step 1 / Step 2 / Step3 (390x844):

@@ -64,3 +64,8 @@ fun MusicAppTheme(content: @Composable () -> Unit) {
     val colors = (if (dark) MusicColorsDark else MusicColors).copy(primary = ThemeState.accent.value)
     MaterialTheme(colorScheme = colors, content = content)
 }
+
+/** Geist Mono (SIL OFL 1.1, see licenses/GeistMono-OFL.txt) - the mono face used in the Figma. */
+val GeistMono = androidx.compose.ui.text.font.FontFamily(
+    androidx.compose.ui.text.font.Font(com.abhi.musicapp.R.font.geist_mono),
+)
