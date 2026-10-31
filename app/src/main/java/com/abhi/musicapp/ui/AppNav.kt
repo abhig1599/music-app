@@ -16,7 +16,13 @@ import com.abhi.musicapp.ui.screens.OnboardingScreen
 import com.abhi.musicapp.ui.screens.PlayerScreen
 import com.abhi.musicapp.ui.screens.PlaylistDetailScreen
 import com.abhi.musicapp.ui.screens.SearchScreen
+import android.content.Intent
+import android.net.Uri
+import android.provider.Settings as AndroidSettings
+import com.abhi.musicapp.ui.screens.BackupScreen
+import com.abhi.musicapp.ui.screens.RingtoneMakerScreen
 import com.abhi.musicapp.ui.screens.SettingsScreen
+import com.abhi.musicapp.ui.screens.ThemesScreen
 
 object Routes {
     const val ONBOARDING = "onboarding"
@@ -25,6 +31,9 @@ object Routes {
     const val SEARCH = "search"
     const val SETTINGS = "settings"
     const val EQUALISER = "equaliser"
+    const val THEMES = "themes"
+    const val RINGTONE = "ringtone"
+    const val BACKUP = "backup"
     const val DOWNLOADS = "downloads"
     const val FOLDERS = "folders"
     const val PLAYLIST_DETAIL = "playlist/{name}"
@@ -71,10 +80,35 @@ fun AppNav() {
         composable(Routes.SETTINGS) {
             SettingsScreen(
                 onBack = { nav.popBackStack() },
-                onOpenEqualiser = { nav.navigate(Routes.EQUALISER) },
+                onRowClick = { label ->
+                    when (label) {
+                        "Equaliser" -> nav.navigate(Routes.EQUALISER)
+                        "Theme", "Accent color" -> nav.navigate(Routes.THEMES)
+                        "Set ringtone" -> nav.navigate(Routes.RINGTONE)
+                        "Google Drive backup" -> nav.navigate(Routes.BACKUP)
+                        "Floating player" -> context.startActivity(
+                            Intent(AndroidSettings.ACTION_MANAGE_OVERLAY_PERMISSION)
+                        )
+                        else -> Unit
+                    }
+                },
             )
         }
         composable(Routes.EQUALISER) { EqualiserScreen(onBack = { nav.popBackStack() }) }
+        composable(Routes.THEMES) { ThemesScreen(onBack = { nav.popBackStack() }) }
+        composable(Routes.RINGTONE) {
+            RingtoneMakerScreen(
+                onBack = { nav.popBackStack() },
+                onOpenSystemConsent = {
+                    context.startActivity(
+                        Intent(AndroidSettings.ACTION_MANAGE_WRITE_SETTINGS).apply {
+                            data = Uri.parse("package:${context.packageName}")
+                        }
+                    )
+                },
+            )
+        }
+        composable(Routes.BACKUP) { BackupScreen(onBack = { nav.popBackStack() }) }
         composable(Routes.DOWNLOADS) { DownloadsScreen(onBack = { nav.popBackStack() }) }
         composable(Routes.FOLDERS) { FoldersScreen(onBack = { nav.popBackStack() }) }
         composable(Routes.PLAYLIST_DETAIL) { entry ->

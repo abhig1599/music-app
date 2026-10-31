@@ -37,7 +37,7 @@ import com.abhi.musicapp.ui.theme.SurfaceSoft
  * Rows are stubs until each feature lands; "Planned" marks designed-but-not-built rows.
  */
 @Composable
-fun SettingsScreen(onBack: () -> Unit, onOpenEqualiser: () -> Unit = {}) {
+fun SettingsScreen(onBack: () -> Unit, onRowClick: (String) -> Unit = {}) {
     Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
         Row(
             modifier = Modifier.fillMaxWidth().padding(16.dp),
@@ -52,37 +52,37 @@ fun SettingsScreen(onBack: () -> Unit, onOpenEqualiser: () -> Unit = {}) {
             "Scan device" to "Rescan folders for new audio",
             "Hidden folders" to "Manage folders hidden from the library",
             "Recycle bin" to "Removed songs",
-        ))
+        ), onRowClick = onRowClick)
         SettingsCategory("Playback", listOf(
             "Gapless playback" to "Planned",
             "Crossfade" to "Planned",
             "Play together with other apps" to "Planned",
             "Sleep timer" to "Off",
-        ))
+        ), onRowClick = onRowClick)
         SettingsCategory("Sound", listOf(
             "Equaliser" to "On",
             "Bass boost" to "Planned",
-        ), onFirstRowClick = onOpenEqualiser)
+        ), onRowClick = onRowClick)
         SettingsCategory("Appearance", listOf(
             "Theme" to "Light",
             "Accent color" to "Orangs",
             "Language" to "English",
-        ))
+        ), onRowClick = onRowClick)
         SettingsCategory("Storage & background", listOf(
             "Download location" to "Planned",
             "Download on Wi-Fi only" to "Planned",
             "Google Drive backup" to "Planned - needs sign-in",
-        ))
+        ), onRowClick = onRowClick)
         SettingsCategory("Permissions", listOf(
             "Music and audio" to "Status",
             "Notifications" to "Status",
             "Floating player" to "Planned - system access",
             "Set ringtone" to "Planned - system access",
-        ))
+        ), onRowClick = onRowClick)
         SettingsCategory("About", listOf(
             "Version" to "0.1.0",
             "Terms & privacy" to "Documents not published yet",
-        ))
+        ), onRowClick = onRowClick)
         Spacer(Modifier.height(24.dp))
     }
 }
@@ -91,7 +91,7 @@ fun SettingsScreen(onBack: () -> Unit, onOpenEqualiser: () -> Unit = {}) {
 private fun SettingsCategory(
     title: String,
     rows: List<Pair<String, String>>,
-    onFirstRowClick: (() -> Unit)? = null,
+    onRowClick: (String) -> Unit = {},
 ) {
     Text(title, modifier = Modifier.padding(horizontal = 20.dp, vertical = 6.dp),
         fontSize = 13.sp, fontWeight = FontWeight.Bold, color = Orangs)
@@ -106,7 +106,7 @@ private fun SettingsCategory(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clickable { if (i == 0) onFirstRowClick?.invoke() }
+                    .clickable { onRowClick(label) }
                     .padding(horizontal = 16.dp, vertical = 14.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
