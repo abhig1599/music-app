@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
@@ -110,7 +111,14 @@ private fun SettingsCategory(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(label, fontSize = 14.sp, color = InkBlack, modifier = Modifier.weight(1f))
-                Text(value, fontSize = 12.sp, color = GrayText)
+                Text(
+                    value,
+                    fontSize = 12.sp,
+                    color = GrayText,
+                    maxLines = 1,
+                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                    modifier = Modifier.widthIn(max = 150.dp),
+                )
                 Icon(Icons.Filled.ChevronRight, contentDescription = null, tint = GrayText)
             }
             if (i < rows.lastIndex) Spacer(
