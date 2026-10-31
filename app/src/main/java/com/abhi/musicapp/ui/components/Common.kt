@@ -140,6 +140,9 @@ fun TickDial(
     ticks: Int = 48,
     center: @Composable () -> Unit = {},
 ) {
+    // Capture theme colors outside the non-composable draw lambda.
+    val litTick = Orangs
+    val dimTick = GrayLight
     Box(modifier = modifier, contentAlignment = Alignment.Center) {
         Canvas(modifier = Modifier.fillMaxSize()) {
             val cx = size.width / 2f
@@ -149,7 +152,7 @@ fun TickDial(
             val lit = (ticks * progress.coerceIn(0f, 1f)).toInt()
             for (i in 0 until ticks) {
                 val angle = Math.toRadians((i * 360.0 / ticks) - 90.0)
-                val color = if (i < lit) Orangs else GrayLight
+                val color = if (i < lit) litTick else dimTick
                 val start = Offset(
                     (cx + inner * cos(angle)).toFloat(),
                     (cy + inner * sin(angle)).toFloat(),
