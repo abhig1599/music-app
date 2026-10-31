@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -76,7 +77,12 @@ fun PlayerScreen(onBack: () -> Unit, fixture: PlayerUiState? = null) {
 
     val mono = com.abhi.musicapp.ui.theme.GeistMono // Figma: Geist Mono (not bundled until licence check)
     // Absolute layout from exact Design-panel reads (390x844 frame, see DECISIONS.md 02:40).
-    Box(Modifier.fillMaxSize()) {
+    androidx.compose.foundation.layout.BoxWithConstraints(Modifier.fillMaxSize()) {
+        // Reference viewport is 390x844. Shorter areas (system bars, small phones): the top group stays
+        // anchored to the top, the title/controls/bottom group anchors to the bottom, and the dial group scales
+        // down only if the two would collide. At 844dp this is identical to the Figma positions.
+        val shrink = (844.dp - maxHeight).coerceAtLeast(0.dp)
+        val dialScale = ((338f - shrink.value) / 301f).coerceIn(0.5f, 1f)
         Row(
             modifier = Modifier.offset(26.dp, 46.dp).size(344.dp, 37.dp),
             verticalAlignment = Alignment.CenterVertically,
@@ -85,9 +91,9 @@ fun PlayerScreen(onBack: () -> Unit, fixture: PlayerUiState? = null) {
                 modifier = Modifier.weight(1f).clickable(onClick = onBack))
             Icon(Icons.Filled.MoreVert, contentDescription = "Menu", tint = InkBlack)
         }
-        TickDial(progress = progress, modifier = Modifier.offset(48.dp, 135.dp).size(301.dp), ticks = 48, pointer = true) {}
+        TickDial(progress = progress, modifier = Modifier.offset(48.dp, 135.dp).size(301.dp).graphicsLayer { scaleX = dialScale; scaleY = dialScale; transformOrigin = androidx.compose.ui.graphics.TransformOrigin(0.5f, 0f) }, ticks = 48, pointer = true) {}
         Column(
-            modifier = Modifier.offset(147.dp, 252.dp).size(104.dp, 68.dp),
+            modifier = Modifier.offset(147.dp, 135.dp + (252.dp - 135.dp) * dialScale).size(104.dp, 68.dp).graphicsLayer { scaleX = dialScale; scaleY = dialScale },
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(1.dp),
         ) {
@@ -99,7 +105,7 @@ fun PlayerScreen(onBack: () -> Unit, fixture: PlayerUiState? = null) {
             Text(formatTotal(state.durationMs), fontSize = 15.51.sp, fontFamily = mono, color = InkBlack)
         }
         Column(
-            modifier = Modifier.offset(23.5.dp, 489.dp).width(344.dp),
+            modifier = Modifier.offset(23.5.dp, (489.dp - shrink)).width(344.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
@@ -112,7 +118,7 @@ fun PlayerScreen(onBack: () -> Unit, fixture: PlayerUiState? = null) {
             )
         }
         Row(
-            modifier = Modifier.offset(89.dp, 659.dp),
+            modifier = Modifier.offset(89.dp, (659.dp - shrink)),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -139,18 +145,18 @@ fun PlayerScreen(onBack: () -> Unit, fixture: PlayerUiState? = null) {
                 contentAlignment = Alignment.Center,
             ) { Icon(Icons.Filled.SkipNext, contentDescription = "Next", tint = InkBlack) }
         }
-        Box(Modifier.offset(19.dp, 726.dp).size(72.dp).clip(CircleShape).background(circle), contentAlignment = Alignment.Center) {
+        Box(Modifier.offset(19.dp, (726.dp - shrink)).size(72.dp).clip(CircleShape).background(circle), contentAlignment = Alignment.Center) {
             Icon(Icons.Filled.Headset, contentDescription = "Audio output", tint = InkBlack)
         }
         Row(
-            modifier = Modifier.offset(154.5.dp, 757.dp).size(79.dp, 24.dp),
+            modifier = Modifier.offset(154.5.dp, (757.dp - shrink)).size(79.dp, 24.dp),
             horizontalArrangement = Arrangement.spacedBy(6.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Icon(Icons.AutoMirrored.Filled.QueueMusic, contentDescription = null, tint = InkBlack)
             Text("Queue", fontSize = 13.sp, fontWeight = FontWeight.Medium, color = InkBlack)
         }
-        Box(Modifier.offset(298.dp, 726.dp).size(72.dp).clip(CircleShape).background(circle), contentAlignment = Alignment.Center) {
+        Box(Modifier.offset(298.dp, (726.dp - shrink)).size(72.dp).clip(CircleShape).background(circle), contentAlignment = Alignment.Center) {
             Icon(Icons.Filled.SelfImprovement, contentDescription = "Focus mode (icon pending his decision)", tint = InkBlack)
         }
     }

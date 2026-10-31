@@ -123,3 +123,6 @@ Caveat: chip text/inner paddings and row height not individually read; row pitch
 - Mini-player small time now zero-padded "01:01" to match the design.
 - Inset fixtures (home/player) paint 24dp/48dp translucent bars: inset fixture, not device validation.
 - Typography: Helvetica Neue is proprietary and not bundled; Roboto substitutes (title tracking -0.8sp). Not an exact match.
+
+## 2026-11-01 03:46 - Player responsive layout
+Per Main: nav-bar overlap in the inset fixture is a layout bug. Player now uses BoxWithConstraints: identical to Figma at 844dp; below that the title/controls/bottom group anchors to the bottom, header stays at top, dial group scales (min 0.5) only to avoid collision. Horizontal axis still assumes 390dp width (not yet responsive). Verified only by inset fixture render, not device.
