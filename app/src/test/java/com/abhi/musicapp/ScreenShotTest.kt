@@ -41,6 +41,7 @@ class ScreenShotTest {
     private fun shot(name: String, heightDp: Int = 844, content: @androidx.compose.runtime.Composable () -> Unit) {
         // 390x844 dp canvas (his Figma frame) via the qualifiers on the class;
         // paint the theme background so dark mode renders truthfully.
+        if (heightDp != 844) org.robolectric.RuntimeEnvironment.setQualifiers("w390dp-h${heightDp}dp")
         composeRule.setContent {
             MusicAppTheme {
                 Box(
