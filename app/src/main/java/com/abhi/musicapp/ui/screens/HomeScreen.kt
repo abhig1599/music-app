@@ -86,86 +86,102 @@ fun HomeScreen(
     }
 
     Column(modifier = Modifier.fillMaxSize()) {
-        ScreenTitle("Playlist", trailing = "Up to date")
+        // Measured from his Figma home frame (390x844 dp, 68%-zoom crop rescaled 1:1):
+        // header centre y~65, mosaic y 110-272 / 289-450, chips y 471-507, list from y 528.
+        val blockBg = androidx.compose.ui.graphics.Color(0xFFDEDEDC)
+        val circleBg = androidx.compose.ui.graphics.Color(0xFFF2F2F0)
+        val monoFont = androidx.compose.ui.text.font.FontFamily.Monospace
+        Spacer(Modifier.height(45.dp))
+        Row(
+            modifier = Modifier.fillMaxWidth().height(40.dp).padding(horizontal = 27.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text("Playlist", fontSize = 28.sp, fontWeight = FontWeight.Bold, color = InkBlack)
+            Spacer(Modifier.weight(1f))
+            Text(
+                "Up to date", fontFamily = monoFont, fontSize = 14.sp, color = InkBlack,
+                modifier = Modifier
+                    .clip(androidx.compose.foundation.shape.RoundedCornerShape(8.dp))
+                    .background(blockBg)
+                    .padding(horizontal = 10.dp, vertical = 8.dp),
+            )
+        }
+        Spacer(Modifier.height(25.dp))
 
-        // Mosaic matching his Figma home frame (2026-10-31): left = 2x2 small
-        // icon tiles (Search / Sort / Settings / Downloads), right = tall scan
-        // card with the tick-dial; then Read Doc. card + chat/video card.
-        Row(Modifier.padding(horizontal = 20.dp).height(172.dp)) {
-            Column(Modifier.weight(1f)) {
-                Row(Modifier.weight(1f)) {
-                    GridTile(Icons.Filled.Search, "Search", onOpenSearch, Modifier.weight(1f))
-                    Spacer(Modifier.width(12.dp))
-                    GridTile(Icons.Filled.Sort, "Sort", { showSort = true }, Modifier.weight(1f))
-                }
-                Spacer(Modifier.height(12.dp))
-                Row(Modifier.weight(1f)) {
-                    GridTile(Icons.Filled.Settings, "Settings", onOpenSettings, Modifier.weight(1f))
-                    Spacer(Modifier.width(12.dp))
-                    GridTile(Icons.Filled.Download, "Downloads", onOpenDownloads, Modifier.weight(1f))
-                }
-            }
-            Spacer(Modifier.width(12.dp))
+        Row(Modifier.padding(horizontal = 27.dp).height(162.dp)) {
             Box(
                 modifier = Modifier
-                    .weight(1f)
-                    .fillMaxHeight()
-                    .clip(androidx.compose.foundation.shape.RoundedCornerShape(16.dp))
-                    .background(com.abhi.musicapp.ui.theme.SurfaceSoft)
-                    .clickable { },
-                contentAlignment = Alignment.Center,
+                    .width(161.dp).fillMaxHeight()
+                    .clip(androidx.compose.foundation.shape.RoundedCornerShape(20.dp))
+                    .background(blockBg)
+                    .padding(12.dp),
             ) {
-                TickDial(progress = 0.7f, modifier = Modifier.size(120.dp)) {
+                Column {
+                    Row(Modifier.weight(1f)) {
+                        CircleTile(Icons.Filled.Search, "Search", onOpenSearch, circleBg, Modifier.weight(1f))
+                        Spacer(Modifier.width(10.dp))
+                        CircleTile(Icons.Filled.Sort, "Sort", { showSort = true }, circleBg, Modifier.weight(1f))
+                    }
+                    Spacer(Modifier.height(10.dp))
+                    Row(Modifier.weight(1f)) {
+                        CircleTile(Icons.Filled.Settings, "Settings", onOpenSettings, circleBg, Modifier.weight(1f))
+                        Spacer(Modifier.width(10.dp))
+                        CircleTile(Icons.Filled.Download, "Downloads", onOpenDownloads, circleBg, Modifier.weight(1f))
+                    }
+                }
+            }
+            Spacer(Modifier.weight(1f))
+            Box(modifier = Modifier.width(150.dp).fillMaxHeight(), contentAlignment = Alignment.Center) {
+                ScanRays(modifier = Modifier.size(150.dp))
+                Box(
+                    modifier = Modifier.size(60.dp).clip(CircleShape).background(com.abhi.musicapp.ui.theme.GrayLight)
+                        .clickable { },
+                    contentAlignment = Alignment.Center,
+                ) {
                     Icon(Icons.Filled.Folder, contentDescription = "Scan device",
-                        tint = GrayText, modifier = Modifier.size(28.dp))
+                        tint = InkBlack, modifier = Modifier.size(24.dp))
                 }
             }
         }
-        Spacer(Modifier.height(12.dp))
-        Row(Modifier.padding(horizontal = 20.dp).height(120.dp)) {
-            // Read Doc. card (his exact label kept)
+        Spacer(Modifier.height(17.dp))
+        Row(Modifier.padding(horizontal = 27.dp).height(161.dp)) {
             Column(
                 modifier = Modifier
-                    .weight(1f)
-                    .fillMaxHeight()
-                    .clip(androidx.compose.foundation.shape.RoundedCornerShape(16.dp))
-                    .background(com.abhi.musicapp.ui.theme.SurfaceSoft)
-                    .clickable { }
-                    .padding(14.dp),
+                    .width(161.dp).fillMaxHeight()
+                    .clip(androidx.compose.foundation.shape.RoundedCornerShape(20.dp))
+                    .background(blockBg)
+                    .clickable { },
+                horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                Text("Read Doc.", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = InkBlack)
+                Spacer(Modifier.height(32.dp))
+                Text("Read Doc.", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = InkBlack)
                 Spacer(Modifier.weight(1f))
                 Box(
-                    modifier = Modifier
-                        .size(44.dp)
-                        .clip(CircleShape)
-                        .background(InkBlack)
-                        .align(Alignment.CenterHorizontally),
+                    modifier = Modifier.size(64.dp).clip(CircleShape).background(InkBlack),
                     contentAlignment = Alignment.Center,
                 ) {
                     Icon(Icons.Filled.Videocam, contentDescription = "Read Now",
-                        tint = Orangs, modifier = Modifier.size(22.dp))
+                        tint = androidx.compose.ui.graphics.Color.White, modifier = Modifier.size(26.dp))
                 }
-                Spacer(Modifier.weight(1f))
+                Spacer(Modifier.height(17.dp))
             }
-            Spacer(Modifier.width(12.dp))
+            Spacer(Modifier.weight(1f))
             Row(
                 modifier = Modifier
-                    .weight(1f)
-                    .fillMaxHeight()
-                    .clip(androidx.compose.foundation.shape.RoundedCornerShape(16.dp))
-                    .background(com.abhi.musicapp.ui.theme.SurfaceSoft),
-                horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.CenterVertically,
+                    .width(161.dp).fillMaxHeight()
+                    .clip(androidx.compose.foundation.shape.RoundedCornerShape(20.dp))
+                    .background(blockBg)
+                    .padding(horizontal = 12.dp, vertical = 12.dp),
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                verticalAlignment = Alignment.Top,
             ) {
-                Icon(Icons.Filled.ChatBubbleOutline, contentDescription = "Lyrics",
-                    tint = InkBlack, modifier = Modifier.size(28.dp))
-                Spacer(Modifier.width(20.dp))
-                Icon(Icons.Filled.Videocam, contentDescription = "Video",
-                    tint = InkBlack, modifier = Modifier.size(28.dp))
+                // His frame shows two brand-style circular buttons here; brand marks are not bundled,
+                // so generic icons stand in until his assets are exported.
+                CircleTile(Icons.Filled.ChatBubbleOutline, "Lyrics", {}, circleBg, Modifier.weight(1f).height(63.dp))
+                CircleTile(Icons.Filled.Videocam, "Video", {}, circleBg, Modifier.weight(1f).height(63.dp))
             }
         }
-        Spacer(Modifier.height(12.dp))
+        Spacer(Modifier.height(21.dp))
 
         // Filter chips
         val chips = listOf("All" to "20", "Folders" to "02", "Playlist" to "06", "Artists" to null)
@@ -243,6 +259,51 @@ fun HomeScreen(
             sheetState = rememberModalBottomSheetState(),
         ) {
             SortSheetContent(onDone = { showSort = false })
+        }
+    }
+}
+
+/** Circular icon button used inside his grey home blocks. */
+@Composable
+private fun CircleTile(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    label: String,
+    onClick: () -> Unit,
+    bg: androidx.compose.ui.graphics.Color,
+    modifier: Modifier = Modifier,
+) {
+    Box(
+        modifier = modifier.clip(CircleShape).background(bg).clickable(onClick = onClick),
+        contentAlignment = Alignment.Center,
+    ) {
+        Icon(icon, contentDescription = label, tint = InkBlack, modifier = Modifier.size(24.dp))
+    }
+}
+
+/** His scan dial: 12 thick rays, orange fading cluster at the upper left (decorative, not playback state). */
+@Composable
+private fun ScanRays(modifier: Modifier = Modifier) {
+    val lit = Orangs
+    val dim = com.abhi.musicapp.ui.theme.GrayLight
+    androidx.compose.foundation.Canvas(modifier = modifier) {
+        val cx = size.width / 2f
+        val cy = size.height / 2f
+        val outer = size.minDimension / 2f
+        val inner = outer * 0.62f
+        val alphas = mapOf(9 to 0.45f, 10 to 1f, 11 to 0.8f, 0 to 0.55f, 1 to 0.35f)
+        for (i in 0 until 12) {
+            val angle = Math.toRadians(i * 30.0 - 90.0)
+            val a = alphas[i]
+            val color = if (a != null) lit.copy(alpha = a) else dim
+            drawLine(
+                color = color,
+                start = androidx.compose.ui.geometry.Offset(
+                    (cx + inner * Math.cos(angle)).toFloat(), (cy + inner * Math.sin(angle)).toFloat()),
+                end = androidx.compose.ui.geometry.Offset(
+                    (cx + outer * Math.cos(angle)).toFloat(), (cy + outer * Math.sin(angle)).toFloat()),
+                strokeWidth = 8.dp.toPx(),
+                cap = androidx.compose.ui.graphics.StrokeCap.Round,
+            )
         }
     }
 }

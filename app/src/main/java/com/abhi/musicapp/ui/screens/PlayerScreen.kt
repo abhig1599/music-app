@@ -70,7 +70,7 @@ fun PlayerScreen(onBack: () -> Unit, fixture: PlayerUiState? = null) {
     val state = fixture ?: live
     val progress = if (state.durationMs > 0)
         state.positionMs.toFloat() / state.durationMs.toFloat() else 0f
-    val circle = GrayLight.copy(alpha = 0.55f)
+    val circle = com.abhi.musicapp.ui.theme.SurfaceSoft
 
     Column(
         modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()),
@@ -87,14 +87,14 @@ fun PlayerScreen(onBack: () -> Unit, fixture: PlayerUiState? = null) {
         }
         Spacer(Modifier.height(30.dp))
 
-        TickDial(progress = progress, modifier = Modifier.size(296.dp), ticks = 60, pointer = true) {
+        TickDial(progress = progress, modifier = Modifier.size(296.dp), ticks = 48, pointer = true) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Row(verticalAlignment = Alignment.Top) {
                     Text(
                         formatMs(state.positionMs),
-                        fontSize = 34.sp, fontFamily = FontFamily.Monospace, color = InkBlack,
+                        fontSize = 40.sp, fontFamily = FontFamily.Monospace, color = InkBlack,
                     )
-                    Text("M", fontSize = 12.sp, color = InkBlack)
+                    Text("M", fontSize = 16.sp, color = InkBlack)
                 }
                 Box(Modifier.size(width = 56.dp, height = 1.dp).background(GrayLight))
                 Text(
@@ -109,9 +109,9 @@ fun PlayerScreen(onBack: () -> Unit, fixture: PlayerUiState? = null) {
         Spacer(Modifier.height(18.dp))
         Text(
             if (state.hasTrack) state.title else "Nothing playing",
-            fontSize = 24.sp, fontWeight = FontWeight.Bold, color = InkBlack,
+            fontSize = 28.sp, fontWeight = FontWeight.Medium, color = InkBlack,
         )
-        Spacer(Modifier.height(88.dp))
+        Spacer(Modifier.height(82.dp))
 
         Row(
             modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp),
@@ -119,13 +119,13 @@ fun PlayerScreen(onBack: () -> Unit, fixture: PlayerUiState? = null) {
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Box(
-                modifier = Modifier.size(58.dp).clip(CircleShape).background(circle)
+                modifier = Modifier.size(62.dp).clip(CircleShape).background(circle)
                     .clickable { PlayerManager.previous() },
                 contentAlignment = Alignment.Center,
             ) { Icon(Icons.Filled.SkipPrevious, contentDescription = "Previous", tint = InkBlack) }
             Spacer(Modifier.size(width = 6.dp, height = 1.dp))
             Box(
-                modifier = Modifier.size(60.dp).clip(CircleShape)
+                modifier = Modifier.size(62.dp).clip(CircleShape)
                     .background(if (state.isPlaying) Orangs else InkBlack)
                     .clickable { PlayerManager.togglePlayPause() },
                 contentAlignment = Alignment.Center,
@@ -138,7 +138,7 @@ fun PlayerScreen(onBack: () -> Unit, fixture: PlayerUiState? = null) {
             }
             Spacer(Modifier.size(width = 6.dp, height = 1.dp))
             Box(
-                modifier = Modifier.size(58.dp).clip(CircleShape).background(circle)
+                modifier = Modifier.size(62.dp).clip(CircleShape).background(circle)
                     .clickable { PlayerManager.next() },
                 contentAlignment = Alignment.Center,
             ) { Icon(Icons.Filled.SkipNext, contentDescription = "Next", tint = InkBlack) }

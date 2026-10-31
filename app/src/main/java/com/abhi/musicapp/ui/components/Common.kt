@@ -30,6 +30,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -74,7 +75,7 @@ fun IconTile(icon: ImageVector, contentDescription: String, onClick: () -> Unit,
 /** Filter chip row: "All 20", "Folders 02", ... active chip is Orangs. */
 @Composable
 fun FilterChip(label: String, count: String?, active: Boolean, onClick: () -> Unit) {
-    val bg = if (active) Orangs else Color.Transparent
+    val bg = if (active) Orangs else Color(0xFFDEDEDC)
     val fg = if (active) PureWhite else InkBlack
     Row(
         modifier = Modifier
@@ -84,7 +85,7 @@ fun FilterChip(label: String, count: String?, active: Boolean, onClick: () -> Un
             .padding(horizontal = 12.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(label, color = fg, fontSize = 16.sp, fontWeight = FontWeight.Medium)
+        Text(label, color = fg, fontSize = 15.sp, fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace)
         if (count != null) {
             Spacer(Modifier.width(2.dp))
             Text(count, color = if (active) PureWhite else GrayText, fontSize = 10.sp,
@@ -104,20 +105,21 @@ fun SongRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 20.dp, vertical = 5.dp)
-            .clip(RoundedCornerShape(16.dp))
+            .padding(horizontal = 20.dp, vertical = 3.dp)
+            .clip(RoundedCornerShape(12.dp))
             .background(SurfaceSoft)
             .clickable(onClick = onClick)
-            .padding(12.dp),
+            .padding(horizontal = 11.dp, vertical = 11.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Box(
             modifier = Modifier
-                .size(46.dp)
-                .clip(RoundedCornerShape(10.dp))
-                .background(InkBlack),
+                .size(50.dp)
+                .clip(RoundedCornerShape(8.dp))
+                .background(Color(0xFFDEDEDC)),
             contentAlignment = Alignment.Center,
         ) {
+            // His thumbs are album photos (not shipped); neutral tile stands in.
             Icon(Icons.Filled.MusicNote, contentDescription = null, tint = Orangs)
         }
         Spacer(Modifier.width(12.dp))
@@ -151,7 +153,7 @@ fun TickDial(
             val cx = size.width / 2f
             val cy = size.height / 2f
             val outer = size.minDimension / 2f
-            val inner = if (pointer) outer * 0.80f else outer * 0.72f
+            val inner = if (pointer) outer * 0.75f else outer * 0.72f
             val lit = (ticks * progress.coerceIn(0f, 1f)).toInt()
             for (i in 0 until ticks) {
                 val angle = Math.toRadians((i * 360.0 / ticks) - 90.0)
@@ -174,7 +176,11 @@ fun TickDial(
                     (cx + outer * cos(angle)).toFloat(),
                     (cy + outer * sin(angle)).toFloat(),
                 )
-                drawLine(color = color, start = start, end = end, strokeWidth = if (pointer) outer * 0.022f else outer * 0.06f)
+                val s2 = if (pointer && d == 0) Offset(
+                    (cx + (inner - outer * 0.14f) * cos(angle)).toFloat(),
+                    (cy + (inner - outer * 0.14f) * sin(angle)).toFloat(),
+                ) else start
+                drawLine(color = color, start = s2, end = end, strokeWidth = if (pointer) outer * 0.04f else outer * 0.06f)
             }
         }
         Box(modifier = Modifier.fillMaxSize(if (pointer) 0.7f else 0.62f), contentAlignment = Alignment.Center) { center() }
@@ -194,11 +200,11 @@ fun MiniPlayer(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 20.dp, vertical = 8.dp)
-            .clip(RoundedCornerShape(16.dp))
+            .padding(horizontal = 19.dp, vertical = 9.dp)
+            .clip(RoundedCornerShape(12.dp))
             .background(bg)
             .clickable(onClick = onClick)
-            .padding(horizontal = 16.dp, vertical = 12.dp),
+            .padding(horizontal = 14.dp, vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         if (darkVariant) {
@@ -206,7 +212,17 @@ fun MiniPlayer(
                 Text(title, color = fg, fontSize = 13.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 Text(time, color = GrayText, fontSize = 10.sp)
             }
-            Text(time, color = Orangs, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+            val padded = time.padStart(5, '0')
+            Text(
+                androidx.compose.ui.text.buildAnnotatedString {
+                    padded.forEach { ch ->
+                        if (ch == ':') withStyle(androidx.compose.ui.text.SpanStyle(color = Orangs)) { append(ch) }
+                        else append(ch)
+                    }
+                },
+                color = fg, fontSize = 34.sp,
+                fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
+            )
             Spacer(Modifier.width(12.dp))
             Icon(Icons.Filled.Pause, contentDescription = "Pause", tint = PureWhite)
         } else {

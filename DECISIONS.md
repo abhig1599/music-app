@@ -93,3 +93,7 @@ Earlier onboarding was a full-screen redesign; his is a rounded bottom sheet on 
 Deviations kept deliberately: his language list contains placeholder sort labels (only English/Hindi kept); his "Permission1/2" are placeholders (real permission names in his toggle-card layout); Step 3 Gemini fields kept but disabled; his T&C consent sentence replaced because no documents exist; link "Create Google Gemini API" is unlinked text. Monospace font family unidentified (system Monospace used).
 - 02:05: Hindi shown but disabled ('not available yet') until real localization exists; Step3 copy no longer repeats the 'free' API claim (pricing unverified).
 - 02:05: onboarding vertical offsets (+11dp), bold mono button/permission titles after overlay vs Figma.
+
+## 2026-11-01 02:20 - Home/player rebuilt from 1:1 overlay (crop of Figma frame rescaled to 390x844)
+Home: header y~65 with mono "Up to date" pill; grey block with four white circle buttons; BARE scan dial (12 thick rays, orange fading cluster upper-left - exact cluster/alphas estimated) with folder icon; Read Doc. grey card + grey card with two circle buttons (his are brand-style Spotify/YouTube marks - NOT bundled, generic icons stand in); grey inactive chips with mono labels; rows with photo thumbs (not shipped; neutral tiles); mini-player with mono big time and orange colon.
+Player: thicker/longer ticks (48 ticks, 6dp), longer centre tick, lighter 62dp control circles, bigger mono time, medium-weight 28sp title. Sleep-timer variants ("App exit in 0:10 S", "Time-up") remain UNBUILT requirements.
