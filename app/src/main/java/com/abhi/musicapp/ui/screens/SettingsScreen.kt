@@ -2,6 +2,17 @@ package com.abhi.musicapp.ui.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.material.icons.filled.ExpandLess
+import androidx.compose.material.icons.filled.ExpandMore
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import com.abhi.musicapp.ui.theme.GrayLight
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -38,52 +49,139 @@ import com.abhi.musicapp.ui.theme.SurfaceSoft
  */
 @Composable
 fun SettingsScreen(onBack: () -> Unit, onRowClick: (String) -> Unit = {}) {
-    Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Icon(Icons.Filled.ArrowBack, contentDescription = "Back",
-                tint = InkBlack, modifier = Modifier.clickable(onClick = onBack))
-        }
-        ScreenTitle("Settings")
-
-        SettingsCategory("Library", listOf(
-            "Scan device" to "Rescan folders for new audio",
-            "Hidden folders" to "Manage folders hidden from the library",
-            "Recycle bin" to "Removed songs",
-        ), onRowClick = onRowClick)
-        SettingsCategory("Playback", listOf(
-            "Gapless playback" to "Planned",
-            "Crossfade" to "Planned",
-            "Play together with other apps" to "Planned",
-            "Sleep timer" to "Off",
-        ), onRowClick = onRowClick)
-        SettingsCategory("Sound", listOf(
-            "Equaliser" to "On",
-            "Bass boost" to "Planned",
-        ), onRowClick = onRowClick)
-        SettingsCategory("Appearance", listOf(
-            "Theme" to "Light",
-            "Accent color" to "Orangs",
-            "Language" to "English",
-        ), onRowClick = onRowClick)
-        SettingsCategory("Storage & background", listOf(
-            "Download location" to "Planned",
-            "Download on Wi-Fi only" to "Planned",
-            "Google Drive backup" to "Planned - needs sign-in",
-        ), onRowClick = onRowClick)
-        SettingsCategory("Permissions", listOf(
-            "Music and audio" to "Status",
-            "Notifications" to "Status",
-            "Floating player" to "Planned - system access",
-            "Set ringtone" to "Planned - system access",
-        ), onRowClick = onRowClick)
-        SettingsCategory("About", listOf(
-            "Version" to "0.1.0",
-            "Terms & privacy" to "Documents not published yet",
-        ), onRowClick = onRowClick)
+    // Figma "Settings" (node 47-14503, 390x1508): content column x22 y41, 351 wide, gap 24:
+    // back button 44x44 white circle, title row 37, then cards (white, r16, pad L/R 14 T 16 B 10, gap 6).
+    // Card heights read: play time 82, permission 166, updates 221, collapsed visibility 58,
+    // expanded visibility 441, Read Now 58, Recycle Bin 58. Inner text sizes/fonts are ESTIMATES.
+    val mono = com.abhi.musicapp.ui.theme.GeistMono
+    var expanded by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(true) }
+    Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 22.dp)) {
+        Spacer(Modifier.height(41.dp))
+        Box(
+            Modifier.size(44.dp).clip(androidx.compose.foundation.shape.CircleShape).background(com.abhi.musicapp.ui.theme.PureWhite)
+                .clickable(onClick = onBack),
+            contentAlignment = Alignment.Center,
+        ) { Icon(Icons.Filled.ArrowBack, contentDescription = "Back", tint = InkBlack, modifier = Modifier.size(20.dp)) }
         Spacer(Modifier.height(24.dp))
+        Text("Settings", fontSize = 28.sp, fontWeight = FontWeight.Bold, color = InkBlack, modifier = Modifier.height(37.dp))
+        Spacer(Modifier.height(24.dp))
+
+        FigmaCard(Modifier.height(82.dp)) {
+            // Play-time stat: needs real listening statistics; no tracker exists yet, so this is a render placeholder.
+            Column(verticalArrangement = Arrangement.Center, modifier = Modifier.fillMaxHeight()) {
+                Text("07H 27M", fontFamily = mono, fontSize = 28.sp, color = InkBlack)
+                Text("Play Time", fontFamily = mono, fontSize = 10.sp, color = InkBlack)
+            }
+        }
+        Spacer(Modifier.height(6.dp))
+        FigmaCard {
+            CardTitle("Permission")
+            Spacer(Modifier.height(13.dp))
+            ToggleRow("Music and audio", "Needed to read your songs", true)
+            Spacer(Modifier.height(13.dp))
+            ToggleRow("Notifications", "Playback controls in the shade", false)
+        }
+        Spacer(Modifier.height(6.dp))
+        FigmaCard {
+            CardTitle("Check for updates")
+            Spacer(Modifier.height(13.dp))
+            Text("Current Version", fontFamily = mono, fontSize = 12.sp, color = InkBlack)
+            Text("0.1.0", fontFamily = mono, fontSize = 10.sp, color = GrayText)
+            Spacer(Modifier.height(13.dp))
+            WideButton("Update check not available yet", dark = false)
+            Spacer(Modifier.height(13.dp))
+            WideButton("Update available (design state only)", dark = true)
+        }
+        Spacer(Modifier.height(6.dp))
+        FigmaCard(Modifier.clickable { expanded = !expanded }) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                CardTitle("Visibility", Modifier.weight(1f))
+                Icon(if (expanded) Icons.Filled.ExpandLess else Icons.Filled.ExpandMore, null, tint = InkBlack)
+            }
+            if (expanded) {
+                Spacer(Modifier.height(13.dp))
+                // Sample folder names from the design; real list comes from the library scan later.
+                listOf("Recording" to ".../DCIM/Audio/Recording", "Download" to ".../DCIM/Audio/Downloads",
+                    "Tunes" to ".../DCIM/Audio/Tunes", "Call Recording" to ".../DCIM/Audio/Recording",
+                    "Y-music" to ".../DCIM/Audio/Y-music").forEach { (n, path) ->
+                    Row(Modifier.padding(vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Box(Modifier.size(12.dp).clip(androidx.compose.foundation.shape.CircleShape)
+                            .border(1.dp, GrayLight, androidx.compose.foundation.shape.CircleShape))
+                        Spacer(Modifier.width(10.dp))
+                        Column {
+                            Text(n, fontFamily = mono, fontSize = 11.sp, color = InkBlack)
+                            Text(path, fontFamily = mono, fontSize = 9.sp, color = GrayText)
+                        }
+                    }
+                }
+                Spacer(Modifier.height(13.dp))
+                WideButton("Save", dark = false)
+                Spacer(Modifier.height(13.dp))
+                WideButton("Save", dark = false)
+            }
+        }
+        Spacer(Modifier.height(6.dp))
+        NavCard("Read Now") { onRowClick("Read Now") }
+        Spacer(Modifier.height(6.dp))
+        NavCard("Recycle Bin") { onRowClick("Recycle bin") }
+
+        // PROPOSED (not in the Figma Settings frame): kept only so existing screens stay reachable.
+        Spacer(Modifier.height(24.dp))
+        Text("More (proposed, not in the design)", fontSize = 12.sp, color = GrayText)
+        Spacer(Modifier.height(8.dp))
+        SettingsCategory("Sound", listOf("Equaliser" to "On"), onRowClick = onRowClick)
+        SettingsCategory("Appearance", listOf("Theme" to "Light"), onRowClick = onRowClick)
+        SettingsCategory("Storage & background", listOf("Download location" to "Planned"), onRowClick = onRowClick)
+        SettingsCategory("About", listOf("Terms & privacy" to "Documents not published yet"), onRowClick = onRowClick)
+        Spacer(Modifier.height(24.dp))
+    }
+}
+
+@Composable
+private fun FigmaCard(modifier: Modifier = Modifier, content: @Composable androidx.compose.foundation.layout.ColumnScope.() -> Unit) {
+    Column(
+        modifier = modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(com.abhi.musicapp.ui.theme.PureWhite)
+            .padding(start = 14.dp, end = 14.dp, top = 16.dp, bottom = 10.dp),
+        content = content,
+    )
+}
+
+@Composable
+private fun CardTitle(text: String, modifier: Modifier = Modifier) =
+    Text(text, fontSize = 13.sp, fontWeight = FontWeight.Medium, color = InkBlack, modifier = modifier)
+
+@Composable
+private fun ToggleRow(title: String, detail: String, on: Boolean) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Column(Modifier.weight(1f)) {
+            Text(title, fontFamily = com.abhi.musicapp.ui.theme.GeistMono, fontSize = 11.sp, fontWeight = FontWeight.Bold, color = InkBlack)
+            Text(detail, fontFamily = com.abhi.musicapp.ui.theme.GeistMono, fontSize = 9.sp, color = GrayText)
+        }
+        // Render-only switch; not wired to real permission state yet.
+        Box(
+            Modifier.size(34.dp, 20.dp).clip(RoundedCornerShape(10.dp))
+                .background(if (on) InkBlack else com.abhi.musicapp.ui.theme.SurfaceSoft),
+            contentAlignment = if (on) Alignment.CenterEnd else Alignment.CenterStart,
+        ) { Box(Modifier.padding(2.dp).size(16.dp).clip(androidx.compose.foundation.shape.CircleShape).background(com.abhi.musicapp.ui.theme.PureWhite)) }
+    }
+}
+
+@Composable
+private fun WideButton(label: String, dark: Boolean) {
+    Box(
+        Modifier.fillMaxWidth().height(40.dp).clip(RoundedCornerShape(10.dp))
+            .background(if (dark) InkBlack else com.abhi.musicapp.ui.theme.SurfaceSoft),
+        contentAlignment = Alignment.Center,
+    ) { Text(label, fontFamily = com.abhi.musicapp.ui.theme.GeistMono, fontSize = 11.sp, color = if (dark) com.abhi.musicapp.ui.theme.PureWhite else InkBlack) }
+}
+
+@Composable
+private fun NavCard(label: String, onClick: () -> Unit) {
+    FigmaCard(Modifier.height(58.dp).clickable(onClick = onClick)) {
+        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxHeight()) {
+            CardTitle(label, Modifier.weight(1f))
+            Icon(Icons.Filled.ChevronRight, null, tint = InkBlack)
+        }
     }
 }
 
