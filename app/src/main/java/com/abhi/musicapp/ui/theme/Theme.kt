@@ -10,7 +10,7 @@ import androidx.compose.ui.graphics.Color
 // Exact values sampled from the Figma file "Music App" (qZQCBqzvSKC9gJ46TzEkz2), Page 1.
 // Style names come from the file's own Styles panel: Black, Bg, White, Bg 2, Orangs, Gray-light.
 private val LightBg = Color(0xFFEAEAE8)        // "Bg"
-private val LightSurface = Color(0xFFF0F0F0)   // "Bg 2"
+private val LightSurface = Color(0xFFE3E3E1)   // "Bg 2" (read from the style definition, Figma 2026-11-01)
 private val LightInk = Color(0xFF1E1E1E)       // "Black"
 private val DarkBg = Color(0xFF1E1E1E)
 private val DarkSurface = Color(0xFF2A2A2A)

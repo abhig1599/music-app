@@ -115,3 +115,11 @@ Caveat: chip text/inner paddings and row height not individually read; row pitch
 - NOT resolved: exact Bg 2 hex (panel shows style name only; pixel-sampling of the screenshot was unreliable). #F0F0F0 kept from earlier token record and stays UNVERIFIED.
 - Home fixture now the same state as Figma mini-player (01:01 / 03:12).
 - 03:06 Geist Mono bundled: OFL 1.1 verified at github.com/vercel/geist-font LICENSE.txt and google/fonts ofl/geistmono/OFL.txt; licence copy in licenses/GeistMono-OFL.txt. Helvetica Neue still NOT bundled (proprietary, unchecked).
+
+## 2026-11-01 03:30 - Bg 2 and sleep pill reads
+- Bg 2 colour style definition (Edit color style dialog, opened read-only, not edited): **#E3E3E1**, 100%. Earlier F0F0F0 was wrong. Theme.kt updated. Other styles unchanged.
+- Frame 45 (22-10030): 344.13x271.79 hug, vertical, gap 24. Strips 344x45.95 r10 white, stroke D3D3D1 1px inside; strip with overlapping orange "1:01 M" chip is 344.13x61.95 (gap -8). Strip 3 has orange "Time-up" pill on right, no centre cluster. "App exit in 0:10 S x" pill 239.51x45.95 r10 white, stroke D3D3D1.
+- ESTIMATES (not read): chip padding/size, tick pitch/height/count, orange cluster position/alpha, font sizes in pills. SleepPill.kt is render-only, no timer behaviour.
+- Mini-player small time now zero-padded "01:01" to match the design.
+- Inset fixtures (home/player) paint 24dp/48dp translucent bars: inset fixture, not device validation.
+- Typography: Helvetica Neue is proprietary and not bundled; Roboto substitutes (title tracking -0.8sp). Not an exact match.

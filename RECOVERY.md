@@ -32,3 +32,7 @@
 ## User decisions still pending
 See DECISIONS.md "PENDING product questions" - isolate them; don't block
 unrelated work on them.
+
+## Update 2026-11-01
+- Latest reads (Bg 2 = #E3E3E1, Frame 45 geometry, chip pill, rows, mini-player) are in DECISIONS.md.
+- Testing limits: Roborazzi renders on Robolectric at w390dp-h844dp. Inset fixtures are not device validation; fixtures prove render state only, not MediaController runtime. No emulator CI (Actions allowance unverified).

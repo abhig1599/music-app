@@ -3,6 +3,7 @@ package com.abhi.musicapp
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.padding
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.unit.dp
@@ -84,6 +85,31 @@ class ScreenShotTest {
                 hasTrack = true,
             ),
         )
+    }
+
+
+    @Test fun sleepPills() = shot("sleep_pills") {
+        androidx.compose.foundation.layout.Box(Modifier.padding(23.dp)) { com.abhi.musicapp.ui.components.SleepPillStack() }
+    }
+
+    /** Inset fixture, NOT device validation: 24dp status bar + 48dp nav bar painted as bars over the screen. */
+    private fun inset(name: String, content: @androidx.compose.runtime.Composable () -> Unit) = shot(name) {
+        Box(Modifier.size(390.dp, 844.dp)) {
+            Box(Modifier.padding(top = 24.dp, bottom = 48.dp)) { content() }
+            Box(Modifier.size(390.dp, 24.dp).background(androidx.compose.ui.graphics.Color(0x33000000)))
+            Box(Modifier.align(androidx.compose.ui.Alignment.BottomStart).size(390.dp, 48.dp).background(androidx.compose.ui.graphics.Color(0x33000000)))
+        }
+    }
+
+    @Test fun homeInset() = inset("home_inset_fixture") {
+        HomeScreen({}, {}, {}, {}, {}, {}, fixture = com.abhi.musicapp.playback.PlayerUiState(
+            title = "Song name in a line...", isPlaying = true, positionMs = 61_000L, durationMs = 192_000L, hasTrack = true))
+    }
+
+    @Test fun playerInset() = inset("player_inset_fixture") {
+        PlayerScreen(onBack = {}, fixture = com.abhi.musicapp.playback.PlayerUiState(
+            title = "Malcolm Todd - Earrings", artist = "", isPlaying = true,
+            positionMs = 61_000L, durationMs = 192_000L, hasTrack = true))
     }
 
     @Test fun search() = shot("search") { SearchScreen(onBack = {}) }

@@ -213,7 +213,7 @@ fun MiniPlayer(
         if (darkVariant) {
             Column(Modifier.weight(1f)) {
                 Text(title, color = fg, fontSize = 13.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                Text(time, color = GrayText, fontSize = 10.sp)
+                Text(time.padStart(5, '0'), color = GrayText, fontSize = 10.sp)
             }
             val padded = time.padStart(5, '0')
             Text(
