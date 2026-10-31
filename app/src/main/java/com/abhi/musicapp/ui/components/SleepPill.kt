@@ -35,22 +35,22 @@ private val Chip = Color(0xFFE3E3E1)     // Bg 2, read from style definition
 @Composable
 private fun TimeChip(value: String, unit: String) {
     Row(
-        Modifier.clip(RoundedCornerShape(8.dp)).background(Chip).padding(horizontal = 8.dp, vertical = 6.dp),
+        Modifier.clip(RoundedCornerShape(8.72.dp)).background(Chip).padding(7.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(value, fontFamily = GeistMono, fontSize = 15.sp, color = InkBlack)
-        Spacer(Modifier.width(3.dp))
-        Text(unit, fontFamily = GeistMono, fontSize = 11.sp, color = Color(0xFF6B6B6B))
+        Text(value, fontFamily = GeistMono, fontSize = 15.51.sp, color = InkBlack)
+        Spacer(Modifier.width(2.62.dp))
+        Text(unit, fontSize = 12.21.sp, color = Color(0xFF6B6B6B)) // Figma: Inter Regular 12.21 (system sans stands in)
     }
 }
 
-/** Grey ticks; chip sizes, tick pitch and orange cluster are ESTIMATES (not Design-panel reads). */
+/** Ticks read from Figma: 25 lines, 23 long, 2px stroke D3D3D1, gap 7 (168 wide). Orange cluster position/alpha is an ESTIMATE. */
 @Composable
 private fun Ticks(modifier: Modifier, orangeAt: Int?) {
-    Row(modifier, horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.CenterVertically) {
-        repeat(24) { i ->
+    Row(modifier, horizontalArrangement = Arrangement.spacedBy(7.dp), verticalAlignment = Alignment.CenterVertically) {
+        repeat(25) { i ->
             val o = orangeAt != null && (i == orangeAt || i == orangeAt + 1)
-            Box(Modifier.width(1.dp).height(if (o) 24.dp else 20.dp).background(if (o) Orangs else Color(0xFFD3D3D1)))
+            Box(Modifier.width(2.dp).height(23.dp).background(if (o) Orangs else Color(0xFFD3D3D1)))
         }
     }
 }
@@ -61,11 +61,12 @@ fun SleepStrip(left: String, right: String?, timeUp: Boolean = false, orangeClus
     Box(Modifier.width(344.dp)) {
         Row(
             Modifier.fillMaxWidth().height(46.dp).clip(RoundedCornerShape(10.dp)).background(PureWhite)
-                .border(1.dp, Stroke, RoundedCornerShape(10.dp)).padding(horizontal = 6.dp),
+                .border(1.dp, Stroke, RoundedCornerShape(10.dp)).padding(6.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
             TimeChip(left, "M")
-            Ticks(Modifier.weight(1f).padding(horizontal = 8.dp), if (orangeCluster) 11 else null)
+            Ticks(Modifier.width(168.dp), if (orangeCluster) 11 else null)
             if (timeUp) {
                 Box(Modifier.clip(RoundedCornerShape(8.dp)).background(Orangs).padding(horizontal = 8.dp, vertical = 7.dp)) {
                     Text("Time-up", fontFamily = GeistMono, fontSize = 15.sp, color = PureWhite)
