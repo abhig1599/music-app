@@ -63,14 +63,19 @@ class ScreenShotTest {
         HomeScreen({}, {}, {}, {}, {}, {})
     }
 
-    @Test fun player() = shot("player") { PlayerScreen(onBack = {}) }
+    @Test fun player() = shot("player") {
+        // same sample state as the Figma frame: playing, 1:01 of 03:12
+        PlayerScreen(onBack = {}, fixture = com.abhi.musicapp.playback.PlayerUiState(
+            title = "Malcolm Todd - Earrings", artist = "", isPlaying = true,
+            positionMs = 61_000L, durationMs = 192_000L, hasTrack = true))
+    }
 
     @Test
     fun playerPlaying() = shot("player_playing") {
         PlayerScreen(
             onBack = {},
             fixture = com.abhi.musicapp.playback.PlayerUiState(
-                title = "Malcolm Todd - Earr...",
+                title = "Malcolm Todd - Earrings",
                 artist = "",
                 isPlaying = true,
                 positionMs = 61_000L,

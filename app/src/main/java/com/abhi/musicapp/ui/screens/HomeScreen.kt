@@ -89,12 +89,12 @@ fun HomeScreen(
     Column(modifier = Modifier.fillMaxSize()) {
         // Measured from his Figma home frame (390x844 dp, 68%-zoom crop rescaled 1:1):
         // header centre y~65, mosaic y 110-272 / 289-450, chips y 471-507, list from y 528.
-        val blockBg = androidx.compose.ui.graphics.Color(0xFFDEDEDC)
-        val circleBg = androidx.compose.ui.graphics.Color(0xFFF2F2F0)
+        val blockBg = com.abhi.musicapp.ui.theme.GrayLight
+        val circleBg = androidx.compose.ui.graphics.Color.White
         val monoFont = androidx.compose.ui.text.font.FontFamily.Monospace
-        Spacer(Modifier.height(45.dp))
+        Spacer(Modifier.height(46.dp))
         Row(
-            modifier = Modifier.fillMaxWidth().height(40.dp).padding(horizontal = 27.dp),
+            modifier = Modifier.fillMaxWidth().height(37.dp).padding(horizontal = 26.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text("Playlist", fontSize = 28.sp, fontWeight = FontWeight.Bold, color = InkBlack)
@@ -107,33 +107,33 @@ fun HomeScreen(
                     .padding(horizontal = 10.dp, vertical = 8.dp),
             )
         }
-        Spacer(Modifier.height(25.dp))
+        Spacer(Modifier.height(26.dp))
 
-        Row(Modifier.padding(horizontal = 27.dp).height(162.dp)) {
+        Row(Modifier.padding(horizontal = 26.dp).height(162.dp)) {
             Box(
                 modifier = Modifier
-                    .width(161.dp).fillMaxHeight()
-                    .clip(androidx.compose.foundation.shape.RoundedCornerShape(20.dp))
+                    .width(162.dp).fillMaxHeight()
+                    .clip(androidx.compose.foundation.shape.RoundedCornerShape(24.dp))
                     .background(blockBg)
                     .padding(12.dp),
             ) {
                 Column {
                     Row {
                         CircleTile(Icons.Filled.Search, "Search", onOpenSearch, circleBg, Modifier.size(63.dp))
-                        Spacer(Modifier.width(10.dp))
+                        Spacer(Modifier.width(12.dp))
                         CircleTile(Icons.Filled.Sort, "Sort", { showSort = true }, circleBg, Modifier.size(63.dp))
                     }
-                    Spacer(Modifier.height(10.dp))
+                    Spacer(Modifier.height(12.dp))
                     Row {
                         CircleTile(Icons.Filled.Settings, "Settings", onOpenSettings, circleBg, Modifier.size(63.dp))
-                        Spacer(Modifier.width(10.dp))
+                        Spacer(Modifier.width(12.dp))
                         CircleTile(Icons.Filled.Download, "Downloads", onOpenDownloads, circleBg, Modifier.size(63.dp))
                     }
                 }
             }
             Spacer(Modifier.weight(1f))
-            Box(modifier = Modifier.width(150.dp).fillMaxHeight(), contentAlignment = Alignment.Center) {
-                ScanRays(modifier = Modifier.size(150.dp))
+            Box(modifier = Modifier.width(147.dp).fillMaxHeight(), contentAlignment = Alignment.Center) {
+                ScanRays(modifier = Modifier.size(147.dp))
                 Box(
                     modifier = Modifier.size(60.dp).clip(CircleShape).background(com.abhi.musicapp.ui.theme.GrayLight)
                         .clickable { },
@@ -144,12 +144,12 @@ fun HomeScreen(
                 }
             }
         }
-        Spacer(Modifier.height(17.dp))
-        Row(Modifier.padding(horizontal = 27.dp).height(161.dp)) {
+        Spacer(Modifier.height(16.dp))
+        Row(Modifier.padding(horizontal = 26.dp).height(162.dp)) {
             Column(
                 modifier = Modifier
-                    .width(161.dp).fillMaxHeight()
-                    .clip(androidx.compose.foundation.shape.RoundedCornerShape(20.dp))
+                    .width(162.dp).fillMaxHeight()
+                    .clip(androidx.compose.foundation.shape.RoundedCornerShape(24.dp))
                     .background(blockBg)
                     .clickable { },
                 horizontalAlignment = Alignment.CenterHorizontally,
@@ -169,11 +169,11 @@ fun HomeScreen(
             Spacer(Modifier.weight(1f))
             Row(
                 modifier = Modifier
-                    .width(161.dp).fillMaxHeight()
-                    .clip(androidx.compose.foundation.shape.RoundedCornerShape(20.dp))
+                    .width(162.dp).fillMaxHeight()
+                    .clip(androidx.compose.foundation.shape.RoundedCornerShape(24.dp))
                     .background(blockBg)
                     .padding(horizontal = 12.dp, vertical = 12.dp),
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
                 verticalAlignment = Alignment.Top,
             ) {
                 // His frame shows two brand-style circular buttons here; brand marks are not bundled,
@@ -182,7 +182,7 @@ fun HomeScreen(
                 CircleTile(Icons.Filled.Videocam, "Video", {}, circleBg, Modifier.size(63.dp))
             }
         }
-        Spacer(Modifier.height(12.dp))
+        Spacer(Modifier.height(16.dp))
 
         // Filter chips
         val chips = listOf("All" to "20", "Folders" to "02", "Playlist" to "06", "Artists" to null)
@@ -195,7 +195,7 @@ fun HomeScreen(
             }
         }
 
-        Spacer(Modifier.height(21.dp))
+        Spacer(Modifier.height(24.dp))
 
         // List content follows the active chip. "All" shows the real on-device
         // library (empty -> demo placeholder rows until permission/scan lands).
@@ -341,7 +341,7 @@ fun SortSheetContent(onDone: () -> Unit) {
     var selected by remember { mutableIntStateOf(0) }
     Column(Modifier.padding(horizontal = 24.dp, vertical = 8.dp)) {
         Text("Sort", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = InkBlack)
-        Spacer(Modifier.height(10.dp))
+        Spacer(Modifier.height(12.dp))
         options.forEachIndexed { i, opt ->
             Row(
                 modifier = Modifier

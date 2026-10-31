@@ -105,3 +105,4 @@ Fonts: Geist Mono (OFL; licence check before bundling), Helvetica Neue (not bund
 Onboarding Step1 sheet Frame 43 x0,y339 390x569 radius 24 pad 20/20/20/142; Next Frame 44 x21,y770 351x48.
 Sleep pill Frame 45: 344x272 hug vertical gap 24, three timeline strips + "App exit in 0:10 S x" pill (still unbuilt).
 Caveat: chip text/inner paddings and row height not individually read; row pitch approximated from frame (306 hug for 4 rows).
+- 02:52: home geometry moved to exact reads (header y46/37, blocks 162 r24 Gray-light, gap 12, dial 147, cards y287, white circles). player fixture now same state as Figma (Malcolm Todd - Earrings, 1:01/03:12 playing). Bot render at 0000c08 showed fixtures differing from Figma state ("Nothing playing", 0:00) - fixed.
