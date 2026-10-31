@@ -4,6 +4,9 @@ on:
   push:
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -36,3 +39,14 @@ jobs:
           name: screen-screenshots
           path: app/build/outputs/roborazzi/
           retention-days: 14
+
+      - name: Commit screenshots back to repo
+        run: |
+          mkdir -p docs/screenshots
+          cp app/build/outputs/roborazzi/*.png docs/screenshots/ || exit 0
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/screenshots/
+          git diff --cached --quiet && exit 0
+          git commit -m "Update rendered screen screenshots [skip ci]"
+          git push
