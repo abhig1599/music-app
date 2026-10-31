@@ -42,8 +42,8 @@ import com.abhi.musicapp.ui.theme.SurfaceSoft
  * Step 2 copy is the corrected wording (not his "Permission1/2" placeholders).
  */
 @Composable
-fun OnboardingScreen(onDone: () -> Unit) {
-    var step by remember { mutableIntStateOf(1) }
+fun OnboardingScreen(onDone: () -> Unit, initialStep: Int = 1) {
+    var step by remember { mutableIntStateOf(initialStep) }
 
     Column(
         modifier = Modifier.fillMaxSize().padding(24.dp),

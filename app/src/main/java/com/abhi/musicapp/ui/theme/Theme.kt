@@ -9,38 +9,49 @@ import androidx.compose.ui.graphics.Color
 
 // Exact values sampled from the Figma file "Music App" (qZQCBqzvSKC9gJ46TzEkz2), Page 1.
 // Style names come from the file's own Styles panel: Black, Bg, White, Bg 2, Orangs, Gray-light.
-val InkBlack = Color(0xFF1E1E1E)   // "Black"
-val Bg = Color(0xFFEAEAE8)         // "Bg"
-val SurfaceSoft = Color(0xFFF0F0F0) // "Bg 2"
+private val LightBg = Color(0xFFEAEAE8)        // "Bg"
+private val LightSurface = Color(0xFFF0F0F0)   // "Bg 2"
+private val LightInk = Color(0xFF1E1E1E)       // "Black"
+private val DarkBg = Color(0xFF1E1E1E)
+private val DarkSurface = Color(0xFF2A2A2A)
+private val DarkInk = Color(0xFFF0F0F0)
 val PureWhite = Color(0xFFFFFFFF)  // "White"
-val Orangs = Color(0xFFFF6603)     // "Orangs" (his style name, kept)
 val GrayLight = Color(0xFFD9D9D9)  // "Gray-light"
 val GrayText = Color(0xFF8A8A8A)
 
+// Theme-aware tokens: screens read these so Dark mode repaints every surface.
+// Light values are his exact sampled styles; dark is our proposed variant.
+val Bg: Color @Composable get() = MaterialTheme.colorScheme.background
+val SurfaceSoft: Color @Composable get() = MaterialTheme.colorScheme.surfaceVariant
+val InkBlack: Color @Composable get() = MaterialTheme.colorScheme.onBackground
+val Orangs: Color @Composable get() = MaterialTheme.colorScheme.primary
+
+private val AccentDefault = Color(0xFFFF6603) // "Orangs" (his style name, kept)
+
 private val MusicColorsDark = darkColorScheme(
-    primary = Orangs,
+    primary = AccentDefault,
     onPrimary = PureWhite,
-    background = InkBlack,
-    onBackground = SurfaceSoft,
-    surface = InkBlack,
-    onSurface = SurfaceSoft,
-    surfaceVariant = Color(0xFF2A2A2A),
-    onSurfaceVariant = SurfaceSoft,
+    background = DarkBg,
+    onBackground = DarkInk,
+    surface = DarkBg,
+    onSurface = DarkInk,
+    surfaceVariant = DarkSurface,
+    onSurfaceVariant = DarkInk,
     secondary = Color(0xFF3A3A3A),
-    onSecondary = SurfaceSoft,
+    onSecondary = DarkInk,
 )
 
 private val MusicColors = lightColorScheme(
-    primary = Orangs,
+    primary = AccentDefault,
     onPrimary = PureWhite,
-    background = Bg,
-    onBackground = InkBlack,
-    surface = Bg,
-    onSurface = InkBlack,
-    surfaceVariant = SurfaceSoft,
-    onSurfaceVariant = InkBlack,
+    background = LightBg,
+    onBackground = LightInk,
+    surface = LightBg,
+    onSurface = LightInk,
+    surfaceVariant = LightSurface,
+    onSurfaceVariant = LightInk,
     secondary = GrayLight,
-    onSecondary = InkBlack,
+    onSecondary = LightInk,
 )
 
 @Composable

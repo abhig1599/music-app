@@ -6,5 +6,5 @@ import androidx.compose.runtime.mutableStateOf
 object ThemeState {
     enum class Mode { LIGHT, DARK, SYSTEM }
     var mode = mutableStateOf(Mode.LIGHT)
-    var accent = mutableStateOf(Orangs)
+    var accent = mutableStateOf(androidx.compose.ui.graphics.Color(0xFFFF6603))
 }

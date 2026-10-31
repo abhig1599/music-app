@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -87,48 +88,84 @@ fun HomeScreen(
     Column(modifier = Modifier.fillMaxSize()) {
         ScreenTitle("Playlist", trailing = "Up to date")
 
-        // Icon grid: Search, Sort / Settings, Download (his 2x2 white tiles)
-        Row(Modifier.padding(horizontal = 20.dp)) {
-            IconTile(Icons.Filled.Search, "Search", onOpenSearch, Modifier.weight(1f).height(88.dp))
-            Spacer(Modifier.width(12.dp))
-            IconTile(Icons.Filled.Sort, "Sort", { showSort = true }, Modifier.weight(1f).height(88.dp))
-        }
-        Spacer(Modifier.height(12.dp))
-        Row(Modifier.padding(horizontal = 20.dp)) {
-            IconTile(Icons.Filled.Settings, "Settings", onOpenSettings, Modifier.weight(1f).height(88.dp))
-            Spacer(Modifier.width(12.dp))
-            IconTile(Icons.Filled.Download, "Downloads", onOpenDownloads, Modifier.weight(1f).height(88.dp))
-        }
-
-        // Scan dial: tick ring around a folder icon (rescan library)
-        Box(
-            modifier = Modifier.fillMaxWidth().padding(vertical = 10.dp),
-            contentAlignment = Alignment.Center,
-        ) {
-            TickDial(progress = 0.7f, modifier = Modifier.size(132.dp)) {
-                Icon(Icons.Filled.Folder, contentDescription = "Scan device",
-                    tint = GrayText, modifier = Modifier.size(30.dp))
+        // Mosaic matching his Figma home frame (2026-10-31): left = 2x2 small
+        // icon tiles (Search / Sort / Settings / Downloads), right = tall scan
+        // card with the tick-dial; then Read Doc. card + chat/video card.
+        Row(Modifier.padding(horizontal = 20.dp).height(172.dp)) {
+            Column(Modifier.weight(1f)) {
+                Row(Modifier.weight(1f)) {
+                    GridTile(Icons.Filled.Search, "Search", onOpenSearch, Modifier.weight(1f))
+                    Spacer(Modifier.width(12.dp))
+                    GridTile(Icons.Filled.Sort, "Sort", { showSort = true }, Modifier.weight(1f))
+                }
+                Spacer(Modifier.height(12.dp))
+                Row(Modifier.weight(1f)) {
+                    GridTile(Icons.Filled.Settings, "Settings", onOpenSettings, Modifier.weight(1f))
+                    Spacer(Modifier.width(12.dp))
+                    GridTile(Icons.Filled.Download, "Downloads", onOpenDownloads, Modifier.weight(1f))
+                }
             }
-        }
-
-        // Read Doc. section (his exact label kept)
-        SectionHeader("Read Doc.")
-        Row(Modifier.padding(horizontal = 20.dp)) {
-            IconTile(Icons.Filled.ChatBubbleOutline, "Lyrics", {}, Modifier.weight(1f).height(72.dp))
-            Spacer(Modifier.width(12.dp))
-            IconTile(Icons.Filled.Videocam, "Video", {}, Modifier.weight(1f).height(72.dp))
             Spacer(Modifier.width(12.dp))
             Box(
                 modifier = Modifier
-                    .size(72.dp)
-                    .clip(CircleShape)
-                    .background(InkBlack)
+                    .weight(1f)
+                    .fillMaxHeight()
+                    .clip(androidx.compose.foundation.shape.RoundedCornerShape(16.dp))
+                    .background(com.abhi.musicapp.ui.theme.SurfaceSoft)
                     .clickable { },
                 contentAlignment = Alignment.Center,
             ) {
-                Icon(Icons.Filled.Videocam, contentDescription = "Read Now", tint = Orangs)
+                TickDial(progress = 0.7f, modifier = Modifier.size(120.dp)) {
+                    Icon(Icons.Filled.Folder, contentDescription = "Scan device",
+                        tint = GrayText, modifier = Modifier.size(28.dp))
+                }
             }
         }
+        Spacer(Modifier.height(12.dp))
+        Row(Modifier.padding(horizontal = 20.dp).height(120.dp)) {
+            // Read Doc. card (his exact label kept)
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxHeight()
+                    .clip(androidx.compose.foundation.shape.RoundedCornerShape(16.dp))
+                    .background(com.abhi.musicapp.ui.theme.SurfaceSoft)
+                    .clickable { }
+                    .padding(14.dp),
+            ) {
+                Text("Read Doc.", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = InkBlack)
+                Spacer(Modifier.weight(1f))
+                Box(
+                    modifier = Modifier
+                        .size(44.dp)
+                        .clip(CircleShape)
+                        .background(InkBlack)
+                        .align(Alignment.CenterHorizontally),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(Icons.Filled.Videocam, contentDescription = "Read Now",
+                        tint = Orangs, modifier = Modifier.size(22.dp))
+                }
+                Spacer(Modifier.weight(1f))
+            }
+            Spacer(Modifier.width(12.dp))
+            Row(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxHeight()
+                    .clip(androidx.compose.foundation.shape.RoundedCornerShape(16.dp))
+                    .background(com.abhi.musicapp.ui.theme.SurfaceSoft),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Icon(Icons.Filled.ChatBubbleOutline, contentDescription = "Lyrics",
+                    tint = InkBlack, modifier = Modifier.size(28.dp))
+                Spacer(Modifier.width(20.dp))
+                Icon(Icons.Filled.Videocam, contentDescription = "Video",
+                    tint = InkBlack, modifier = Modifier.size(28.dp))
+            }
+        }
+        Spacer(Modifier.height(12.dp))
 
         // Filter chips
         val chips = listOf("All" to "20", "Folders" to "02", "Playlist" to "06", "Artists" to null)
@@ -207,6 +244,26 @@ fun HomeScreen(
         ) {
             SortSheetContent(onDone = { showSort = false })
         }
+    }
+}
+
+/** Small icon-only square tile used in the home mosaic grid. */
+@Composable
+private fun GridTile(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    label: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Box(
+        modifier = modifier
+            .fillMaxHeight()
+            .clip(androidx.compose.foundation.shape.RoundedCornerShape(16.dp))
+            .background(com.abhi.musicapp.ui.theme.SurfaceSoft)
+            .clickable(onClick = onClick),
+        contentAlignment = Alignment.Center,
+    ) {
+        Icon(icon, contentDescription = label, tint = InkBlack, modifier = Modifier.size(26.dp))
     }
 }
 
