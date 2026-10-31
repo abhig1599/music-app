@@ -92,3 +92,4 @@ PENDING (waiting on the user) / STUB (visible in app, intentionally not function
 Earlier onboarding was a full-screen redesign; his is a rounded bottom sheet on grey Bg, bold title, monospaced body, orange Next button. Rebuilt to match (positions estimated from 68%-zoom captures).
 Deviations kept deliberately: his language list contains placeholder sort labels (only English/Hindi kept); his "Permission1/2" are placeholders (real permission names in his toggle-card layout); Step 3 Gemini fields kept but disabled; his T&C consent sentence replaced because no documents exist; link "Create Google Gemini API" is unlinked text. Monospace font family unidentified (system Monospace used).
 - 02:05: Hindi shown but disabled ('not available yet') until real localization exists; Step3 copy no longer repeats the 'free' API claim (pricing unverified).
+- 02:05: onboarding vertical offsets (+11dp), bold mono button/permission titles after overlay vs Figma.

@@ -75,9 +75,9 @@ fun OnboardingScreen(onDone: () -> Unit, initialStep: Int = 1) {
                 .padding(horizontal = 22.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            Spacer(Modifier.height(10.dp))
+            Spacer(Modifier.height(21.dp))
             Box(Modifier.size(width = 40.dp, height = 4.dp).clip(CircleShape).background(GrayLight))
-            Spacer(Modifier.height(if (step == 3) 22.dp else 30.dp))
+            Spacer(Modifier.height(if (step == 3) 29.dp else 30.dp))
             Box(Modifier.fillMaxWidth().weight(1f)) {
                 when (step) {
                     1 -> LanguageStep()
@@ -113,7 +113,7 @@ private fun OrangeButton(label: String, onClick: () -> Unit) {
             .clickable(onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
-        Text(label, fontFamily = Mono, fontSize = 13.sp, fontWeight = FontWeight.Medium, color = InkBlack)
+        Text(label, fontFamily = Mono, fontSize = 14.sp, fontWeight = FontWeight.Bold, color = InkBlack)
     }
 }
 
@@ -192,7 +192,7 @@ private fun PermissionsStep() {
 private fun PermissionRow(title: String, detail: String, on: Boolean, onToggle: () -> Unit) {
     Row(verticalAlignment = Alignment.CenterVertically) {
         Column(Modifier.weight(1f)) {
-            Text(title, fontFamily = Mono, fontSize = 13.sp, color = InkBlack)
+            Text(title, fontFamily = Mono, fontSize = 14.sp, fontWeight = FontWeight.Bold, color = InkBlack)
             Text(detail, fontFamily = Mono, fontSize = 10.sp, color = GrayText, lineHeight = 13.sp)
         }
         Spacer(Modifier.size(8.dp))
