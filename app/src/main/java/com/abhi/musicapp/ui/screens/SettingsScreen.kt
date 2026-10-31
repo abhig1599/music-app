@@ -92,7 +92,7 @@ fun SettingsScreen(onBack: () -> Unit, onRowClick: (String) -> Unit = {}, fixtur
             Spacer(Modifier.height(13.dp))
             WideButton("Update check not available yet", dark = false, enabled = false)
             Spacer(Modifier.height(13.dp))
-            if (fixture) WideButton("Update available (design state only)", dark = true, enabled = false)
+            if (fixture) WideButton("Update available (design state only)", dark = true, enabled = true)
         }
         Spacer(Modifier.height(6.dp))
         FigmaCard(Modifier.clickable { expanded = !expanded }) {
@@ -117,9 +117,10 @@ fun SettingsScreen(onBack: () -> Unit, onRowClick: (String) -> Unit = {}, fixtur
                     }
                 }
                 Spacer(Modifier.height(13.dp))
-                WideButton("Save", dark = false, enabled = false)
+                // Figma shows first Save disabled-looking, second enabled-looking. Visual only; neither has save logic.
+                WideButton("Save", dark = false, enabled = !fixture)
                 Spacer(Modifier.height(13.dp))
-                WideButton("Save", dark = false, enabled = false)
+                WideButton("Save", dark = false, enabled = true)
             }
         }
         Spacer(Modifier.height(6.dp))
@@ -127,14 +128,6 @@ fun SettingsScreen(onBack: () -> Unit, onRowClick: (String) -> Unit = {}, fixtur
         Spacer(Modifier.height(6.dp))
         NavCard("Recycle Bin") { onRowClick("Recycle bin") }
 
-        // PROPOSED (not in the Figma Settings frame): kept only so existing screens stay reachable.
-        Spacer(Modifier.height(24.dp))
-        Text("More (proposed, not in the design)", fontSize = 12.sp, color = GrayText)
-        Spacer(Modifier.height(8.dp))
-        SettingsCategory("Sound", listOf("Equaliser" to "On"), onRowClick = onRowClick)
-        SettingsCategory("Appearance", listOf("Theme" to "Light"), onRowClick = onRowClick)
-        SettingsCategory("Storage & background", listOf("Download location" to "Planned"), onRowClick = onRowClick)
-        SettingsCategory("About", listOf("Terms & privacy" to "Documents not published yet"), onRowClick = onRowClick)
         Spacer(Modifier.height(24.dp))
     }
 }
