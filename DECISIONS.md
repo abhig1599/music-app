@@ -66,3 +66,12 @@ PENDING (waiting on the user) / STUB (visible in app, intentionally not function
   exist, real behavior must be tested on device.
 - SoundCloud "downloadable" flag mechanics: current docs fetch failed once;
   only rate-limit page verified.
+
+## 2026-11-01 01:15 IST - User steering: "Replicate the UI 100%"
+
+- The Figma file is the VISUAL SOURCE OF TRUTH for every screen it contains: layout, spacing, type scale, colors (sampled tokens), icons, and the tick-dial. No reinterpretation of his authored screens.
+- Lark and other references inform BEHAVIOR only, never replacement design.
+- Features/screens the Figma does not contain (dark variant, themes picker, ringtone maker, backup, etc.) stay visibly labeled as PROPOSED additions; they must not silently blend into his authored screens.
+- Verification bar: compare app renders at 390x844 against exact Figma node captures; measure spacing from the captures, don't eyeball from memory.
+- Font: the exact typeface and its licensing for Android bundling must be identified from the file and flagged if it can't ship free. Until then renders use the closest system fallback and "100%" claims stay withheld.
+- Android system constraints (status/nav bars, OEM font scaling, screen sizes) mean cross-device pixel-identity can't be promised; "100%" applies to the 390x844 reference canvas and must be pixel-inspected before any such claim.
