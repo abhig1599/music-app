@@ -57,7 +57,16 @@ class ScreenShotTest {
 
     @Test fun search() = shot("search") { SearchScreen(onBack = {}) }
 
-    @Test fun settings() = shot("settings") { SettingsScreen(onBack = {}) }
+    @Test fun settings() = shot("settings") { SettingsScreen(onBack = {}, onRowClick = {}) }
+
+    @Test fun themes() = shot("themes") { ThemesScreen(onBack = {}) }
+
+    @Test
+    fun themesDark() {
+        ThemeState.mode.value = ThemeState.Mode.DARK
+        shot("themes_dark") { ThemesScreen(onBack = {}) }
+        ThemeState.mode.value = ThemeState.Mode.LIGHT
+    }
 
     @Test fun downloads() = shot("downloads") { DownloadsScreen(onBack = {}) }
 
