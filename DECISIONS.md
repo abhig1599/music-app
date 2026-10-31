@@ -75,3 +75,10 @@ PENDING (waiting on the user) / STUB (visible in app, intentionally not function
 - Verification bar: compare app renders at 390x844 against exact Figma node captures; measure spacing from the captures, don't eyeball from memory.
 - Font: the exact typeface and its licensing for Android bundling must be identified from the file and flagged if it can't ship free. Until then renders use the closest system fallback and "100%" claims stay withheld.
 - Android system constraints (status/nav bars, OEM font scaling, screen sizes) mean cross-device pixel-identity can't be promised; "100%" applies to the 390x844 reference canvas and must be pixel-inspected before any such claim.
+
+## 2026-11-01 01:20 - Corrections after Main review
+- Removed false claim "Nothing runs in the background without these" (notifications optional; media access exempt via manual file picking).
+- Reader step: no invented function and no "nothing uploaded" promise; his Gemini/custom API fields kept as disabled/pending placeholders. Reader semantics still the user's open decision.
+- T&C line no longer asserts consent; documents unpublished.
+- Player: header "Playlist" + 3-dot, monospaced time, removed placeholder artist line, smaller play circle. Still NOT exact: tick geometry, control circles with light backgrounds, per-layer font weight (Helvetica Neue identified in Figma; embedding licence unchecked - not bundled).
+- Fixtures prove render state only, not MediaController runtime integration.

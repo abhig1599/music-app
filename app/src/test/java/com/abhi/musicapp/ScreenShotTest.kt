@@ -70,8 +70,8 @@ class ScreenShotTest {
         PlayerScreen(
             onBack = {},
             fixture = com.abhi.musicapp.playback.PlayerUiState(
-                title = "Earring...",
-                artist = "Demo Artist",
+                title = "Malcolm Todd - Earr...",
+                artist = "",
                 isPlaying = true,
                 positionMs = 61_000L,
                 durationMs = 192_000L,

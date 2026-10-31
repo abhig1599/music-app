@@ -19,6 +19,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.QueueMusic
 import androidx.compose.material.icons.filled.Headset
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.SelfImprovement
@@ -72,8 +73,9 @@ fun PlayerScreen(onBack: () -> Unit, fixture: PlayerUiState? = null) {
             modifier = Modifier.fillMaxWidth().padding(16.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back",
-                tint = InkBlack, modifier = Modifier.clickable(onClick = onBack))
+            Text("Playlist", fontSize = 28.sp, fontWeight = FontWeight.Bold, color = InkBlack,
+                modifier = Modifier.weight(1f).clickable(onClick = onBack))
+            Icon(Icons.Filled.MoreVert, contentDescription = "Menu", tint = InkBlack)
         }
 
         Spacer(Modifier.height(24.dp))
@@ -83,13 +85,13 @@ fun PlayerScreen(onBack: () -> Unit, fixture: PlayerUiState? = null) {
                 Row(verticalAlignment = Alignment.Top) {
                     Text(
                         formatMs(state.positionMs),
-                        fontSize = 44.sp, fontWeight = FontWeight.Bold, color = InkBlack,
+                        fontSize = 40.sp, fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace, color = InkBlack,
                     )
                     Text("M", fontSize = 12.sp, color = GrayText)
                 }
                 Text(
                     formatMs(state.durationMs),
-                    fontSize = 14.sp, color = GrayText,
+                    fontSize = 12.sp, fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace, color = InkBlack,
                 )
             }
         }
@@ -105,11 +107,7 @@ fun PlayerScreen(onBack: () -> Unit, fixture: PlayerUiState? = null) {
             if (state.hasTrack) state.title else "Nothing playing",
             fontSize = 22.sp, fontWeight = FontWeight.Bold, color = InkBlack,
         )
-        Spacer(Modifier.height(2.dp))
-        Text(
-            if (state.hasTrack) state.artist else "Pick a song from the library",
-            fontSize = 13.sp, color = GrayText,
-        )
+
 
         Spacer(Modifier.height(28.dp))
 

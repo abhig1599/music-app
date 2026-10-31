@@ -129,7 +129,7 @@ private fun PermissionsStep() {
     Column {
         Text("Permissions", fontSize = 28.sp, fontWeight = FontWeight.Bold, color = InkBlack)
         Spacer(Modifier.height(6.dp))
-        Text("Only what the player needs. Nothing runs in the background without these.",
+        Text("Allow access so the player can find and play your music.",
             fontSize = 13.sp, color = GrayText)
         Spacer(Modifier.height(20.dp))
 
@@ -190,7 +190,7 @@ private fun ReaderStep() {
     Column {
         Text("Read Now", fontSize = 28.sp, fontWeight = FontWeight.Bold, color = InkBlack)
         Spacer(Modifier.height(6.dp))
-        Text("Optional. Turns on the reading view for lyrics and documents in the app.",
+        Text("Optional. Setup for the reader is not connected yet - his design fields are kept below, disabled, until the reader behaviour is decided.",
             fontSize = 13.sp, color = GrayText)
         Spacer(Modifier.height(20.dp))
         Row(
@@ -203,18 +203,28 @@ private fun ReaderStep() {
         ) {
             Column(Modifier.weight(1f)) {
                 Text("Enable Read Now", fontSize = 15.sp, color = InkBlack, fontWeight = FontWeight.Medium)
-                Text("Off by default. Nothing is uploaded anywhere.", fontSize = 12.sp, color = GrayText)
+                Text("Off. Not available yet.", fontSize = 12.sp, color = GrayText)
             }
             Switch(
-                checked = readerEnabled,
-                onCheckedChange = { readerEnabled = it },
+                checked = false,
+                enabled = false,
+                onCheckedChange = { },
                 colors = SwitchDefaults.colors(checkedTrackColor = Orangs),
             )
         }
+        Spacer(Modifier.height(12.dp))
+        // Placeholder for his Gemini / custom API setup fields (pending decision; no function invented).
+        Column(
+            modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp))
+                .background(SurfaceSoft).padding(16.dp),
+        ) {
+            Text("Gemini / custom API setup", fontSize = 14.sp, color = GrayText)
+            Text("Pending - disabled until the reader is defined.", fontSize = 12.sp, color = GrayText)
+        }
         Spacer(Modifier.height(20.dp))
-        // TODO: link real T&C / privacy pages once they exist (no documents published yet).
+        // Terms and privacy documents do not exist yet, so no consent is asserted.
         Text(
-            "By continuing you acknowledge that you have read and agree to our T&C and privacy policy.",
+            "Terms and privacy documents are not published yet.",
             fontSize = 11.sp,
             color = GrayText,
         )
