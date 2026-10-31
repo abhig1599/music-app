@@ -44,6 +44,12 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.ui.platform.LocalContext
+import com.abhi.musicapp.library.LibraryRepository
+import com.abhi.musicapp.library.Song
+import com.abhi.musicapp.playback.PlayerManager
 import com.abhi.musicapp.ui.components.FilterChip
 import com.abhi.musicapp.ui.components.IconTile
 import com.abhi.musicapp.ui.components.MiniPlayer
@@ -71,6 +77,12 @@ fun HomeScreen(
 ) {
     var chip by remember { mutableIntStateOf(0) }
     var showSort by remember { mutableStateOf(false) }
+    val context = LocalContext.current
+    var songs by remember { mutableStateOf<List<Song>>(emptyList()) }
+    val playerState by PlayerManager.state.collectAsState()
+    LaunchedEffect(Unit) {
+        songs = LibraryRepository.querySongs(context)
+    }
 
     Column(modifier = Modifier.fillMaxSize()) {
         ScreenTitle("Playlist", trailing = "Up to date")
@@ -126,36 +138,66 @@ fun HomeScreen(
             }
         }
 
-        // List content follows the active chip
-        val rows: List<Pair<String, String>> = when (chip) {
-            1 -> DemoData.folders
-            2 -> DemoData.playlists
-            else -> DemoData.songs
-        }
-        LazyColumn(modifier = Modifier.weight(1f)) {
-            items(rows) { (title, sub) ->
-                SongRow(
-                    title = title,
-                    subtitle = sub,
-                    trailing = {
-                        if (chip == 0) {
-                            Icon(Icons.Filled.GraphicEq, contentDescription = "Playing", tint = Orangs)
-                        } else {
-                            Icon(Icons.Filled.ChevronRight, contentDescription = null, tint = GrayText)
-                        }
-                    },
-                    onClick = {
-                        when (chip) {
-                            1 -> onOpenFolders()
-                            2 -> onOpenPlaylist(title)
-                            else -> onOpenPlayer()
-                        }
-                    },
-                )
+        // List content follows the active chip. "All" shows the real on-device
+        // library (empty -> demo placeholder rows until permission/scan lands).
+        if (chip == 0 && songs.isNotEmpty()) {
+            LazyColumn(modifier = Modifier.weight(1f)) {
+                items(songs.size) { i ->
+                    val song = songs[i]
+                    SongRow(
+                        title = song.title,
+                        subtitle = song.artist,
+                        trailing = {
+                            if (playerState.title == song.title && playerState.isPlaying) {
+                                Icon(Icons.Filled.GraphicEq, contentDescription = "Playing", tint = Orangs)
+                            } else {
+                                Icon(Icons.Filled.ChevronRight, contentDescription = null, tint = GrayText)
+                            }
+                        },
+                        onClick = {
+                            PlayerManager.playAll(songs, i)
+                            onOpenPlayer()
+                        },
+                    )
+                }
+            }
+        } else {
+            val rows: List<Pair<String, String>> = when (chip) {
+                1 -> DemoData.folders
+                2 -> DemoData.playlists
+                else -> DemoData.songs
+            }
+            LazyColumn(modifier = Modifier.weight(1f)) {
+                items(rows.size) { i ->
+                    val (title, sub) = rows[i]
+                    SongRow(
+                        title = title,
+                        subtitle = sub,
+                        trailing = {
+                            if (chip == 0) {
+                                Icon(Icons.Filled.GraphicEq, contentDescription = "Playing", tint = Orangs)
+                            } else {
+                                Icon(Icons.Filled.ChevronRight, contentDescription = null, tint = GrayText)
+                            }
+                        },
+                        onClick = {
+                            when (chip) {
+                                1 -> onOpenFolders()
+                                2 -> onOpenPlaylist(title)
+                                else -> onOpenPlayer()
+                            }
+                        },
+                    )
+                }
             }
         }
 
-        MiniPlayer(title = "Song name in a line...", time = "01:01", darkVariant = true, onClick = onOpenPlayer)
+        MiniPlayer(
+            title = if (playerState.hasTrack) playerState.title else "Song name in a line...",
+            time = formatMs(playerState.positionMs),
+            darkVariant = true,
+            onClick = onOpenPlayer,
+        )
     }
 
     if (showSort) {

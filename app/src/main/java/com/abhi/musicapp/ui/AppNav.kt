@@ -1,9 +1,13 @@
 package com.abhi.musicapp.ui
 
+import android.content.Context
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.abhi.musicapp.playback.PlayerManager
 import com.abhi.musicapp.ui.screens.DownloadsScreen
 import com.abhi.musicapp.ui.screens.FoldersScreen
 import com.abhi.musicapp.ui.screens.HomeScreen
@@ -25,13 +29,28 @@ object Routes {
     fun playlistDetail(name: String) = "playlist/$name"
 }
 
+private const val PREFS = "music_app_prefs"
+private const val KEY_ONBOARDING_DONE = "onboarding_done"
+
 @Composable
 fun AppNav() {
     val nav = rememberNavController()
-    // TODO(persistence): remember onboarding-done and start at HOME when completed.
-    NavHost(navController = nav, startDestination = Routes.ONBOARDING) {
+    val context = LocalContext.current
+
+    LaunchedEffect(Unit) { PlayerManager.connect(context) }
+
+    val onboardingDone = context
+        .getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+        .getBoolean(KEY_ONBOARDING_DONE, false)
+
+    NavHost(
+        navController = nav,
+        startDestination = if (onboardingDone) Routes.HOME else Routes.ONBOARDING,
+    ) {
         composable(Routes.ONBOARDING) {
             OnboardingScreen(onDone = {
+                context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+                    .edit().putBoolean(KEY_ONBOARDING_DONE, true).apply()
                 nav.navigate(Routes.HOME) { popUpTo(Routes.ONBOARDING) { inclusive = true } }
             })
         }
