@@ -14,6 +14,8 @@ import com.abhi.musicapp.ui.screens.OnboardingScreen
 import com.abhi.musicapp.ui.screens.PlayerScreen
 import com.abhi.musicapp.ui.screens.SearchScreen
 import com.abhi.musicapp.ui.screens.SettingsScreen
+import com.abhi.musicapp.ui.screens.ThemesScreen
+import com.abhi.musicapp.ui.theme.ThemeState
 import com.abhi.musicapp.ui.theme.MusicAppTheme
 import com.github.takahirom.roborazzi.captureRoboImage
 import org.junit.Rule
