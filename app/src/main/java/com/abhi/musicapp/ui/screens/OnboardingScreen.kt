@@ -7,6 +7,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -190,7 +191,7 @@ private fun ReaderStep() {
     Column {
         Text("Read Now", fontSize = 28.sp, fontWeight = FontWeight.Bold, color = InkBlack)
         Spacer(Modifier.height(6.dp))
-        Text("Optional. Setup for the reader is not connected yet - his design fields are kept below, disabled, until the reader behaviour is decided.",
+        Text("Optional. Reader setup is not connected yet. The fields below are disabled.",
             fontSize = 13.sp, color = GrayText)
         Spacer(Modifier.height(20.dp))
         Row(
@@ -218,8 +219,17 @@ private fun ReaderStep() {
             modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp))
                 .background(SurfaceSoft).padding(16.dp),
         ) {
-            Text("Gemini / custom API setup", fontSize = 14.sp, color = GrayText)
-            Text("Pending - disabled until the reader is defined.", fontSize = 12.sp, color = GrayText)
+            Text("Gemini API key", fontSize = 12.sp, color = GrayText)
+            Spacer(Modifier.height(6.dp))
+            Box(Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp)).background(PureWhite.copy(alpha = 0.5f)).padding(12.dp)) {
+                Text("Not available yet", fontSize = 13.sp, color = GrayText)
+            }
+            Spacer(Modifier.height(12.dp))
+            Text("Custom API endpoint", fontSize = 12.sp, color = GrayText)
+            Spacer(Modifier.height(6.dp))
+            Box(Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp)).background(PureWhite.copy(alpha = 0.5f)).padding(12.dp)) {
+                Text("Not available yet", fontSize = 13.sp, color = GrayText)
+            }
         }
         Spacer(Modifier.height(20.dp))
         // Terms and privacy documents do not exist yet, so no consent is asserted.

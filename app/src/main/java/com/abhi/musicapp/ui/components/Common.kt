@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -83,10 +84,11 @@ fun FilterChip(label: String, count: String?, active: Boolean, onClick: () -> Un
             .padding(horizontal = 12.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(label, color = fg, fontSize = 14.sp, fontWeight = FontWeight.Medium)
+        Text(label, color = fg, fontSize = 16.sp, fontWeight = FontWeight.Medium)
         if (count != null) {
-            Spacer(Modifier.width(6.dp))
-            Text(count, color = if (active) PureWhite else GrayText, fontSize = 11.sp)
+            Spacer(Modifier.width(2.dp))
+            Text(count, color = if (active) PureWhite else GrayText, fontSize = 10.sp,
+                modifier = Modifier.offset(y = (-6).dp))
         }
     }
 }
@@ -138,6 +140,7 @@ fun TickDial(
     progress: Float,
     modifier: Modifier = Modifier,
     ticks: Int = 48,
+    pointer: Boolean = false,
     center: @Composable () -> Unit = {},
 ) {
     // Capture theme colors outside the non-composable draw lambda.
@@ -148,11 +151,21 @@ fun TickDial(
             val cx = size.width / 2f
             val cy = size.height / 2f
             val outer = size.minDimension / 2f
-            val inner = outer * 0.72f
+            val inner = if (pointer) outer * 0.80f else outer * 0.72f
             val lit = (ticks * progress.coerceIn(0f, 1f)).toInt()
             for (i in 0 until ticks) {
                 val angle = Math.toRadians((i * 360.0 / ticks) - 90.0)
-                val color = if (i < lit) litTick else dimTick
+                // pointer = his player dial: thin grey ticks, orange cluster fixed at the top
+                // (centre tick full, neighbours fading). Cluster behaviour vs progress is unverified.
+                val d = minOf(i, ticks - i)
+                val color = if (pointer) {
+                    when (d) {
+                        0 -> litTick
+                        1 -> litTick.copy(alpha = 0.6f)
+                        2 -> litTick.copy(alpha = 0.35f)
+                        else -> dimTick
+                    }
+                } else if (i < lit) litTick else dimTick
                 val start = Offset(
                     (cx + inner * cos(angle)).toFloat(),
                     (cy + inner * sin(angle)).toFloat(),
@@ -161,10 +174,10 @@ fun TickDial(
                     (cx + outer * cos(angle)).toFloat(),
                     (cy + outer * sin(angle)).toFloat(),
                 )
-                drawLine(color = color, start = start, end = end, strokeWidth = outer * 0.06f)
+                drawLine(color = color, start = start, end = end, strokeWidth = if (pointer) outer * 0.022f else outer * 0.06f)
             }
         }
-        Box(modifier = Modifier.fillMaxSize(0.62f), contentAlignment = Alignment.Center) { center() }
+        Box(modifier = Modifier.fillMaxSize(if (pointer) 0.7f else 0.62f), contentAlignment = Alignment.Center) { center() }
     }
 }
 
@@ -189,9 +202,11 @@ fun MiniPlayer(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         if (darkVariant) {
-            Text(title, color = fg, fontSize = 13.sp, maxLines = 1,
-                overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
-            Text(time, color = Orangs, fontSize = 13.sp, fontWeight = FontWeight.Bold)
+            Column(Modifier.weight(1f)) {
+                Text(title, color = fg, fontSize = 13.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Text(time, color = GrayText, fontSize = 10.sp)
+            }
+            Text(time, color = Orangs, fontSize = 20.sp, fontWeight = FontWeight.Bold)
             Spacer(Modifier.width(12.dp))
             Icon(Icons.Filled.Pause, contentDescription = "Pause", tint = PureWhite)
         } else {

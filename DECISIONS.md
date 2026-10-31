@@ -82,3 +82,8 @@ PENDING (waiting on the user) / STUB (visible in app, intentionally not function
 - T&C line no longer asserts consent; documents unpublished.
 - Player: header "Playlist" + 3-dot, monospaced time, removed placeholder artist line, smaller play circle. Still NOT exact: tick geometry, control circles with light backgrounds, per-layer font weight (Helvetica Neue identified in Figma; embedding licence unchecked - not bundled).
 - Fixtures prove render state only, not MediaController runtime integration.
+
+## 2026-11-01 01:45 - Fidelity batch 3
+- Player re-laid from measured Figma frame (68% zoom capture / 0.678): dial 296dp thin ticks, orange pointer cluster at top (behaviour vs progress UNVERIFIED), light 58dp control circles, 72dp bottom circles.
+- Chip counts raised/small; mini-player has time under title plus large orange time. Reader setup fields shown as two disabled labelled inputs (Step 3 Figma frame not yet located in captures; structure approximate).
+- Developer wording removed from reader subtitle.
