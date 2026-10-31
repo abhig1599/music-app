@@ -38,14 +38,14 @@ class ScreenShotTest {
     @get:Rule
     val composeRule = createComposeRule()
 
-    private fun shot(name: String, content: @androidx.compose.runtime.Composable () -> Unit) {
+    private fun shot(name: String, heightDp: Int = 844, content: @androidx.compose.runtime.Composable () -> Unit) {
         // 390x844 dp canvas (his Figma frame) via the qualifiers on the class;
         // paint the theme background so dark mode renders truthfully.
         composeRule.setContent {
             MusicAppTheme {
                 Box(
                     modifier = Modifier
-                        .size(390.dp, 844.dp)
+                        .size(390.dp, heightDp.dp)
                         .background(androidx.compose.material3.MaterialTheme.colorScheme.background)
                 ) { content() }
             }
@@ -115,6 +115,10 @@ class ScreenShotTest {
     @Test fun search() = shot("search") { SearchScreen(onBack = {}) }
 
     @Test fun settings() = shot("settings") { SettingsScreen(onBack = {}, onRowClick = {}) }
+
+    // Fixtures: design sample values, render state only. Tall canvas shows the whole 1508dp frame.
+    @Test fun settingsFixtureExpanded() = shot("settings_fixture_expanded", 1560) { SettingsScreen(onBack = {}, fixture = true, startExpanded = true) }
+    @Test fun settingsFixtureCollapsed() = shot("settings_fixture_collapsed", 1100) { SettingsScreen(onBack = {}, fixture = true, startExpanded = false) }
 
     @Test fun themes() = shot("themes") { ThemesScreen(onBack = {}) }
 

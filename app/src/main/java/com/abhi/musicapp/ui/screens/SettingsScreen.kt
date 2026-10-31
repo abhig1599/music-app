@@ -33,6 +33,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -48,13 +49,14 @@ import com.abhi.musicapp.ui.theme.SurfaceSoft
  * Rows are stubs until each feature lands; "Planned" marks designed-but-not-built rows.
  */
 @Composable
-fun SettingsScreen(onBack: () -> Unit, onRowClick: (String) -> Unit = {}) {
+fun SettingsScreen(onBack: () -> Unit, onRowClick: (String) -> Unit = {}, fixture: Boolean = false, startExpanded: Boolean = true) {
+    // fixture=true shows the design's sample values (07H 27M, permission on). Real app: no usage tracker or grant state yet, so placeholders/off.
     // Figma "Settings" (node 47-14503, 390x1508): content column x22 y41, 351 wide, gap 24:
     // back button 44x44 white circle, title row 37, then cards (white, r16, pad L/R 14 T 16 B 10, gap 6).
     // Card heights read: play time 82, permission 166, updates 221, collapsed visibility 58,
     // expanded visibility 441, Read Now 58, Recycle Bin 58. Inner text sizes/fonts are ESTIMATES.
     val mono = com.abhi.musicapp.ui.theme.GeistMono
-    var expanded by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(true) }
+    var expanded by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(startExpanded) }
     Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 22.dp)) {
         Spacer(Modifier.height(41.dp))
         Box(
@@ -69,7 +71,7 @@ fun SettingsScreen(onBack: () -> Unit, onRowClick: (String) -> Unit = {}) {
         FigmaCard(Modifier.height(82.dp)) {
             // Play-time stat: needs real listening statistics; no tracker exists yet, so this is a render placeholder.
             Column(verticalArrangement = Arrangement.Center, modifier = Modifier.fillMaxHeight()) {
-                Text("07H 27M", fontFamily = mono, fontSize = 28.sp, color = InkBlack)
+                Text(if (fixture) "07H 27M" else "--H --M", fontFamily = mono, fontSize = 28.sp, color = InkBlack)
                 Text("Play Time", fontFamily = mono, fontSize = 10.sp, color = InkBlack)
             }
         }
@@ -77,7 +79,7 @@ fun SettingsScreen(onBack: () -> Unit, onRowClick: (String) -> Unit = {}) {
         FigmaCard {
             CardTitle("Permission")
             Spacer(Modifier.height(13.dp))
-            ToggleRow("Music and audio", "Needed to read your songs", true)
+            ToggleRow("Music and audio", "Needed to read your songs", fixture)
             Spacer(Modifier.height(13.dp))
             ToggleRow("Notifications", "Playback controls in the shade", false)
         }
@@ -88,9 +90,9 @@ fun SettingsScreen(onBack: () -> Unit, onRowClick: (String) -> Unit = {}) {
             Text("Current Version", fontFamily = mono, fontSize = 12.sp, color = InkBlack)
             Text("0.1.0", fontFamily = mono, fontSize = 10.sp, color = GrayText)
             Spacer(Modifier.height(13.dp))
-            WideButton("Update check not available yet", dark = false)
+            WideButton("Update check not available yet", dark = false, enabled = false)
             Spacer(Modifier.height(13.dp))
-            WideButton("Update available (design state only)", dark = true)
+            if (fixture) WideButton("Update available (design state only)", dark = true, enabled = false)
         }
         Spacer(Modifier.height(6.dp))
         FigmaCard(Modifier.clickable { expanded = !expanded }) {
@@ -115,9 +117,9 @@ fun SettingsScreen(onBack: () -> Unit, onRowClick: (String) -> Unit = {}) {
                     }
                 }
                 Spacer(Modifier.height(13.dp))
-                WideButton("Save", dark = false)
+                WideButton("Save", dark = false, enabled = false)
                 Spacer(Modifier.height(13.dp))
-                WideButton("Save", dark = false)
+                WideButton("Save", dark = false, enabled = false)
             }
         }
         Spacer(Modifier.height(6.dp))
@@ -167,9 +169,9 @@ private fun ToggleRow(title: String, detail: String, on: Boolean) {
 }
 
 @Composable
-private fun WideButton(label: String, dark: Boolean) {
+private fun WideButton(label: String, dark: Boolean, enabled: Boolean = true) {
     Box(
-        Modifier.fillMaxWidth().height(40.dp).clip(RoundedCornerShape(10.dp))
+        Modifier.alpha(if (enabled) 1f else 0.6f).fillMaxWidth().height(40.dp).clip(RoundedCornerShape(10.dp))
             .background(if (dark) InkBlack else com.abhi.musicapp.ui.theme.SurfaceSoft),
         contentAlignment = Alignment.Center,
     ) { Text(label, fontFamily = com.abhi.musicapp.ui.theme.GeistMono, fontSize = 11.sp, color = if (dark) com.abhi.musicapp.ui.theme.PureWhite else InkBlack) }
