@@ -107,7 +107,7 @@ fun PlayerScreen(onBack: () -> Unit, fixture: PlayerUiState? = null) {
             Text(
                 if (state.hasTrack) state.title else "Nothing playing",
                 fontSize = 32.sp, fontWeight = FontWeight.Medium, color = InkBlack,
-                maxLines = 1, softWrap = false, textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                maxLines = 1, softWrap = false, letterSpacing = (-0.8).sp, textAlign = androidx.compose.ui.text.style.TextAlign.Center,
                 modifier = Modifier.fillMaxWidth(),
             )
         }

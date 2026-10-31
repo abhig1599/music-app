@@ -3,6 +3,7 @@ package com.abhi.musicapp.ui.screens
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.foundation.layout.requiredWidth
 import androidx.compose.foundation.border
@@ -195,7 +196,7 @@ fun HomeScreen(
         // chips; it overflows the 390 frame, so "Artists" is clipped there too (kept as reference).
         Box(Modifier.fillMaxWidth().clipToBounds()) {
             Row(
-                modifier = Modifier.padding(start = 20.dp).requiredWidth(475.dp).height(46.dp)
+                modifier = Modifier.wrapContentWidth(Alignment.Start, unbounded = true).padding(start = 20.dp).requiredWidth(475.dp).height(46.dp)
                     .clip(androidx.compose.foundation.shape.RoundedCornerShape(10.dp))
                     .background(androidx.compose.ui.graphics.Color.White)
                     .border(1.dp, androidx.compose.ui.graphics.Color(0xFFD3D3D1), androidx.compose.foundation.shape.RoundedCornerShape(10.dp))
