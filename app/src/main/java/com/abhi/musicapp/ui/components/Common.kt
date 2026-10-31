@@ -180,7 +180,7 @@ fun TickDial(
                     (cx + (inner - outer * 0.14f) * cos(angle)).toFloat(),
                     (cy + (inner - outer * 0.14f) * sin(angle)).toFloat(),
                 ) else start
-                drawLine(color = color, start = s2, end = end, strokeWidth = if (pointer) outer * 0.04f else outer * 0.06f)
+                drawLine(color = color, start = s2, end = end, strokeWidth = if (pointer) outer * 0.05f else outer * 0.06f)
             }
         }
         Box(modifier = Modifier.fillMaxSize(if (pointer) 0.7f else 0.62f), contentAlignment = Alignment.Center) { center() }

@@ -117,16 +117,16 @@ fun HomeScreen(
                     .padding(12.dp),
             ) {
                 Column {
-                    Row(Modifier.weight(1f)) {
-                        CircleTile(Icons.Filled.Search, "Search", onOpenSearch, circleBg, Modifier.weight(1f))
+                    Row {
+                        CircleTile(Icons.Filled.Search, "Search", onOpenSearch, circleBg, Modifier.size(63.dp))
                         Spacer(Modifier.width(10.dp))
-                        CircleTile(Icons.Filled.Sort, "Sort", { showSort = true }, circleBg, Modifier.weight(1f))
+                        CircleTile(Icons.Filled.Sort, "Sort", { showSort = true }, circleBg, Modifier.size(63.dp))
                     }
                     Spacer(Modifier.height(10.dp))
-                    Row(Modifier.weight(1f)) {
-                        CircleTile(Icons.Filled.Settings, "Settings", onOpenSettings, circleBg, Modifier.weight(1f))
+                    Row {
+                        CircleTile(Icons.Filled.Settings, "Settings", onOpenSettings, circleBg, Modifier.size(63.dp))
                         Spacer(Modifier.width(10.dp))
-                        CircleTile(Icons.Filled.Download, "Downloads", onOpenDownloads, circleBg, Modifier.weight(1f))
+                        CircleTile(Icons.Filled.Download, "Downloads", onOpenDownloads, circleBg, Modifier.size(63.dp))
                     }
                 }
             }
@@ -177,19 +177,24 @@ fun HomeScreen(
             ) {
                 // His frame shows two brand-style circular buttons here; brand marks are not bundled,
                 // so generic icons stand in until his assets are exported.
-                CircleTile(Icons.Filled.ChatBubbleOutline, "Lyrics", {}, circleBg, Modifier.weight(1f).height(63.dp))
-                CircleTile(Icons.Filled.Videocam, "Video", {}, circleBg, Modifier.weight(1f).height(63.dp))
+                CircleTile(Icons.Filled.ChatBubbleOutline, "Lyrics", {}, circleBg, Modifier.size(63.dp))
+                CircleTile(Icons.Filled.Videocam, "Video", {}, circleBg, Modifier.size(63.dp))
             }
         }
-        Spacer(Modifier.height(21.dp))
+        Spacer(Modifier.height(12.dp))
 
         // Filter chips
         val chips = listOf("All" to "20", "Folders" to "02", "Playlist" to "06", "Artists" to null)
-        LazyRow(Modifier.padding(horizontal = 14.dp, vertical = 8.dp)) {
+        LazyRow(
+            modifier = Modifier.padding(horizontal = 27.dp, vertical = 0.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
             items(chips.size) { i ->
                 FilterChip(chips[i].first, chips[i].second, active = chip == i) { chip = i }
             }
         }
+
+        Spacer(Modifier.height(21.dp))
 
         // List content follows the active chip. "All" shows the real on-device
         // library (empty -> demo placeholder rows until permission/scan lands).
