@@ -1,9 +1,14 @@
 package com.abhi.musicapp
 
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.size
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.test.onRoot
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.abhi.musicapp.ui.screens.DownloadsScreen
+import com.abhi.musicapp.ui.screens.EqualiserScreen
 import com.abhi.musicapp.ui.screens.HomeScreen
 import com.abhi.musicapp.ui.screens.OnboardingScreen
 import com.abhi.musicapp.ui.screens.PlayerScreen
@@ -30,7 +35,12 @@ class ScreenShotTest {
     val composeRule = createComposeRule()
 
     private fun shot(name: String, content: @androidx.compose.runtime.Composable () -> Unit) {
-        composeRule.setContent { MusicAppTheme(content = content) }
+        // Match his Figma canvas exactly (390x844 dp) so the full screen renders.
+        composeRule.setContent {
+            MusicAppTheme {
+                Box(modifier = Modifier.size(390.dp, 844.dp)) { content() }
+            }
+        }
         composeRule.waitForIdle()
         composeRule.onRoot().captureRoboImage("build/outputs/roborazzi/$name.png")
     }
@@ -48,4 +58,6 @@ class ScreenShotTest {
     @Test fun settings() = shot("settings") { SettingsScreen(onBack = {}) }
 
     @Test fun downloads() = shot("downloads") { DownloadsScreen(onBack = {}) }
+
+    @Test fun equaliser() = shot("equaliser") { EqualiserScreen(onBack = {}) }
 }
