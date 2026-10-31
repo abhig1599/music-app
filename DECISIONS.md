@@ -106,3 +106,11 @@ Onboarding Step1 sheet Frame 43 x0,y339 390x569 radius 24 pad 20/20/20/142; Next
 Sleep pill Frame 45: 344x272 hug vertical gap 24, three timeline strips + "App exit in 0:10 S x" pill (still unbuilt).
 Caveat: chip text/inner paddings and row height not individually read; row pitch approximated from frame (306 hug for 4 rows).
 - 02:52: home geometry moved to exact reads (header y46/37, blocks 162 r24 Gray-light, gap 12, dial 147, cards y287, white circles). player fixture now same state as Figma (Malcolm Todd - Earrings, 1:01/03:12 playing). Bot render at 0000c08 showed fixtures differing from Figma state ("Nothing playing", 0:00) - fixed.
+
+## 2026-11-01 03:05 - More exact reads (Design panel, read-only)
+- Chip row = Frame 4: white 475x46, r10, 1px D3D3D1 inside stroke, auto-layout horizontal gap 12, pad 6; ONE container, it overflows the 390 frame (Artists clipped in Figma; kept).
+- Chips: "All" 65.56x36.95 hug, pad 6.97, r8.72, fill Orangs; "Folders" 108.56x36.95, fill Bg 2 (inactive chips are Bg 2, not white).
+- List: Frame 41 x20,y527 351x306; Frame 32 rows vertical gap 6; row Frame 42 = 351x72 hug, pad 10, r10, fill White, stroke D3D3D1 1px inside; thumb+text group 156x50 gap 13 (thumb 50); chevron 24x24 frame rotated 90.
+- Mini-player (song-playing frame): title + small "01:01" under it AND big mono "01:01" with orange colon; x18,y757 355x78 pad 14/18 r14 Black.
+- NOT resolved: exact Bg 2 hex (panel shows style name only; pixel-sampling of the screenshot was unreliable). #F0F0F0 kept from earlier token record and stays UNVERIFIED.
+- Home fixture now the same state as Figma mini-player (01:01 / 03:12).

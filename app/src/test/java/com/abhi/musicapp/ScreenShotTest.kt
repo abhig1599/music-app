@@ -60,7 +60,8 @@ class ScreenShotTest {
     @Test fun onboardingReader() = shot("onboarding_reader") { OnboardingScreen(onDone = {}, initialStep = 3) }
 
     @Test fun home() = shot("home") {
-        HomeScreen({}, {}, {}, {}, {}, {})
+        HomeScreen({}, {}, {}, {}, {}, {}, fixture = com.abhi.musicapp.playback.PlayerUiState(
+            title = "Song name in a line...", isPlaying = true, positionMs = 61_000L, durationMs = 192_000L, hasTrack = true))
     }
 
     @Test fun player() = shot("player") {

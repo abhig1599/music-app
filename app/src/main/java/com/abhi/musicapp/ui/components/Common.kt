@@ -76,15 +76,15 @@ fun IconTile(icon: ImageVector, contentDescription: String, onClick: () -> Unit,
 /** Filter chip row: "All 20", "Folders 02", ... active chip is Orangs. */
 @Composable
 fun FilterChip(label: String, count: String?, active: Boolean, onClick: () -> Unit) {
-    val bg = if (active) Orangs else PureWhite
+    val bg = if (active) Orangs else SurfaceSoft
     val fg = if (active) PureWhite else InkBlack
     Row(
         modifier = Modifier
-            .clip(RoundedCornerShape(10.dp))
+            .height(37.dp)
+            .clip(RoundedCornerShape(8.72.dp))
             .background(bg)
-            .then(if (active) Modifier else Modifier.border(1.dp, Color(0xFFD3D3D1), RoundedCornerShape(10.dp)))
             .clickable(onClick = onClick)
-            .padding(horizontal = 10.dp, vertical = 8.dp),
+            .padding(horizontal = 7.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(label, color = fg, fontSize = 15.sp, maxLines = 1, softWrap = false, fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace)
@@ -107,25 +107,25 @@ fun SongRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 20.dp, vertical = 3.dp)
-            .clip(RoundedCornerShape(12.dp))
-            .background(SurfaceSoft)
-            .border(1.dp, Color(0xFFD3D3D1), RoundedCornerShape(12.dp))
+            .padding(horizontal = 20.dp, vertical = 3.dp) // Figma: rows 351 wide at x20, gap 6
+            .clip(RoundedCornerShape(10.dp))
+            .background(PureWhite)
+            .border(1.dp, Color(0xFFD3D3D1), RoundedCornerShape(10.dp))
             .clickable(onClick = onClick)
-            .padding(horizontal = 11.dp, vertical = 11.dp),
+            .padding(10.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Box(
             modifier = Modifier
                 .size(50.dp)
                 .clip(RoundedCornerShape(8.dp))
-                .background(Color(0xFFDEDEDC)),
+                .background(GrayLight),
             contentAlignment = Alignment.Center,
         ) {
             // His thumbs are album photos (not shipped); neutral tile stands in.
             Icon(Icons.Filled.MusicNote, contentDescription = null, tint = Orangs)
         }
-        Spacer(Modifier.width(12.dp))
+        Spacer(Modifier.width(13.dp))
         Column(Modifier.weight(1f)) {
             Text(title, color = InkBlack, fontSize = 15.sp, fontWeight = FontWeight.Medium,
                 maxLines = 1, overflow = TextOverflow.Ellipsis)
@@ -203,11 +203,11 @@ fun MiniPlayer(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 19.dp, vertical = 9.dp)
-            .clip(RoundedCornerShape(12.dp))
+            .padding(horizontal = 18.dp, vertical = 4.dp) // Figma: x18, 355 wide
+            .clip(RoundedCornerShape(14.dp))
             .background(bg)
             .clickable(onClick = onClick)
-            .padding(horizontal = 14.dp, vertical = 14.dp),
+            .padding(horizontal = 18.dp, vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         if (darkVariant) {

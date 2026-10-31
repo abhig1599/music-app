@@ -3,6 +3,9 @@ package com.abhi.musicapp.ui.screens
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.foundation.layout.requiredWidth
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -76,12 +79,14 @@ fun HomeScreen(
     onOpenDownloads: () -> Unit,
     onOpenFolders: () -> Unit,
     onOpenPlaylist: (String) -> Unit,
+    fixture: com.abhi.musicapp.playback.PlayerUiState? = null,
 ) {
     var chip by remember { mutableIntStateOf(0) }
     var showSort by remember { mutableStateOf(false) }
     val context = LocalContext.current
     var songs by remember { mutableStateOf<List<Song>>(emptyList()) }
-    val playerState by PlayerManager.state.collectAsState()
+    val livePlayerState by PlayerManager.state.collectAsState()
+    val playerState = fixture ?: livePlayerState
     LaunchedEffect(Unit) {
         songs = LibraryRepository.querySongs(context)
     }
@@ -186,16 +191,23 @@ fun HomeScreen(
 
         // Filter chips
         val chips = listOf("All" to "20", "Folders" to "02", "Playlist" to "06", "Artists" to null)
-        LazyRow(
-            contentPadding = PaddingValues(horizontal = 20.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            items(chips.size) { i ->
-                FilterChip(chips[i].first, chips[i].second, active = chip == i) { chip = i }
+        // Figma Frame 4: one white 475x46 pill (r10, 1px D3D3D1 stroke, pad 6, gap 12) holding the
+        // chips; it overflows the 390 frame, so "Artists" is clipped there too (kept as reference).
+        Box(Modifier.fillMaxWidth().clipToBounds()) {
+            Row(
+                modifier = Modifier.padding(start = 20.dp).requiredWidth(475.dp).height(46.dp)
+                    .clip(androidx.compose.foundation.shape.RoundedCornerShape(10.dp))
+                    .background(androidx.compose.ui.graphics.Color.White)
+                    .border(1.dp, androidx.compose.ui.graphics.Color(0xFFD3D3D1), androidx.compose.foundation.shape.RoundedCornerShape(10.dp))
+                    .padding(6.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                chips.forEachIndexed { i, c -> FilterChip(c.first, c.second, active = chip == i) { chip = i } }
             }
         }
 
-        Spacer(Modifier.height(24.dp))
+        Spacer(Modifier.height(16.dp))
 
         // List content follows the active chip. "All" shows the real on-device
         // library (empty -> demo placeholder rows until permission/scan lands).
