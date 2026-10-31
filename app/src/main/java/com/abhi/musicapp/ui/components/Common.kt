@@ -2,6 +2,7 @@ package com.abhi.musicapp.ui.components
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -75,17 +76,18 @@ fun IconTile(icon: ImageVector, contentDescription: String, onClick: () -> Unit,
 /** Filter chip row: "All 20", "Folders 02", ... active chip is Orangs. */
 @Composable
 fun FilterChip(label: String, count: String?, active: Boolean, onClick: () -> Unit) {
-    val bg = if (active) Orangs else Color(0xFFDEDEDC)
+    val bg = if (active) Orangs else PureWhite
     val fg = if (active) PureWhite else InkBlack
     Row(
         modifier = Modifier
             .clip(RoundedCornerShape(10.dp))
             .background(bg)
+            .then(if (active) Modifier else Modifier.border(1.dp, Color(0xFFD3D3D1), RoundedCornerShape(10.dp)))
             .clickable(onClick = onClick)
-            .padding(horizontal = 12.dp, vertical = 8.dp),
+            .padding(horizontal = 10.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(label, color = fg, fontSize = 15.sp, fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace)
+        Text(label, color = fg, fontSize = 15.sp, maxLines = 1, softWrap = false, fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace)
         if (count != null) {
             Spacer(Modifier.width(2.dp))
             Text(count, color = if (active) PureWhite else GrayText, fontSize = 10.sp,
@@ -108,6 +110,7 @@ fun SongRow(
             .padding(horizontal = 20.dp, vertical = 3.dp)
             .clip(RoundedCornerShape(12.dp))
             .background(SurfaceSoft)
+            .border(1.dp, Color(0xFFD3D3D1), RoundedCornerShape(12.dp))
             .clickable(onClick = onClick)
             .padding(horizontal = 11.dp, vertical = 11.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -153,7 +156,7 @@ fun TickDial(
             val cx = size.width / 2f
             val cy = size.height / 2f
             val outer = size.minDimension / 2f
-            val inner = if (pointer) outer * 0.75f else outer * 0.72f
+            val inner = if (pointer) outer * (108.5f / 150.5f) else outer * 0.72f
             val lit = (ticks * progress.coerceIn(0f, 1f)).toInt()
             for (i in 0 until ticks) {
                 val angle = Math.toRadians((i * 360.0 / ticks) - 90.0)
@@ -177,10 +180,10 @@ fun TickDial(
                     (cy + outer * sin(angle)).toFloat(),
                 )
                 val s2 = if (pointer && d == 0) Offset(
-                    (cx + (inner - outer * 0.14f) * cos(angle)).toFloat(),
-                    (cy + (inner - outer * 0.14f) * sin(angle)).toFloat(),
+                    (cx + (inner - outer * 0.08f) * cos(angle)).toFloat(),
+                    (cy + (inner - outer * 0.08f) * sin(angle)).toFloat(),
                 ) else start
-                drawLine(color = color, start = s2, end = end, strokeWidth = if (pointer) outer * 0.05f else outer * 0.06f)
+                drawLine(color = color, start = s2, end = end, strokeWidth = if (pointer) outer * (5f / 150.5f) else outer * 0.06f, cap = androidx.compose.ui.graphics.StrokeCap.Round)
             }
         }
         Box(modifier = Modifier.fillMaxSize(if (pointer) 0.7f else 0.62f), contentAlignment = Alignment.Center) { center() }

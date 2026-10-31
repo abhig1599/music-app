@@ -3,6 +3,7 @@ package com.abhi.musicapp.ui.screens
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -186,8 +187,8 @@ fun HomeScreen(
         // Filter chips
         val chips = listOf("All" to "20", "Folders" to "02", "Playlist" to "06", "Artists" to null)
         LazyRow(
-            modifier = Modifier.padding(horizontal = 27.dp, vertical = 0.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            contentPadding = PaddingValues(horizontal = 20.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             items(chips.size) { i ->
                 FilterChip(chips[i].first, chips[i].second, active = chip == i) { chip = i }
@@ -232,7 +233,7 @@ fun HomeScreen(
                         title = title,
                         subtitle = sub,
                         trailing = {
-                            if (chip == 0) {
+                            if (chip == 0 && i == 0) {
                                 Icon(Icons.Filled.GraphicEq, contentDescription = "Playing", tint = Orangs)
                             } else {
                                 Icon(Icons.Filled.ChevronRight, contentDescription = null, tint = GrayText)

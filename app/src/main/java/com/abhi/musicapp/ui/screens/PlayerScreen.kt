@@ -10,6 +10,8 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
@@ -72,60 +74,54 @@ fun PlayerScreen(onBack: () -> Unit, fixture: PlayerUiState? = null) {
         state.positionMs.toFloat() / state.durationMs.toFloat() else 0f
     val circle = com.abhi.musicapp.ui.theme.SurfaceSoft
 
-    Column(
-        modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()),
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        Spacer(Modifier.height(115.dp))
+    val mono = FontFamily.Monospace // Figma: Geist Mono (not bundled until licence check)
+    // Absolute layout from exact Design-panel reads (390x844 frame, see DECISIONS.md 02:40).
+    Box(Modifier.fillMaxSize()) {
         Row(
-            modifier = Modifier.fillMaxWidth().height(34.dp).padding(horizontal = 16.dp),
+            modifier = Modifier.offset(26.dp, 46.dp).size(344.dp, 37.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text("Playlist", fontSize = 28.sp, fontWeight = FontWeight.Bold, color = InkBlack,
                 modifier = Modifier.weight(1f).clickable(onClick = onBack))
             Icon(Icons.Filled.MoreVert, contentDescription = "Menu", tint = InkBlack)
         }
-        Spacer(Modifier.height(30.dp))
-
-        TickDial(progress = progress, modifier = Modifier.size(296.dp), ticks = 48, pointer = true) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Row(verticalAlignment = Alignment.Top) {
-                    Text(
-                        formatMs(state.positionMs),
-                        fontSize = 40.sp, fontFamily = FontFamily.Monospace, color = InkBlack,
-                    )
-                    Text("M", fontSize = 16.sp, color = InkBlack)
-                }
-                Box(Modifier.size(width = 56.dp, height = 1.dp).background(GrayLight))
-                Text(
-                    formatTotal(state.durationMs),
-                    fontSize = 12.sp, fontFamily = FontFamily.Monospace, color = InkBlack,
-                )
+        TickDial(progress = progress, modifier = Modifier.offset(48.dp, 135.dp).size(301.dp), ticks = 48, pointer = true) {}
+        Column(
+            modifier = Modifier.offset(147.dp, 252.dp).size(104.dp, 68.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(1.dp),
+        ) {
+            Row(verticalAlignment = Alignment.Top) {
+                Text(formatMs(state.positionMs), fontSize = 35.68.sp, fontFamily = mono, color = InkBlack)
+                Text("M", fontSize = 20.sp, color = InkBlack)
             }
+            Box(Modifier.size(width = 104.dp, height = 1.dp).background(GrayLight))
+            Text(formatTotal(state.durationMs), fontSize = 15.51.sp, fontFamily = mono, color = InkBlack)
         }
-
-        Spacer(Modifier.height(54.dp))
-        Text("[Playlist/Source]", fontSize = 12.sp, color = InkBlack)
-        Spacer(Modifier.height(18.dp))
-        Text(
-            if (state.hasTrack) state.title else "Nothing playing",
-            fontSize = 28.sp, fontWeight = FontWeight.Medium, color = InkBlack,
-        )
-        Spacer(Modifier.height(82.dp))
-
+        Column(
+            modifier = Modifier.offset(23.5.dp, 489.dp).width(344.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            Text("[Playlist/Source]", fontSize = 16.sp, fontWeight = FontWeight.Medium, color = InkBlack)
+            Text(
+                if (state.hasTrack) state.title else "Nothing playing",
+                fontSize = 32.sp, fontWeight = FontWeight.Medium, color = InkBlack,
+                maxLines = 1,
+            )
+        }
         Row(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp),
-            horizontalArrangement = Arrangement.Center,
+            modifier = Modifier.offset(89.dp, 659.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Box(
-                modifier = Modifier.size(62.dp).clip(CircleShape).background(circle)
+                modifier = Modifier.size(63.dp).clip(CircleShape).background(PureWhite)
                     .clickable { PlayerManager.previous() },
                 contentAlignment = Alignment.Center,
             ) { Icon(Icons.Filled.SkipPrevious, contentDescription = "Previous", tint = InkBlack) }
-            Spacer(Modifier.size(width = 6.dp, height = 1.dp))
             Box(
-                modifier = Modifier.size(62.dp).clip(CircleShape)
+                modifier = Modifier.size(63.dp).clip(CircleShape)
                     .background(if (state.isPlaying) Orangs else InkBlack)
                     .clickable { PlayerManager.togglePlayPause() },
                 contentAlignment = Alignment.Center,
@@ -136,32 +132,25 @@ fun PlayerScreen(onBack: () -> Unit, fixture: PlayerUiState? = null) {
                     tint = PureWhite, modifier = Modifier.size(28.dp),
                 )
             }
-            Spacer(Modifier.size(width = 6.dp, height = 1.dp))
             Box(
-                modifier = Modifier.size(62.dp).clip(CircleShape).background(circle)
+                modifier = Modifier.size(63.dp).clip(CircleShape).background(PureWhite)
                     .clickable { PlayerManager.next() },
                 contentAlignment = Alignment.Center,
             ) { Icon(Icons.Filled.SkipNext, contentDescription = "Next", tint = InkBlack) }
         }
-
-        Spacer(Modifier.height(7.dp))
+        Box(Modifier.offset(19.dp, 726.dp).size(72.dp).clip(CircleShape).background(circle), contentAlignment = Alignment.Center) {
+            Icon(Icons.Filled.Headset, contentDescription = "Audio output", tint = InkBlack)
+        }
         Row(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 18.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
+            modifier = Modifier.offset(154.5.dp, 757.dp).size(79.dp, 24.dp),
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Box(Modifier.size(72.dp).clip(CircleShape).background(circle), contentAlignment = Alignment.Center) {
-                Icon(Icons.Filled.Headset, contentDescription = "Audio output", tint = InkBlack)
-            }
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(Icons.AutoMirrored.Filled.QueueMusic, contentDescription = null, tint = InkBlack)
-                Text("Queue", fontSize = 13.sp, fontWeight = FontWeight.Medium, color = InkBlack,
-                    modifier = Modifier.padding(start = 4.dp))
-            }
-            Box(Modifier.size(72.dp).clip(CircleShape).background(circle), contentAlignment = Alignment.Center) {
-                Icon(Icons.Filled.SelfImprovement, contentDescription = "Focus mode (icon pending his decision)", tint = InkBlack)
-            }
+            Icon(Icons.AutoMirrored.Filled.QueueMusic, contentDescription = null, tint = InkBlack)
+            Text("Queue", fontSize = 13.sp, fontWeight = FontWeight.Medium, color = InkBlack)
         }
-        Spacer(Modifier.height(24.dp))
+        Box(Modifier.offset(298.dp, 726.dp).size(72.dp).clip(CircleShape).background(circle), contentAlignment = Alignment.Center) {
+            Icon(Icons.Filled.SelfImprovement, contentDescription = "Focus mode (icon pending his decision)", tint = InkBlack)
+        }
     }
 }
