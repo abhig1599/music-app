@@ -9,6 +9,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.abhi.musicapp.playback.PlayerManager
 import com.abhi.musicapp.ui.screens.DownloadsScreen
+import com.abhi.musicapp.ui.screens.EqualiserScreen
 import com.abhi.musicapp.ui.screens.FoldersScreen
 import com.abhi.musicapp.ui.screens.HomeScreen
 import com.abhi.musicapp.ui.screens.OnboardingScreen
@@ -23,6 +24,7 @@ object Routes {
     const val PLAYER = "player"
     const val SEARCH = "search"
     const val SETTINGS = "settings"
+    const val EQUALISER = "equaliser"
     const val DOWNLOADS = "downloads"
     const val FOLDERS = "folders"
     const val PLAYLIST_DETAIL = "playlist/{name}"
@@ -66,7 +68,13 @@ fun AppNav() {
         }
         composable(Routes.PLAYER) { PlayerScreen(onBack = { nav.popBackStack() }) }
         composable(Routes.SEARCH) { SearchScreen(onBack = { nav.popBackStack() }) }
-        composable(Routes.SETTINGS) { SettingsScreen(onBack = { nav.popBackStack() }) }
+        composable(Routes.SETTINGS) {
+            SettingsScreen(
+                onBack = { nav.popBackStack() },
+                onOpenEqualiser = { nav.navigate(Routes.EQUALISER) },
+            )
+        }
+        composable(Routes.EQUALISER) { EqualiserScreen(onBack = { nav.popBackStack() }) }
         composable(Routes.DOWNLOADS) { DownloadsScreen(onBack = { nav.popBackStack() }) }
         composable(Routes.FOLDERS) { FoldersScreen(onBack = { nav.popBackStack() }) }
         composable(Routes.PLAYLIST_DETAIL) { entry ->

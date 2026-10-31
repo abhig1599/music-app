@@ -36,7 +36,7 @@ import com.abhi.musicapp.ui.theme.SurfaceSoft
  * Rows are stubs until each feature lands; "Planned" marks designed-but-not-built rows.
  */
 @Composable
-fun SettingsScreen(onBack: () -> Unit) {
+fun SettingsScreen(onBack: () -> Unit, onOpenEqualiser: () -> Unit = {}) {
     Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
         Row(
             modifier = Modifier.fillMaxWidth().padding(16.dp),
@@ -59,9 +59,9 @@ fun SettingsScreen(onBack: () -> Unit) {
             "Sleep timer" to "Off",
         ))
         SettingsCategory("Sound", listOf(
-            "Equaliser" to "Planned",
+            "Equaliser" to "On",
             "Bass boost" to "Planned",
-        ))
+        ), onFirstRowClick = onOpenEqualiser)
         SettingsCategory("Appearance", listOf(
             "Theme" to "Light",
             "Accent color" to "Orangs",
@@ -87,7 +87,11 @@ fun SettingsScreen(onBack: () -> Unit) {
 }
 
 @Composable
-private fun SettingsCategory(title: String, rows: List<Pair<String, String>>) {
+private fun SettingsCategory(
+    title: String,
+    rows: List<Pair<String, String>>,
+    onFirstRowClick: (() -> Unit)? = null,
+) {
     Text(title, modifier = Modifier.padding(horizontal = 20.dp, vertical = 6.dp),
         fontSize = 13.sp, fontWeight = FontWeight.Bold, color = Orangs)
     Column(
@@ -101,7 +105,7 @@ private fun SettingsCategory(title: String, rows: List<Pair<String, String>>) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clickable { }
+                    .clickable { if (i == 0) onFirstRowClick?.invoke() }
                     .padding(horizontal = 16.dp, vertical = 14.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
