@@ -134,14 +134,15 @@ private fun LanguageStep() {
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(39.dp)
-                    .clickable { selected = lang }
+                    .clickable(enabled = lang == "English") { selected = lang }
                     .padding(horizontal = 13.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(lang, fontFamily = Mono, fontSize = 13.sp,
-                    color = if (selected == lang) Orangs else InkBlack,
+                    color = if (selected == lang) Orangs else if (lang == "English") InkBlack else GrayText,
                     modifier = Modifier.weight(1f))
                 if (selected == lang) Text("✓", color = Orangs, fontSize = 16.sp)
+                if (lang != "English") Text("not available yet", fontFamily = Mono, fontSize = 10.sp, color = GrayText)
             }
         }
     }
@@ -215,7 +216,7 @@ private fun ReaderStep(onSkip: () -> Unit) {
         SheetTitle("Enable Reader")
         Spacer(Modifier.height(14.dp))
         Text(
-            "Enter your Google Gemini API key to enable the free \"Read Now\" feature.\nYou can get your API key for free from Google AI Studio.",
+            "Enter your Google Gemini API key to enable the \"Read Now\" feature.\nYou can create an API key in Google AI Studio. Pricing and limits are set by Google and not verified here.",
             fontFamily = Mono, fontSize = 10.sp, color = InkBlack, lineHeight = 13.sp,
         )
         Spacer(Modifier.height(14.dp))
