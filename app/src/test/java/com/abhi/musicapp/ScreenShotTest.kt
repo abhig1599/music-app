@@ -23,7 +23,7 @@ import org.robolectric.annotation.GraphicsMode
  */
 @RunWith(AndroidJUnit4::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
-@Config(sdk = [34])
+@Config(sdk = [34], instrumentedPackages = ["androidx.loader.content"])
 class ScreenShotTest {
 
     @get:Rule
