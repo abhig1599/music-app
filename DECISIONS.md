@@ -257,3 +257,8 @@ Figma Search frames also contain an Android keyboard instance and "File or folde
 - 15:02 Applied: past-records X now 2px round Black Canvas stroke (12dp glyph in 24dp box; glyph size ASSUMED from Download Detail).
 - 15:17 Hypothesis test (Main): theme-level ProvideTextStyle letterSpacing 0.sp to test whether M3 default letterSpacing (0.5sp) explains mono width delta (+0.5*chars ~ 5dp for 10 chars). Font sizes unchanged. Result pending CI.
 - 15:47 RESULT (CI green 626dc64): letterSpacing 0 reduced mono chip widths: Search chip ~130->124 (Figma 121), Pause-all ~119->113 (Figma 111). M3 default letterSpacing explained most of the delta; residual ~2-3dp unexplained (pixel-scan of fill, anti-aliasing/padding not isolated). Still not exact.
+
+## Past-records row interior reads (15:58 IST, node 47-13667)
+- Thumb Frame 50: 50x50, radius 10, Image fill (photo asset not shipped: non-match), padding 16/16 in its own frame (unapplied, inner).
+- Row gap thumb->text 10 (Frame 51 gap 10). Text column: hug 160x43, vertical, gap 4, padding 0. Applied: thumb radius 10 (was 8 inferred), column gap 4.
+- Still unread: title/sub font sizes (ours 18 / Geist Mono 12, inferred), Remove-all font size, search magnifier glyph, row stack gap (ours 4, inferred).

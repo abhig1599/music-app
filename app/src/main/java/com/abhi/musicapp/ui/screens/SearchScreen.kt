@@ -81,9 +81,9 @@ fun SearchScreen(onBack: () -> Unit, fixture: SearchFixture = SearchFixture.None
             }
             rows.forEach { (t, sub) ->
                 Row(Modifier.fillMaxWidth().height(72.dp).clip(RoundedCornerShape(10.dp)).background(PureWhite).padding(10.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Box(Modifier.size(50.dp).clip(RoundedCornerShape(8.dp)).background(PureWhite)) // photo thumbs not shipped
+                    Box(Modifier.size(50.dp).clip(RoundedCornerShape(10.dp)).background(PureWhite)) // Figma read: 50x50 radius 10, Image fill (photo not shipped = non-match)
                     Spacer(Modifier.width(10.dp))
-                    Column(Modifier.weight(1f)) {
+                    Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) { // Figma read: text column gap 4
                         Text(t, fontSize = 18.sp, color = InkBlack)
                         Text(sub, fontFamily = GeistMono, fontSize = 12.sp, color = InkBlack)
                     }
