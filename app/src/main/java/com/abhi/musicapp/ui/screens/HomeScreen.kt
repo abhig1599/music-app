@@ -278,8 +278,9 @@ fun HomeScreen(
             }
         }
 
-        MiniPlayer(
-            title = if (playerState.hasTrack) playerState.title else "Song name in a line...",
+        // Figma base Home (36-12141) has no player bar; it appears only in "Home page - song playing". Show only when a track is loaded.
+        if (playerState.hasTrack) MiniPlayer(
+            title = playerState.title,
             time = formatMs(playerState.positionMs),
             darkVariant = true,
             onClick = onOpenPlayer,
