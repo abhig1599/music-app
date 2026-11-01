@@ -254,3 +254,4 @@ Figma Search frames also contain an Android keyboard instance and "File or folde
 - Row X: Vector with 2px Black stroke (same as Download Detail X). Ours uses Material Close icon: NOT yet replaced (non-match).
 - Thumb radius: not read (panel selection got confused). Still inferred 8.
 - Row stack gap between rows not read.
+- 15:02 Applied: past-records X now 2px round Black Canvas stroke (12dp glyph in 24dp box; glyph size ASSUMED from Download Detail).

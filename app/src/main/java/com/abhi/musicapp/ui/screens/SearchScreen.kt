@@ -88,7 +88,13 @@ fun SearchScreen(onBack: () -> Unit, fixture: SearchFixture = SearchFixture.None
                         Text(sub, fontFamily = GeistMono, fontSize = 12.sp, color = InkBlack)
                     }
                     when (fixture) {
-                        SearchFixture.PastRecords -> Icon(Icons.Filled.Close, null, tint = InkBlack, modifier = Modifier.size(24.dp))
+                        SearchFixture.PastRecords -> Box(Modifier.size(24.dp), contentAlignment = Alignment.Center) { // Figma: Vector 2px Black stroke; 12x12 size ASSUMED same as Download Detail X
+                            androidx.compose.foundation.Canvas(Modifier.size(12.dp)) {
+                                val w = 2.dp.toPx()
+                                drawLine(InkBlack, androidx.compose.ui.geometry.Offset(0f, 0f), androidx.compose.ui.geometry.Offset(size.width, size.height), w, androidx.compose.ui.graphics.StrokeCap.Round)
+                                drawLine(InkBlack, androidx.compose.ui.geometry.Offset(size.width, 0f), androidx.compose.ui.geometry.Offset(0f, size.height), w, androidx.compose.ui.graphics.StrokeCap.Round)
+                            }
+                        }
                         else -> Icon(Icons.Filled.ChevronRight, null, tint = InkBlack, modifier = Modifier.size(24.dp))
                     }
                 }
