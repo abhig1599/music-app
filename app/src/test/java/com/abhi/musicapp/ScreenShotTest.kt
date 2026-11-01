@@ -68,6 +68,11 @@ class ScreenShotTest {
             title = "Song name in a line...", isPlaying = true, positionMs = 61_000L, durationMs = 192_000L, hasTrack = true))
     }
 
+    /** SHIPPED Home, fixture = null: real empty/denied library in Robolectric (no audio permission granted). */
+    @Test fun homeShippedDenied() = shot("home_shipped_denied") {
+        HomeScreen({}, {}, {}, {}, {}, {})
+    }
+
     /** Base Home state (Figma 36-12141): no track loaded, no mini-player. Fixture, DemoData rows. */
     @Test fun homeBase() = shot("home_base_fixture") {
         HomeScreen({}, {}, {}, {}, {}, {}, fixture = com.abhi.musicapp.playback.PlayerUiState())
