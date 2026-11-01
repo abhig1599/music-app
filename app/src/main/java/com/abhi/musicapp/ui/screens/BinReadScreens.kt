@@ -31,6 +31,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.border
+import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.ui.unit.sp
 import com.abhi.musicapp.ui.theme.GeistMono
 import com.abhi.musicapp.ui.theme.GrayText
@@ -104,7 +105,7 @@ fun RecycleBinScreen(onBack: () -> Unit, fixture: List<BinRow> = emptyList()) {
 @Composable
 fun ReadNowScreen(onBack: () -> Unit, fixtureApiName: String? = null, designComparison: Boolean = false) {
     val mono = GeistMono
-    FigmaPage("Read Now", onBack) {
+    FigmaPage("Read Now", onBack, titleSize = 30.sp, chevronBack = true) {
         Column(verticalArrangement = Arrangement.spacedBy(24.dp)) {
             if (fixtureApiName != null) {
                 Column(Modifier.fillMaxWidth().height(168.dp).clip(RoundedCornerShape(16.dp)).background(com.abhi.musicapp.ui.theme.FigmaWhite)
@@ -113,10 +114,10 @@ fun ReadNowScreen(onBack: () -> Unit, fixtureApiName: String? = null, designComp
                     Spacer(Modifier.height(13.dp))
                     Row(Modifier.height(46.dp), verticalAlignment = Alignment.CenterVertically) {
                         Column(Modifier.weight(1f)) {
-                            Text(fixtureApiName, fontFamily = mono, fontSize = 12.sp, fontWeight = FontWeight.Medium, color = InkBlack) // Geist Mono Medium (size not panel-verified)
+                            Text(fixtureApiName, fontFamily = mono, fontSize = 16.sp, fontWeight = FontWeight.Medium, color = InkBlack) // Geist Mono Medium 16 (read)
                             Text("...hello", fontSize = 14.sp, color = GrayText) // Helvetica Neue Regular 14 Gray (read)
                         }
-                        Icon(Icons.Filled.Delete, "Delete", tint = InkBlack, modifier = Modifier.size(20.dp))
+                        Icon(Icons.Outlined.Delete, "Delete", tint = GrayText, modifier = Modifier.size(20.dp)) // Figma: outlined vector 18x20, stroke Gray 1.5 round; Material outlined glyph is an approximation
                     }
                     Spacer(Modifier.height(13.dp))
                     ReadButton("Add API", dark = false, enabled = false)
@@ -134,7 +135,7 @@ fun ReadNowScreen(onBack: () -> Unit, fixtureApiName: String? = null, designComp
                 Text("Now I want to add a line that you can only add one API at a time, and if there are some issue with the Read Now feature, you can simply need to delete the API and add a new one to get it running.",
                 fontFamily = mono, fontSize = 12.sp, fontWeight = FontWeight.Medium, color = GrayText) // Geist Mono Medium 12 Gray (read)
             } else {
-                Text("Read Now is not available yet. No API is stored and nothing is sent anywhere.", fontFamily = mono, fontSize = 12.sp, fontWeight = FontWeight.Medium, color = GrayText)
+                Text("Read Now is not available yet. No API key is stored for this feature.", fontFamily = mono, fontSize = 12.sp, fontWeight = FontWeight.Medium, color = GrayText)
             }
         }
     }
@@ -144,6 +145,6 @@ fun ReadNowScreen(onBack: () -> Unit, fixtureApiName: String? = null, designComp
 private fun ReadButton(label: String, dark: Boolean, enabled: Boolean = true, designComparison: Boolean = false) {
     Box(Modifier.alpha(if (enabled || (dark && designComparison)) 1f else 0.5f).fillMaxWidth().height(48.dp).clip(RoundedCornerShape(10.dp))
         .background(if (dark) InkBlack else com.abhi.musicapp.ui.theme.GrayLight), contentAlignment = Alignment.Center) {
-        Text(label, fontFamily = GeistMono, fontSize = 11.sp, color = if (dark) com.abhi.musicapp.ui.theme.FigmaWhite else GrayText)
+        Text(label, fontFamily = GeistMono, fontSize = 16.sp, fontWeight = FontWeight.Medium, color = if (dark) com.abhi.musicapp.ui.theme.FigmaWhite else GrayText)
     }
 }
