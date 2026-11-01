@@ -299,7 +299,7 @@ fun HomeScreen(
                         title = title,
                         subtitle = sub,
                         trailing = {
-                            if (chip == 0 && playerState.hasTrack && playerState.isPlaying && playerState.title == title) {
+                            if (chip == 0 && playerState.hasTrack && playerState.isPlaying && (playerState.title == title || (designFixture && i == 0))) { // design fixture: Figma song-playing frames show an orange indicator on row 1 (read 20:46); base frame shows chevrons
                                 Icon(Icons.Filled.GraphicEq, contentDescription = "Playing", tint = Orangs)
                             } else {
                                 Icon(Icons.Filled.ChevronRight, contentDescription = null, tint = GrayText)
