@@ -93,7 +93,7 @@ fun SettingsScreen(onBack: () -> Unit, onRowClick: (String) -> Unit = {}, fixtur
             val open: (() -> Unit)? = if (fixture) null else ({ com.abhi.musicapp.library.LibraryRepository.openAppSettings(ctx) })
             ToggleRow("Music and audio", if (fixture) "Needed to read your songs" else "Needed to read your songs. Tap to open system settings", audioOn, open)
             Spacer(Modifier.height(13.dp))
-            ToggleRow("Notifications", if (fixture) "Playback controls in the shade" else "Playback controls in the shade. Tap to open system settings", notifOn, open)
+            ToggleRow("Notifications", if (fixture) "Playback controls in the shade" else "Notification permission. Tap to open system settings", notifOn, open)
         }
         Spacer(Modifier.height(6.dp))
         FigmaCard {
@@ -114,10 +114,18 @@ fun SettingsScreen(onBack: () -> Unit, onRowClick: (String) -> Unit = {}, fixtur
             }
             if (expanded) {
                 Spacer(Modifier.height(13.dp))
-                // Sample folder names from the design; real list comes from the library scan later.
-                listOf("Recording" to ".../DCIM/Audio/Recording", "Download" to ".../DCIM/Audio/Downloads",
+                // Design sample paths only in fixtures. Shipped state lists real MediaStore folders (read-only: no hide/show logic exists yet).
+                val vctx = androidx.compose.ui.platform.LocalContext.current
+                var realFolders by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf<List<Pair<String, String>>>(emptyList()) }
+                if (!fixture) androidx.compose.runtime.LaunchedEffect(Unit) {
+                    val all = com.abhi.musicapp.library.LibraryRepository.querySongs(vctx)
+                    realFolders = all.filter { it.folder.isNotEmpty() }.map { it.folder }.distinct().sorted().map { it.substringAfterLast('/') to it }
+                }
+                val sample = listOf("Recording" to ".../DCIM/Audio/Recording", "Download" to ".../DCIM/Audio/Downloads",
                     "Tunes" to ".../DCIM/Audio/Tunes", "Call Recording" to ".../DCIM/Audio/Recording",
-                    "Y-music" to ".../DCIM/Audio/Y-music").forEach { (n, path) ->
+                    "Y-music" to ".../DCIM/Audio/Y-music")
+                if (!fixture && realFolders.isEmpty()) Text("No music folders found. Needs audio permission and music files.", fontSize = 11.sp, color = GrayText)
+                (if (fixture) sample else realFolders).forEach { (n, path) ->
                     Row(Modifier.padding(vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
                         Box(Modifier.size(12.dp).clip(androidx.compose.foundation.shape.CircleShape)
                             .border(1.dp, GrayLight, androidx.compose.foundation.shape.CircleShape))
@@ -130,9 +138,9 @@ fun SettingsScreen(onBack: () -> Unit, onRowClick: (String) -> Unit = {}, fixtur
                 }
                 Spacer(Modifier.height(13.dp))
                 // Figma shows first Save disabled-looking, second enabled-looking. Visual only; neither has save logic.
-                WideButton("Save", dark = false, enabled = !fixture)
+                WideButton("Save", dark = false, enabled = false)
                 Spacer(Modifier.height(13.dp))
-                WideButton("Save", dark = false, enabled = true)
+                WideButton("Save", dark = false, enabled = fixture) // shipped: no hide/show logic exists, so disabled
             }
         }
         Spacer(Modifier.height(6.dp))

@@ -174,10 +174,10 @@ fun PlayerScreen(onBack: () -> Unit, fixture: PlayerUiState? = null, initialOver
         val pill = com.abhi.musicapp.ui.theme.GrayLight
         if (overlay != 0) Box(Modifier.fillMaxSize().clickable(indication = null, interactionSource = androidx.compose.runtime.remember { androidx.compose.foundation.interaction.MutableInteractionSource() }) { overlay = 0 })
         if (overlay == 1) Column(Modifier.offset(134.dp, 94.dp).width(232.dp).clip(androidx.compose.foundation.shape.RoundedCornerShape(8.dp)).background(sheet)) {
-            // Equaliser is drawn greyed out in the Figma menu: kept disabled (no EQ exists). Other entries only close the menu until their sheets are wired.
+            // Equaliser is drawn greyed out in the Figma menu: kept disabled (no EQ exists). Add to playlist is wired (shipped path, PlaylistStore); other entries only close the menu until wired.
             listOf("Sleep Time", "Add to playlist", "Share", "Speed", "Delete", "Equaliser", "Lyrics").forEach { t ->
                 val off = t == "Equaliser"
-                Row(Modifier.fillMaxWidth().height(51.dp).then(if (off) Modifier else Modifier.clickable { overlay = 0 }).padding(horizontal = 12.dp),
+                Row(Modifier.fillMaxWidth().height(51.dp).then(if (off) Modifier else Modifier.clickable { overlay = if (t == "Add to playlist" && fixture == null) 4 else 0 }).padding(horizontal = 12.dp),
                     verticalAlignment = Alignment.CenterVertically) {
                     Box(Modifier.size(16.dp).clip(androidx.compose.foundation.shape.RoundedCornerShape(3.dp)).background(if (off) pill else com.abhi.musicapp.ui.theme.GrayText)) // glyphs not matched
                     androidx.compose.foundation.layout.Spacer(Modifier.width(10.dp))
@@ -185,6 +185,7 @@ fun PlayerScreen(onBack: () -> Unit, fixture: PlayerUiState? = null, initialOver
                 }
             }
         }
+        if (overlay == 4) AddToPlaylistSheet(state.mediaId) { overlay = 0 } // shipped path only (menu sets 4 only when fixture == null)
         if (overlay == 2 || overlay == 3) {
             val left = overlay == 3
             val icons = if (left) listOf(Icons.Filled.Bluetooth, Icons.Filled.PhoneAndroid, Icons.Filled.Speaker) else listOf(Icons.Filled.VolumeOff, Icons.Filled.DarkMode)

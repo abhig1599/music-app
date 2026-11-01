@@ -123,6 +123,7 @@ fun AppNav() {
             PlaylistDetailScreen(
                 name = entry.arguments?.getString("name") ?: "Playlist",
                 onBack = { nav.popBackStack() },
+                onOpenPlayer = { nav.navigate(Routes.PLAYER) },
             )
         }
     }

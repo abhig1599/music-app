@@ -25,6 +25,7 @@ data class PlayerUiState(
     val positionMs: Long = 0L,
     val durationMs: Long = 0L,
     val hasTrack: Boolean = false,
+    val mediaId: Long = -1L,
 )
 
 /**
@@ -105,6 +106,7 @@ object PlayerManager {
             positionMs = c.currentPosition.coerceAtLeast(0L),
             durationMs = c.duration.coerceAtLeast(0L),
             hasTrack = c.currentMediaItem != null,
+            mediaId = c.currentMediaItem?.mediaId?.toLongOrNull() ?: -1L,
         )
     }
 }

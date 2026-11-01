@@ -267,12 +267,13 @@ fun HomeScreen(
                 else -> DemoData.songs
             } else when (chip) {
                 1 -> realFolders
+                2 -> remember(reload, chip) { com.abhi.musicapp.library.PlaylistStore(context).load().map { it.name to "${it.songIds.size} songs" } }
                 else -> emptyList()
             }
             if (rows.isEmpty()) {
                 Text(
                     when (chip) {
-                        2 -> "No playlists yet."
+                        2 -> "No playlists yet. Use Add to playlist in the player menu."
                         else -> if (!audioGranted) "Music permission is off, so your songs can't be read. Tap here to open system settings."
                             else if (chip == 1) "No folders found on this device." else "No songs found on this device."
                     },

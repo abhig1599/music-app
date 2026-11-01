@@ -45,11 +45,25 @@ fun FoldersScreen(onBack: () -> Unit, onOpenPlayer: () -> Unit = {}) {
 }
 
 @Composable
-fun PlaylistDetailScreen(name: String, onBack: () -> Unit) {
+fun PlaylistDetailScreen(name: String, onBack: () -> Unit, onOpenPlayer: () -> Unit = {}) {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    var songs by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf<List<com.abhi.musicapp.library.Song>>(emptyList()) }
+    androidx.compose.runtime.LaunchedEffect(name) {
+        val ids = com.abhi.musicapp.library.PlaylistStore(context).load().firstOrNull { it.name == name }?.songIds ?: emptyList()
+        val byId = com.abhi.musicapp.library.LibraryRepository.querySongs(context).associateBy { it.id }
+        songs = ids.mapNotNull { byId[it] } // songs no longer on the device are skipped, not deleted from the playlist
+    }
     Column(modifier = Modifier.fillMaxSize()) {
         Header(name, onBack)
-        Text("Songs in this playlist will appear here.",
-            color = GrayText, fontSize = 13.sp, modifier = Modifier.padding(horizontal = 24.dp))
+        if (songs.isEmpty()) {
+            Text("No playable songs in this playlist. Add songs from the player menu (Add to playlist).",
+                color = GrayText, fontSize = 13.sp, modifier = Modifier.padding(horizontal = 24.dp))
+        }
+        songs.forEachIndexed { i, song ->
+            SongRow(song.title, song.artist, trailing = {
+                Icon(Icons.Filled.ChevronRight, contentDescription = null, tint = GrayText)
+            }, onClick = { com.abhi.musicapp.playback.PlayerManager.playAll(songs, i); onOpenPlayer() })
+        }
     }
 }
 
