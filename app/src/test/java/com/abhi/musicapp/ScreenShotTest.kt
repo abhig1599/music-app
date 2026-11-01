@@ -68,6 +68,11 @@ class ScreenShotTest {
             title = "Song name in a line...", isPlaying = true, positionMs = 61_000L, durationMs = 192_000L, hasTrack = true))
     }
 
+    /** Base Home state (Figma 36-12141): no track loaded, no mini-player. Fixture, DemoData rows. */
+    @Test fun homeBase() = shot("home_base_fixture") {
+        HomeScreen({}, {}, {}, {}, {}, {}, fixture = com.abhi.musicapp.playback.PlayerUiState())
+    }
+
     @Test fun homeUpdateFixture() = shot("home_update_fixture") {
         HomeScreen({}, {}, {}, {}, {}, {}, updateAvailableFixture = true, fixture = com.abhi.musicapp.playback.PlayerUiState(
             title = "Song name in a line...", isPlaying = true, positionMs = 61_000L, durationMs = 192_000L, hasTrack = true))
