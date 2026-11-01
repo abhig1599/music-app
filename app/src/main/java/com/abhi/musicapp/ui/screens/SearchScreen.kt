@@ -64,7 +64,7 @@ fun SearchScreen(onBack: () -> Unit, fixture: SearchFixture = SearchFixture.None
         }
         Spacer(Modifier.height(26.dp))
         Row(Modifier.fillMaxWidth().height(48.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-            Box(Modifier.weight(1f).height(48.dp).clip(RoundedCornerShape(10.dp)).border(1.dp, androidx.compose.ui.graphics.Color(0xFFD3D3D1), RoundedCornerShape(10.dp)).padding(start = 12.dp, end = 8.dp), contentAlignment = Alignment.CenterStart) {
+            Box(Modifier.weight(1f).height(48.dp).clip(RoundedCornerShape(10.dp)).background(androidx.compose.ui.graphics.Color(0xFFEAEAE8)).border(1.dp, androidx.compose.ui.graphics.Color(0xFFE3E3E1), RoundedCornerShape(10.dp)).padding(start = 12.dp, end = 8.dp), contentAlignment = Alignment.CenterStart) {
                 if (query.isEmpty()) Text("Search what you need baby...", fontSize = 18.sp, color = GrayText)
                 if (fixture == SearchFixture.None) BasicTextField(typed, { typed = it }, singleLine = true, textStyle = TextStyle(fontSize = 18.sp, color = InkBlack))
                 else if (query.isNotEmpty()) Text(query, fontSize = 18.sp, color = GrayText)

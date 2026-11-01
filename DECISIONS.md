@@ -229,3 +229,9 @@ Figma Search frames also contain an Android keyboard instance and "File or folde
 ## Download Detail part 6 (reads 13:00 IST)
 - Group 5 (chip row band): 475x46 at x0, corner radius 10, fill White (opacity unread; same F0F0F0 sample used). Chips centered vertically (36.95 in 46). Band runs past the frame edge and is clipped; ours is clipped at content width 351 (small difference). Left inset ~5 is from the capture, not read.
 - Progress slot: 32x32 frame, inner Group 26.67x26.67 at (2.67,2.67), stroke 2 round, pause vector in the middle. Pause bar size/gap (2x8, gap 3) INFERRED. Figma track looks faint/dotted; ours is a plain faint ring.
+
+## Search screen reads (13:28 IST, node 47-13151)
+- Title "Search...": Helvetica Neue Bold 30, 126x37 hug, line height auto (was inferred, now READ).
+- Search field: 288 wide (Fill) x 48 hug, auto layout, padding L12 T14 R56 B14, radius 10, fill EAEAE8, stroke token "Bg 2" (E3E3E1) 1px Outside. Placeholder text: Helvetica Neue Regular 18, line height 20, 239 hug, color token text/text-tertiary (hex NOT read). Applied: fill and stroke E3E3E1 (previous D3D3D1 was wrong). Stroke drawn inside, not outside (small adaptation).
+- Search screen frame is 390x798 content above a 390x244 Android keyboard component (Figma library). Ours uses the system IME, not matched.
+- Still unread: "Up to date" chip numbers on Search, thumb radius, Remove all font.
