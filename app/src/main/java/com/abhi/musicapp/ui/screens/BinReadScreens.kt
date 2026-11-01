@@ -130,8 +130,12 @@ fun ReadNowScreen(onBack: () -> Unit, fixtureApiName: String? = null, designComp
                 ReadButton(if (designComparison) "Add API" else "Add API (unavailable)", dark = true, enabled = false, designComparison = designComparison)
             }
             // The design carries this explanatory note under the cards; reproduced as drawn.
-            Text("Now I want to add a line that you can only add one API at a time, and if there are some issue with the Read Now feature, you can simply need to delete the API and add a new one to get it running.",
+            if (designComparison) {
+                Text("Now I want to add a line that you can only add one API at a time, and if there are some issue with the Read Now feature, you can simply need to delete the API and add a new one to get it running.",
                 fontFamily = mono, fontSize = 12.sp, fontWeight = FontWeight.Medium, color = GrayText) // Geist Mono Medium 12 Gray (read)
+            } else {
+                Text("Read Now is not available yet. No API is stored and nothing is sent anywhere.", fontFamily = mono, fontSize = 12.sp, fontWeight = FontWeight.Medium, color = GrayText)
+            }
         }
     }
 }
