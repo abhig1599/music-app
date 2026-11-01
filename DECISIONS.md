@@ -202,3 +202,7 @@ Still unread: chip radius/padding/fonts, row text sizes, state-icon glyph sizes,
 ## Download Detail exact reads, part 2 (59-2079)
 Title "Downloads": Helvetica Neue Bold 30 (shared FigmaPage default stays 28 for other screens; Download Detail overrides to 30). "Pause all" pill: 111.95x36.95 hug, padding 6.97, radius 8.72, fill Bg 2 (#E3E3E1), auto-layout. Chip row Frame 4: 475x46, gap 12, padding 6, radius 10 (its white fill is not visible in the render, not applied). Chip: 65.56x36.95 hug, padding 6.97, radius 8.72, inner gap 2.62 (label to superscript), selected fill Orangs. Unselected chips assumed Bg 2 like the pill (not individually read).
 Still unread: chip/pill text sizes, "more" chip, row text sizes, state-icon sizes, back button radius.
+
+## Download Detail exact reads, part 3 (59-2079)
+Row: 351x72, padding 10, radius 10, white. Left group 292x50: thumb 50, gap 10, text frame 153x43 vertical gap 4. Title Helvetica Neue Regular 18 (h21). Subtitle Geist Mono Medium 14 (h18, 110 wide). Status icon slot 32x32 (clip), glyph group 26.67 with 2px black round stroke (error "!" row read; check/progress/X glyph sizes not read individually). Applied: title 18 Regular, subtitle 14 Medium mono, gap 10/4, slot 32, error ring 26.67/2.
+Still unread: chip label and superscript sizes, back chevron glyph, check/progress/X glyph sizes, Search row text sizes. Back icon is a chevron in Figma (ours arrow).

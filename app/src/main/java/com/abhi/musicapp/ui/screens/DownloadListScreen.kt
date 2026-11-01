@@ -56,14 +56,14 @@ fun DownloadListFixture(onBack: () -> Unit = {}) {
                 listOf(0, 1, 2, 3).forEach { state ->
                     Row(Modifier.fillMaxWidth().height(72.dp).clip(RoundedCornerShape(10.dp)).background(PureWhite).padding(10.dp), verticalAlignment = Alignment.CenterVertically) {
                         Box(Modifier.size(50.dp).clip(RoundedCornerShape(8.dp)).background(GrayLight)) // photo not shipped
-                        Spacer(Modifier.width(13.dp))
-                        Column(Modifier.weight(1f)) {
-                            Text("Rolling in the Deep", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = InkBlack)
-                            Text("Playlist Name", fontFamily = GeistMono, fontSize = 10.sp, color = InkBlack)
+                        Spacer(Modifier.width(10.dp))
+                        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                            Text("Rolling in the Deep", fontSize = 18.sp, fontWeight = FontWeight.Normal, color = InkBlack)
+                            Text("Playlist Name", fontFamily = GeistMono, fontSize = 14.sp, fontWeight = FontWeight.Medium, color = InkBlack)
                         }
-                        Box(Modifier.size(28.dp), contentAlignment = Alignment.Center) {
+                        Box(Modifier.size(32.dp), contentAlignment = Alignment.Center) {
                             when (state) {
-                                0 -> Box(Modifier.size(24.dp).border(1.5.dp, InkBlack, CircleShape), contentAlignment = Alignment.Center) { Text("!", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = InkBlack) }
+                                0 -> Box(Modifier.size(26.67.dp).border(2.dp, InkBlack, CircleShape), contentAlignment = Alignment.Center) { Text("!", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = InkBlack) }
                                 1 -> { CircularProgressIndicator(progress = { 0.6f }, color = Orangs, trackColor = GrayLight, strokeWidth = 2.dp, modifier = Modifier.size(26.dp))
                                     Box(Modifier.width(2.dp).height(8.dp).background(InkBlack)) }
                                 2 -> Box(Modifier.size(24.dp).clip(CircleShape).background(InkBlack), contentAlignment = Alignment.Center) { Icon(Icons.Filled.Check, null, tint = PureWhite, modifier = Modifier.size(14.dp)) }
