@@ -262,3 +262,10 @@ Figma Search frames also contain an Android keyboard instance and "File or folde
 - Thumb Frame 50: 50x50, radius 10, Image fill (photo asset not shipped: non-match), padding 16/16 in its own frame (unapplied, inner).
 - Row gap thumb->text 10 (Frame 51 gap 10). Text column: hug 160x43, vertical, gap 4, padding 0. Applied: thumb radius 10 (was 8 inferred), column gap 4.
 - Still unread: title/sub font sizes (ours 18 / Geist Mono 12, inferred), Remove-all font size, search magnifier glyph, row stack gap (ours 4, inferred).
+
+## Past-records row reads, part 2 (16:27 IST, node 47-13667)
+- Row Frame 43: fill White, stroke D9D9D9 100% 1px Inside, radius 10, no effects. Applied (1dp border; our border sits inside via padding after border = Inside).
+- Row title: Helvetica Neue Regular 18, letter spacing 0%, line height Auto, 113x21 hug, fill Black. Confirms size 18 and letterSpacing 0 (for this text).
+- X: Frame 24x24, clip content, Vector inside (vector size still not read directly; 12 assumed).
+- Subtitle font/size NOT read (panel read failed; mono 12 still inferred). Remove-all font and magnifier glyph unread.
+- Why rows looked greyer in the capture: stroke D9D9D9 plus canvas scaling; not a different fill.
