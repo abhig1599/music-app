@@ -90,7 +90,7 @@ fun RecycleBinScreen(onBack: () -> Unit, fixture: List<BinRow> = emptyList()) {
 }
 
 /**
- * Read Now (Reader). Cards: white, r16, 351 wide; API card ~166 high, empty-state card ~265 high (estimates from 68% zoom), gap 24.
+ * Read Now (Reader). Cards: white, r16, 351 wide; API card 351x168 (pad 14/16/14/10, gap 13; title row 20, API row 321x46, button 321x48), empty card 351x267.52, gap 24 (Design panel). Button radius/fonts estimated.
  * The Reader is optional/undefined: Add API is disabled, no key is accepted or stored, no AI call exists.
  */
 @Composable
@@ -99,21 +99,22 @@ fun ReadNowScreen(onBack: () -> Unit, fixtureApiName: String? = null) {
     FigmaPage("Read Now", onBack) {
         Column(verticalArrangement = Arrangement.spacedBy(24.dp)) {
             if (fixtureApiName != null) {
-                Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(PureWhite).padding(14.dp)) {
-                    Text("API Collection", fontSize = 12.sp, color = InkBlack)
-                    Spacer(Modifier.height(14.dp))
-                    Row(verticalAlignment = Alignment.CenterVertically) {
+                Column(Modifier.fillMaxWidth().height(168.dp).clip(RoundedCornerShape(16.dp)).background(PureWhite)
+                    .padding(start = 14.dp, end = 14.dp, top = 16.dp, bottom = 10.dp)) {
+                    Text("API Collection", fontSize = 12.sp, color = InkBlack, modifier = Modifier.height(20.dp))
+                    Spacer(Modifier.height(13.dp))
+                    Row(Modifier.height(46.dp), verticalAlignment = Alignment.CenterVertically) {
                         Column(Modifier.weight(1f)) {
                             Text(fixtureApiName, fontFamily = mono, fontSize = 12.sp, fontWeight = FontWeight.Bold, color = InkBlack)
                             Text("...hello", fontFamily = mono, fontSize = 9.sp, color = GrayText)
                         }
                         Icon(Icons.Filled.Delete, "Delete", tint = InkBlack, modifier = Modifier.size(20.dp))
                     }
-                    Spacer(Modifier.height(14.dp))
-                    ReadButton("Add API", dark = false)
+                    Spacer(Modifier.height(13.dp))
+                    ReadButton("Add API", dark = false, enabled = false)
                 }
             }
-            Column(Modifier.fillMaxWidth().height(265.dp).clip(RoundedCornerShape(16.dp)).background(PureWhite).padding(14.dp)) {
+            Column(Modifier.fillMaxWidth().height(267.52.dp).clip(RoundedCornerShape(16.dp)).background(PureWhite).padding(start = 14.dp, end = 14.dp, top = 16.dp, bottom = 10.dp)) {
                 Text("API Collection", fontSize = 12.sp, color = InkBlack)
                 Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
                     Text("No API added yet", fontSize = 11.sp, color = InkBlack)
@@ -122,14 +123,14 @@ fun ReadNowScreen(onBack: () -> Unit, fixtureApiName: String? = null) {
             }
             // The design carries this explanatory note under the cards; reproduced as drawn.
             Text("Now I want to add a line that you can only add one API at a time, and if there are some issue with the Read Now feature, you can simply need to delete the API and add a new one to get it running.",
-                fontFamily = mono, fontSize = 9.sp, color = InkBlack)
+                fontFamily = mono, fontSize = 12.sp, fontWeight = FontWeight.Medium, color = InkBlack)
         }
     }
 }
 
 @Composable
 private fun ReadButton(label: String, dark: Boolean, enabled: Boolean = true) {
-    Box(Modifier.alpha(if (enabled) 1f else 0.5f).fillMaxWidth().height(40.dp).clip(RoundedCornerShape(10.dp))
+    Box(Modifier.alpha(if (enabled) 1f else 0.5f).fillMaxWidth().height(48.dp).clip(RoundedCornerShape(10.dp))
         .background(if (dark) InkBlack else com.abhi.musicapp.ui.theme.GrayLight), contentAlignment = Alignment.Center) {
         Text(label, fontFamily = GeistMono, fontSize = 11.sp, color = if (dark) PureWhite else GrayText)
     }
