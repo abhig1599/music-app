@@ -193,3 +193,4 @@ Open (tracked): Equaliser/Theme/Ringtone/Backup/Download-location screens have n
 - Header Frame 6: X26 Y46 W344 H37. Input row: X26 Y109 W344 H48 gap 8. Field: W288 fill, H48, pad L12/T14/R56/B14, radius 10, fill EAEAE8 (= Bg), placeholder Helvetica Neue Regular 18 / line 20 at (12,14). Button: 48x48, radius 10, Orangs.
 - Past-records list Frame 71: X26 Y173 W344 H279, vertical gap 4. Row (Frame 43..): W344 H72 hug, pad 10, radius 10, fill White; content Frame 51 292x50 gap 13. "Remove all" frame: 344x51, vertical pad 16.
 - Applied to SearchScreen: row 48/radius 10/18sp placeholder, rows 72 white pad 10 gap 4, list start 173, Remove-all 51. NOT read: field stroke (1dp D3D3D1 inferred from render, not a read), row title/subtitle font sizes (still 14/10 estimates), thumb radius, X icon size.
+- Thumb-to-text gap 10 (Frame 51), action icon frame 24x24 (applied). Text font sizes of rows still unread.

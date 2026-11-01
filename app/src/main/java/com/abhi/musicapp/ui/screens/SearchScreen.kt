@@ -70,7 +70,7 @@ fun SearchScreen(onBack: () -> Unit, fixture: SearchFixture = SearchFixture.None
                 else if (query.isNotEmpty()) Text(query, fontSize = 18.sp, color = GrayText)
             }
             Box(Modifier.size(48.dp).clip(RoundedCornerShape(10.dp)).background(Orangs), contentAlignment = Alignment.Center) {
-                Icon(Icons.Filled.Search, "Search", tint = InkBlack, modifier = Modifier.size(20.dp))
+                Icon(Icons.Filled.Search, "Search", tint = InkBlack, modifier = Modifier.size(24.dp))
             }
         }
         Spacer(Modifier.height(16.dp))
@@ -82,14 +82,14 @@ fun SearchScreen(onBack: () -> Unit, fixture: SearchFixture = SearchFixture.None
             rows.forEach { (t, sub) ->
                 Row(Modifier.fillMaxWidth().height(72.dp).clip(RoundedCornerShape(10.dp)).background(PureWhite).padding(10.dp), verticalAlignment = Alignment.CenterVertically) {
                     Box(Modifier.size(50.dp).clip(RoundedCornerShape(8.dp)).background(PureWhite)) // photo thumbs not shipped
-                    Spacer(Modifier.width(13.dp))
+                    Spacer(Modifier.width(10.dp))
                     Column(Modifier.weight(1f)) {
                         Text(t, fontSize = 14.sp, color = InkBlack)
                         Text(sub, fontFamily = GeistMono, fontSize = 10.sp, color = InkBlack)
                     }
                     when (fixture) {
-                        SearchFixture.PastRecords -> Icon(Icons.Filled.Close, null, tint = InkBlack, modifier = Modifier.size(20.dp))
-                        else -> Icon(Icons.Filled.ChevronRight, null, tint = InkBlack, modifier = Modifier.size(20.dp))
+                        SearchFixture.PastRecords -> Icon(Icons.Filled.Close, null, tint = InkBlack, modifier = Modifier.size(24.dp))
+                        else -> Icon(Icons.Filled.ChevronRight, null, tint = InkBlack, modifier = Modifier.size(24.dp))
                     }
                 }
             }
