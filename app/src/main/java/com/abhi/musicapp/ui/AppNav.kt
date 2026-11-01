@@ -41,7 +41,7 @@ object Routes {
     const val RECYCLE = "recycle"
     const val READ_NOW = "readnow"
     const val PLAYLIST_DETAIL = "playlist/{name}"
-    fun playlistDetail(name: String) = "playlist/$name"
+    fun playlistDetail(name: String) = "playlist/${android.net.Uri.encode(name)}"
 }
 
 private const val PREFS = "music_app_prefs"
