@@ -235,3 +235,7 @@ Figma Search frames also contain an Android keyboard instance and "File or folde
 - Search field: 288 wide (Fill) x 48 hug, auto layout, padding L12 T14 R56 B14, radius 10, fill EAEAE8, stroke token "Bg 2" (E3E3E1) 1px Outside. Placeholder text: Helvetica Neue Regular 18, line height 20, 239 hug, color token text/text-tertiary (hex NOT read). Applied: fill and stroke E3E3E1 (previous D3D3D1 was wrong). Stroke drawn inside, not outside (small adaptation).
 - Search screen frame is 390x798 content above a 390x244 Android keyboard component (Figma library). Ours uses the system IME, not matched.
 - Still unread: "Up to date" chip numbers on Search, thumb radius, Remove all font.
+
+## Search chip (read 13:57 IST)
+- "Up to date" on Search: Frame 2 auto layout, 121x36.95 hug, padding 6.97, gap 2.62, radius 8.72, fill token Bg 2 (E3E3E1). Text Geist Mono Regular 18, 108x23. Applied (was inferred 14sp/GrayLight).
+- Search past-records frame (thumb radius, Remove all font) still unread.

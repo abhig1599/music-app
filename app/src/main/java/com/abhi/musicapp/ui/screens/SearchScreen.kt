@@ -59,8 +59,8 @@ fun SearchScreen(onBack: () -> Unit, fixture: SearchFixture = SearchFixture.None
         Row(Modifier.fillMaxWidth().height(37.dp), verticalAlignment = Alignment.CenterVertically) {
             Text("Search...", fontSize = 30.sp, fontWeight = FontWeight.Bold, color = InkBlack)
             Spacer(Modifier.weight(1f))
-            Text("Up to date", fontFamily = GeistMono, fontSize = 14.sp, color = InkBlack,
-                modifier = Modifier.clip(RoundedCornerShape(8.dp)).background(GrayLight).padding(horizontal = 10.dp, vertical = 8.dp))
+            Text("Up to date", fontFamily = GeistMono, fontSize = 18.sp, lineHeight = 23.sp, color = InkBlack, // Figma read: Geist Mono Regular 18, chip 121x36.95, pad 6.97, radius 8.72, fill Bg 2
+                modifier = Modifier.clip(RoundedCornerShape(8.72.dp)).background(androidx.compose.ui.graphics.Color(0xFFE3E3E1)).padding(6.97.dp))
         }
         Spacer(Modifier.height(26.dp))
         Row(Modifier.fillMaxWidth().height(48.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
