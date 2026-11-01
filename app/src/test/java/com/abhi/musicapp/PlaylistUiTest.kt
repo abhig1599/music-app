@@ -29,7 +29,7 @@ class PlaylistUiTest {
         var done = false
         rule.setContent { MusicAppTheme { AddToPlaylistSheet(songId = 7L) { done = true } } }
         rule.onNodeWithText("New playlist").performClick()
-        rule.onNodeWithText("Playlist Name...").performTextInput("Gym")
+        rule.onNode(androidx.compose.ui.test.hasSetTextAction()).performTextInput("Gym")
         rule.onNodeWithText("Create").performClick()
         rule.waitForIdle()
         val p = PlaylistStore(ctx).load().single()
