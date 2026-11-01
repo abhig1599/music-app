@@ -57,7 +57,7 @@ fun SearchScreen(onBack: () -> Unit, fixture: SearchFixture = SearchFixture.None
     Column(Modifier.fillMaxSize().padding(horizontal = 26.dp)) {
         Spacer(Modifier.height(46.dp))
         Row(Modifier.fillMaxWidth().height(37.dp), verticalAlignment = Alignment.CenterVertically) {
-            Text("Search...", fontSize = 28.sp, fontWeight = FontWeight.Bold, color = InkBlack)
+            Text("Search...", fontSize = 30.sp, fontWeight = FontWeight.Bold, color = InkBlack)
             Spacer(Modifier.weight(1f))
             Text("Up to date", fontFamily = GeistMono, fontSize = 14.sp, color = InkBlack,
                 modifier = Modifier.clip(RoundedCornerShape(8.dp)).background(GrayLight).padding(horizontal = 10.dp, vertical = 8.dp))
@@ -84,8 +84,8 @@ fun SearchScreen(onBack: () -> Unit, fixture: SearchFixture = SearchFixture.None
                     Box(Modifier.size(50.dp).clip(RoundedCornerShape(8.dp)).background(PureWhite)) // photo thumbs not shipped
                     Spacer(Modifier.width(10.dp))
                     Column(Modifier.weight(1f)) {
-                        Text(t, fontSize = 14.sp, color = InkBlack)
-                        Text(sub, fontFamily = GeistMono, fontSize = 10.sp, color = InkBlack)
+                        Text(t, fontSize = 18.sp, color = InkBlack)
+                        Text(sub, fontFamily = GeistMono, fontSize = 12.sp, color = InkBlack)
                     }
                     when (fixture) {
                         SearchFixture.PastRecords -> Icon(Icons.Filled.Close, null, tint = InkBlack, modifier = Modifier.size(24.dp))
@@ -95,7 +95,7 @@ fun SearchScreen(onBack: () -> Unit, fixture: SearchFixture = SearchFixture.None
             }
             if (fixture == SearchFixture.PastRecords) {
                 Box(Modifier.fillMaxWidth().height(51.dp), contentAlignment = Alignment.Center) {
-                    Text("Remove all", fontSize = 12.sp, color = InkBlack)
+                    Text("Remove all", fontSize = 16.sp, color = InkBlack)
                 }
             }
         }

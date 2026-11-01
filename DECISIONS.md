@@ -206,3 +206,8 @@ Still unread: chip/pill text sizes, "more" chip, row text sizes, state-icon size
 ## Download Detail exact reads, part 3 (59-2079)
 Row: 351x72, padding 10, radius 10, white. Left group 292x50: thumb 50, gap 10, text frame 153x43 vertical gap 4. Title Helvetica Neue Regular 18 (h21). Subtitle Geist Mono Medium 14 (h18, 110 wide). Status icon slot 32x32 (clip), glyph group 26.67 with 2px black round stroke (error "!" row read; check/progress/X glyph sizes not read individually). Applied: title 18 Regular, subtitle 14 Medium mono, gap 10/4, slot 32, error ring 26.67/2.
 Still unread: chip label and superscript sizes, back chevron glyph, check/progress/X glyph sizes, Search row text sizes. Back icon is a chevron in Figma (ours arrow).
+
+## Search row text (47-13667) - partly measured
+Measured from hug boxes in the Design panel overlay: row title text box 93-113 x 21 hug (Helvetica Neue 18, same as Download Detail), placeholder 239x20, "Remove all" 344 fill x 19 hug.
+INFERRED, not read from the font field: "Remove all" 16 (19px hug), subtitle mono 12 (visible width ~57px for "10 songs" = 7.2/char), header title 30 (header hug height 37 equals Download Detail's 30pt title). Applied these; font fields not individually opened.
+Figma Search frames also contain an Android keyboard instance and "File or folder name" subtitle on row 1 (we render no keyboard; system IME at runtime).
