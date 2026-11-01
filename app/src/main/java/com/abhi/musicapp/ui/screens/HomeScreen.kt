@@ -101,7 +101,7 @@ fun HomeScreen(
         // Measured from his Figma home frame (390x844 dp, 68%-zoom crop rescaled 1:1):
         // header centre y~65, mosaic y 110-272 / 289-450, chips y 471-507, list from y 528.
         val blockBg = com.abhi.musicapp.ui.theme.GrayLight
-        val circleBg = androidx.compose.ui.graphics.Color.White
+        val circleBg = com.abhi.musicapp.ui.theme.FigmaWhite // Figma per-use fill style "White" READ on Search circle (63x63 r31.5 pad 20/19); other circles ASSUMED same
         val monoFont = com.abhi.musicapp.ui.theme.GeistMono
         Spacer(Modifier.height(46.dp))
         Row(
