@@ -1,5 +1,6 @@
 package com.abhi.musicapp.ui.theme
 
+import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
@@ -62,7 +63,10 @@ fun MusicAppTheme(content: @Composable () -> Unit) {
         ThemeState.Mode.SYSTEM -> isSystemInDarkTheme()
     }
     val colors = (if (dark) MusicColorsDark else MusicColors).copy(primary = ThemeState.accent.value)
-    MaterialTheme(colorScheme = colors, content = content)
+    MaterialTheme(colorScheme = colors) {
+        // HYPOTHESIS TEST: M3 text styles carry letterSpacing (e.g. bodyLarge 0.5sp); Figma letter spacing for these frames is unread (assumed 0). Font sizes untouched.
+        androidx.compose.material3.ProvideTextStyle(androidx.compose.ui.text.TextStyle(letterSpacing = 0.sp), content)
+    }
 }
 
 /** Geist Mono (SIL OFL 1.1, see licenses/GeistMono-OFL.txt) - the mono face used in the Figma. */

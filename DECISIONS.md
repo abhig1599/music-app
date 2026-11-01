@@ -255,3 +255,4 @@ Figma Search frames also contain an Android keyboard instance and "File or folde
 - Thumb radius: not read (panel selection got confused). Still inferred 8.
 - Row stack gap between rows not read.
 - 15:02 Applied: past-records X now 2px round Black Canvas stroke (12dp glyph in 24dp box; glyph size ASSUMED from Download Detail).
+- 15:17 Hypothesis test (Main): theme-level ProvideTextStyle letterSpacing 0.sp to test whether M3 default letterSpacing (0.5sp) explains mono width delta (+0.5*chars ~ 5dp for 10 chars). Font sizes unchanged. Result pending CI.
