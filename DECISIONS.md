@@ -256,3 +256,4 @@ Figma Search frames also contain an Android keyboard instance and "File or folde
 - Row stack gap between rows not read.
 - 15:02 Applied: past-records X now 2px round Black Canvas stroke (12dp glyph in 24dp box; glyph size ASSUMED from Download Detail).
 - 15:17 Hypothesis test (Main): theme-level ProvideTextStyle letterSpacing 0.sp to test whether M3 default letterSpacing (0.5sp) explains mono width delta (+0.5*chars ~ 5dp for 10 chars). Font sizes unchanged. Result pending CI.
+- 15:47 RESULT (CI green 626dc64): letterSpacing 0 reduced mono chip widths: Search chip ~130->124 (Figma 121), Pause-all ~119->113 (Figma 111). M3 default letterSpacing explained most of the delta; residual ~2-3dp unexplained (pixel-scan of fill, anti-aliasing/padding not isolated). Still not exact.
