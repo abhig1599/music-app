@@ -276,3 +276,7 @@ Figma Search frames also contain an Android keyboard instance and "File or folde
 
 ## Row fill sampled (16:58 IST)
 - Figma panel says row fill = style "White", but the rendered Figma capture samples F0F0F0 in row interiors (same value as the Download Detail chip band F0F0F0). So the "White" style likely is not FFFFFF (hex not read from the styles panel). SAMPLED, not read. Applied F0F0F0 to the Search past-records rows only. NOT applied globally: other screens that use "White" (PureWhite in code) need their own check.
+
+## "White" style hex READ (17:09 IST)
+- Figma Edit color style "White" (view only, closed without edits): F0F0F0, 100%. Reconciles the 16:58 sampled row fill: Search past-records row F0F0F0 is now source-grounded (row fill = style White).
+- Theme.kt has `PureWhite = FFFFFF // "White"`: token mismatch with Figma. NOT changed globally yet. PureWhite is used in ~14 files; each use must be checked as (a) Figma style "White" -> F0F0F0 or (b) literal white (e.g. glyph on orange, keyboard) -> keep. Inventory: Common 6, SleepPill 4, Settings 4, BinRead 5, Downloads 3, DownloadList 2, Player 3, PlayerSheetFixtures 2, Themes 2, Backup/Eq/Onboarding/Ringtone/Search 1 each, Theme.kt 3.
