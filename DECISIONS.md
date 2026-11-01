@@ -239,3 +239,7 @@ Figma Search frames also contain an Android keyboard instance and "File or folde
 ## Search chip (read 13:57 IST)
 - "Up to date" on Search: Frame 2 auto layout, 121x36.95 hug, padding 6.97, gap 2.62, radius 8.72, fill token Bg 2 (E3E3E1). Text Geist Mono Regular 18, 108x23. Applied (was inferred 14sp/GrayLight).
 - Search past-records frame (thumb radius, Remove all font) still unread.
+
+## Search content width (14:23 IST)
+- Figma shows the title/field rows as 344 wide (selection badge 344x48). In the capture the content spans x=26.5..370dp, so right inset is about 20, not 26. Ours was symmetric 26 (338 wide), which caused the chip to sit ~6dp left. Changed Search to start 26 / end 20. Left/right insets are DERIVED from the capture, not exact reads. Other screens untouched, unverified.
+- Chip width (121) is consistent with Geist Mono 18 x 10 chars + 2x6.97 padding, so the chip itself was not the cause.

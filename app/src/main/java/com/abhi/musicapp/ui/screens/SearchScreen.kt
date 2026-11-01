@@ -54,7 +54,7 @@ enum class SearchFixture { None, PastRecords, Recommendations }
 fun SearchScreen(onBack: () -> Unit, fixture: SearchFixture = SearchFixture.None) {
     var typed by remember { mutableStateOf("") }
     val query = if (fixture == SearchFixture.Recommendations) "Hello" else typed
-    Column(Modifier.fillMaxSize().padding(horizontal = 26.dp)) {
+    Column(Modifier.fillMaxSize().padding(start = 26.dp, end = 20.dp)) { // content width 344 (Figma selection badge 344x48 on field row); left 26 and right 20 are derived from the capture, not read
         Spacer(Modifier.height(46.dp))
         Row(Modifier.fillMaxWidth().height(37.dp), verticalAlignment = Alignment.CenterVertically) {
             Text("Search...", fontSize = 30.sp, fontWeight = FontWeight.Bold, color = InkBlack)
