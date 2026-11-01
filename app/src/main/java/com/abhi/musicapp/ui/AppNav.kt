@@ -8,6 +8,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.abhi.musicapp.playback.PlayerManager
+import com.abhi.musicapp.ui.screens.RecycleBinScreen
+import com.abhi.musicapp.ui.screens.ReadNowScreen
 import com.abhi.musicapp.ui.screens.DownloadsScreen
 import com.abhi.musicapp.ui.screens.EqualiserScreen
 import com.abhi.musicapp.ui.screens.FoldersScreen
@@ -36,6 +38,8 @@ object Routes {
     const val BACKUP = "backup"
     const val DOWNLOADS = "downloads"
     const val FOLDERS = "folders"
+    const val RECYCLE = "recycle"
+    const val READ_NOW = "readnow"
     const val PLAYLIST_DETAIL = "playlist/{name}"
     fun playlistDetail(name: String) = "playlist/$name"
 }
@@ -82,6 +86,8 @@ fun AppNav() {
                 onBack = { nav.popBackStack() },
                 onRowClick = { label ->
                     when (label) {
+                        "Recycle bin" -> nav.navigate(Routes.RECYCLE)
+                        "Read Now" -> nav.navigate(Routes.READ_NOW)
                         "Equaliser" -> nav.navigate(Routes.EQUALISER)
                         "Theme", "Accent color" -> nav.navigate(Routes.THEMES)
                         "Set ringtone" -> nav.navigate(Routes.RINGTONE)
@@ -94,6 +100,8 @@ fun AppNav() {
                 },
             )
         }
+        composable(Routes.RECYCLE) { RecycleBinScreen(onBack = { nav.popBackStack() }) }
+        composable(Routes.READ_NOW) { ReadNowScreen(onBack = { nav.popBackStack() }) }
         composable(Routes.EQUALISER) { EqualiserScreen(onBack = { nav.popBackStack() }) }
         composable(Routes.THEMES) { ThemesScreen(onBack = { nav.popBackStack() }) }
         composable(Routes.RINGTONE) {

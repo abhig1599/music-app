@@ -16,6 +16,8 @@ import com.abhi.musicapp.ui.screens.OnboardingScreen
 import com.abhi.musicapp.ui.screens.PlayerScreen
 import com.abhi.musicapp.ui.screens.SearchScreen
 import com.abhi.musicapp.ui.screens.SettingsScreen
+import com.abhi.musicapp.ui.screens.RecycleBinScreen
+import com.abhi.musicapp.ui.screens.ReadNowScreen
 import com.abhi.musicapp.ui.screens.ThemesScreen
 import com.abhi.musicapp.ui.theme.ThemeState
 import com.abhi.musicapp.ui.theme.MusicAppTheme
@@ -120,6 +122,12 @@ class ScreenShotTest {
     // Fixtures: design sample values, render state only. Tall canvas shows the whole 1508dp frame.
     @Test fun settingsFixtureExpanded() = shot("settings_fixture_expanded", 1560) { SettingsScreen(onBack = {}, fixture = true, startExpanded = true) }
     @Test fun settingsFixtureCollapsed() = shot("settings_fixture_collapsed", 1100) { SettingsScreen(onBack = {}, fixture = true, startExpanded = false) }
+
+    // Fixtures: design sample rows/content, render state only.
+    @Test fun recycleBinFixture() = shot("recycle_bin_fixture") { RecycleBinScreen(onBack = {}, fixture = List(3) { com.abhi.musicapp.ui.screens.BinRow("[songs name ]", 2) }) }
+    @Test fun recycleBinEmpty() = shot("recycle_bin_empty") { RecycleBinScreen(onBack = {}) }
+    @Test fun readNowFixture() = shot("read_now_fixture") { ReadNowScreen(onBack = {}, fixtureApiName = "Gemini API") }
+    @Test fun readNowEmpty() = shot("read_now_empty") { ReadNowScreen(onBack = {}) }
 
     @Test fun themes() = shot("themes") { ThemesScreen(onBack = {}) }
 
