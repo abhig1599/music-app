@@ -116,6 +116,8 @@ class ScreenShotTest {
     }
 
     @Test fun search() = shot("search") { SearchScreen(onBack = {}) }
+    @Test fun searchPastFixture() = shot("search_past_fixture") { SearchScreen(onBack = {}, fixture = com.abhi.musicapp.ui.screens.SearchFixture.PastRecords) }
+    @Test fun searchRecsFixture() = shot("search_recs_fixture") { SearchScreen(onBack = {}, fixture = com.abhi.musicapp.ui.screens.SearchFixture.Recommendations) }
 
     @Test fun settings() = shot("settings") { SettingsScreen(onBack = {}, onRowClick = {}) }
 

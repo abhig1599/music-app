@@ -168,3 +168,9 @@ Open (tracked): Equaliser/Theme/Ringtone/Backup/Download-location screens have n
 - "Downloads" list screen (All 20 / Pending 02 / Downloaded, Pause, rows with "Playlist Name") seen in frame 59-1730 neighbour: NOT yet built or measured.
 
 - Main 6:44: fixtures keep source typo "Downlaod Playlist" (recorded as source typo), runtime says "Download Playlist". YouTube chip asset missing = not matched (blank circle). Sort/download controls render-only; source/ToS question stays open.
+
+## Search frames (47-13151 Search, 47-13667 past records, 47-13936 recommendations) read 6:55
+- Old Search was my proposal (back arrow, leading icon). Figma: no back button; header "Search..." + "Up to date" pill; field + orange search button; rows with photo thumb/title/mono subtitle; past records = X per row + "Remove all"; recommendations (query "Hello") = chevrons. Android keyboard drawn in the frames (system UI, not built).
+- Rebuilt from 68% estimates (not Design-panel reads). Past records fixture-only (no history stored). Photo thumbs neutral tiles.
+## Downloads list ("Download Detail", 59-2079)
+- "Downloads" + "Pause all" mono pill; chips All 20 (orange)/Pending 02/Downloaded 06/...; rows with per-state icon (error !, progress ring, check, X). Seen, estimated row 72 gap 6 - not yet built.
