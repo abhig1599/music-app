@@ -14,7 +14,7 @@ import java.io.File
 @RunWith(AndroidJUnit4::class)
 @Config(sdk = [34])
 class PlaylistStoreTest {
-    private fun store() = PlaylistStore(File.createTempFile("pl", ".json").also { it.delete() })
+    private fun store() = PlaylistStore(File.createTempFile("plst", ".json").also { it.delete() })
 
     @Test fun createAddReloadRemoveDelete() {
         val s = store()
