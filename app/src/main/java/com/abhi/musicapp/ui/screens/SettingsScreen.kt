@@ -124,8 +124,11 @@ fun SettingsScreen(onBack: () -> Unit, onRowClick: (String) -> Unit = {}, fixtur
                 val sample = listOf("Recording" to ".../DCIM/Audio/Recording", "Download" to ".../DCIM/Audio/Downloads",
                     "Tunes" to ".../DCIM/Audio/Tunes", "Call Recording" to ".../DCIM/Audio/Recording",
                     "Y-music" to ".../DCIM/Audio/Y-music")
-                if (!fixture && realFolders.isEmpty()) Text("No music folders found. Needs audio permission and music files.", fontSize = 11.sp, color = GrayText)
-                (if (fixture) sample else realFolders).forEach { (n, path) ->
+                if (!fixture && realFolders.isEmpty()) Text(
+                    if (!com.abhi.musicapp.library.LibraryRepository.hasAudioPermission(vctx)) "Music permission is off, so folders can't be listed. Use the Permission card above."
+                    else "No music folders found on this device.", fontSize = 11.sp, color = GrayText)
+                val visibleFolders = if (fixture) sample else realFolders
+                visibleFolders.forEach { (n, path) ->
                     Row(Modifier.padding(vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
                         Box(Modifier.size(12.dp).clip(androidx.compose.foundation.shape.CircleShape)
                             .border(1.dp, GrayLight, androidx.compose.foundation.shape.CircleShape))
@@ -137,10 +140,14 @@ fun SettingsScreen(onBack: () -> Unit, onRowClick: (String) -> Unit = {}, fixtur
                     }
                 }
                 Spacer(Modifier.height(13.dp))
-                // Figma shows first Save disabled-looking, second enabled-looking. Visual only; neither has save logic.
-                WideButton("Save", dark = false, enabled = false)
-                Spacer(Modifier.height(13.dp))
-                WideButton("Save", dark = false, enabled = fixture) // shipped: no hide/show logic exists, so disabled
+                // Figma shows two Save buttons (first disabled-looking, second enabled-looking). Visual only, no save logic.
+                // Design fixture only: the shipped state has no hide/show logic, so it draws no Save buttons.
+                if (fixture) {
+                    Spacer(Modifier.height(13.dp))
+                    WideButton("Save", dark = false, enabled = false)
+                    Spacer(Modifier.height(13.dp))
+                    WideButton("Save", dark = false, enabled = true)
+                }
             }
         }
         Spacer(Modifier.height(6.dp))

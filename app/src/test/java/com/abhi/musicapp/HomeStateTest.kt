@@ -47,4 +47,24 @@ class HomeStateTest {
         rule.waitForIdle()
         rule.onNodeWithText("Song name in a line...").assertExists()
     }
+
+    @Test fun shippedHomeChipCountsAreNotFigmaSamples() {
+        rule.setContent { MusicAppTheme { HomeScreen({}, {}, {}, {}, {}, {}) } }
+        rule.waitForIdle()
+        rule.onNodeWithText("20").assertDoesNotExist()
+        rule.onNodeWithText("06").assertDoesNotExist()
+    }
+
+    @Test fun shippedHomeUnavailableTilesAreDisabled() {
+        rule.setContent { MusicAppTheme { HomeScreen({}, {}, {}, {}, {}, {}) } }
+        rule.waitForIdle()
+        rule.onNodeWithContentDescription("Read Now (unavailable)").assertExists()
+        rule.onNodeWithContentDescription("Lyrics (unavailable)").assertExists()
+    }
+
+    @Test fun playlistDetailEmptyStateWhenSongsNotResolvable() {
+        rule.setContent { MusicAppTheme { com.abhi.musicapp.ui.screens.PlaylistDetailScreen("Gym", {}) } }
+        rule.waitForIdle()
+        rule.onNodeWithText("No playable songs in this playlist. Add songs from the player menu (Add to playlist).").assertExists()
+    }
 }

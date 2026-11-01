@@ -4,6 +4,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.wrapContentWidth
+import androidx.compose.ui.semantics.disabled
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.draw.drawWithContent
@@ -181,17 +183,19 @@ fun HomeScreen(
                     .width(162.dp).fillMaxHeight()
                     .clip(androidx.compose.foundation.shape.RoundedCornerShape(24.dp))
                     .background(blockBg)
-                    .clickable { },
+                    .then(if (fixture != null) Modifier.clickable { } else Modifier), // shipped: Read Now is unavailable, no inert click target
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Spacer(Modifier.height(32.dp))
                 Text("Read Doc.", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = InkBlack)
                 Spacer(Modifier.weight(1f))
                 Box(
-                    modifier = Modifier.size(64.dp).clip(CircleShape).background(InkBlack),
+                    modifier = Modifier.size(64.dp)
+                        .then(if (fixture == null) Modifier.alpha(0.5f).semantics { disabled() } else Modifier) // shipped: unavailable (no Reader exists)
+                        .clip(CircleShape).background(InkBlack),
                     contentAlignment = Alignment.Center,
                 ) {
-                    Icon(Icons.Filled.Videocam, contentDescription = "Read Now",
+                    Icon(Icons.Filled.Videocam, contentDescription = if (fixture == null) "Read Now (unavailable)" else "Read Now",
                         tint = androidx.compose.ui.graphics.Color.White, modifier = Modifier.size(26.dp))
                 }
                 Spacer(Modifier.height(17.dp))
@@ -208,14 +212,20 @@ fun HomeScreen(
             ) {
                 // His frame shows two brand-style circular buttons here; brand marks are not bundled,
                 // so generic icons stand in until his assets are exported.
-                CircleTile(Icons.Filled.ChatBubbleOutline, "Lyrics", {}, circleBg, Modifier.size(63.dp))
-                CircleTile(Icons.Filled.Videocam, "Video", {}, circleBg, Modifier.size(63.dp))
+                CircleTile(Icons.Filled.ChatBubbleOutline, if (fixture == null) "Lyrics (unavailable)" else "Lyrics", {}, circleBg, Modifier.size(63.dp).then(if (fixture == null) Modifier.alpha(0.5f).semantics { disabled() } else Modifier))
+                CircleTile(Icons.Filled.Videocam, if (fixture == null) "Video (unavailable)" else "Video", {}, circleBg, Modifier.size(63.dp).then(if (fixture == null) Modifier.alpha(0.5f).semantics { disabled() } else Modifier))
             }
         }
         Spacer(Modifier.height(16.dp))
 
         // Filter chips
-        val chips = listOf("All" to "20", "Folders" to "02", "Playlist" to "06", "Artists" to null)
+        val chips = if (fixture != null) listOf("All" to "20", "Folders" to "02", "Playlist" to "06", "Artists" to null) // Figma sample numbers (fixture only)
+        else listOf(
+            "All" to songs.size.toString().padStart(2, '0'),
+            "Folders" to LibraryRepository.folders(songs).size.toString().padStart(2, '0'),
+            "Playlist" to remember(reload) { com.abhi.musicapp.library.PlaylistStore(context).load().size }.toString().padStart(2, '0'),
+            "Artists" to null, // no artists view exists; chip is visual only
+        )
         // Figma Frame 4: one white 475x46 pill (r10, 1px D3D3D1 stroke, pad 6, gap 12) holding the
         // chips; it overflows the 390 frame, so "Artists" is clipped there too (kept as reference).
         Box(Modifier.fillMaxWidth().clipToBounds()) {
