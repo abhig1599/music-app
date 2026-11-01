@@ -151,7 +151,8 @@ class ScreenShotTest {
     // Fixtures: design sample rows/content, render state only.
     @Test fun recycleBinFixture() = shot("recycle_bin_fixture") { RecycleBinScreen(onBack = {}, fixture = List(3) { com.abhi.musicapp.ui.screens.BinRow("[songs name ]", 2) }) }
     @Test fun recycleBinEmpty() = shot("recycle_bin_empty") { RecycleBinScreen(onBack = {}) }
-    @Test fun readNowFixture() = shot("read_now_fixture") { ReadNowScreen(onBack = {}, fixtureApiName = "Gemini API") }
+    @Test fun readNowFixture() = shot("read_now_fixture") { ReadNowScreen(onBack = {}, fixtureApiName = "Gemini API", designComparison = true) }
+    @Test fun readNowFixtureShipped() = shot("read_now_fixture_shipped") { ReadNowScreen(onBack = {}, fixtureApiName = "Gemini API") }
     @Test fun readNowEmpty() = shot("read_now_empty") { ReadNowScreen(onBack = {}) }
 
     @Test fun themes() = shot("themes") { ThemesScreen(onBack = {}) }
