@@ -5,6 +5,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.foundation.layout.requiredWidth
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.PaddingValues
@@ -83,6 +84,8 @@ fun HomeScreen(
     fixture: com.abhi.musicapp.playback.PlayerUiState? = null,
     /** Render-only: Figma 'Home page- update avilable' shows an orange header pill. No updater exists, so the app never sets this. */
     updateAvailableFixture: Boolean = false,
+    /** Render-only: Figma 'Download add in the home page' draws an orange progress arc around the Download button. No download engine exists. */
+    downloadRingFixture: Boolean = false,
 ) {
     var chip by remember { mutableIntStateOf(0) }
     var showSort by remember { mutableStateOf(false) }
@@ -135,7 +138,15 @@ fun HomeScreen(
                     Row {
                         CircleTile(Icons.Filled.Settings, "Settings", onOpenSettings, circleBg, Modifier.size(63.dp))
                         Spacer(Modifier.width(12.dp))
-                        CircleTile(Icons.Filled.Download, "Downloads", onOpenDownloads, circleBg, Modifier.size(63.dp))
+                        CircleTile(Icons.Filled.Download, "Downloads", onOpenDownloads, circleBg,
+                            Modifier.size(63.dp).then(if (downloadRingFixture) Modifier.drawWithContent {
+                                drawContent()
+                                val w = 3.dp.toPx()
+                                drawArc(com.abhi.musicapp.ui.theme.Orangs, -90f, 100f, false,
+                                    topLeft = androidx.compose.ui.geometry.Offset(w / 2, w / 2),
+                                    size = androidx.compose.ui.geometry.Size(size.width - w, size.height - w),
+                                    style = androidx.compose.ui.graphics.drawscope.Stroke(w, cap = androidx.compose.ui.graphics.StrokeCap.Round))
+                            } else Modifier))
                     }
                 }
             }

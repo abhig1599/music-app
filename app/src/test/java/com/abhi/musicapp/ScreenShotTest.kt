@@ -73,6 +73,11 @@ class ScreenShotTest {
             title = "Song name in a line...", isPlaying = true, positionMs = 61_000L, durationMs = 192_000L, hasTrack = true))
     }
 
+    @Test fun homeDownloadRingFixture() = shot("home_download_ring_fixture") {
+        HomeScreen({}, {}, {}, {}, {}, {}, downloadRingFixture = true, fixture = com.abhi.musicapp.playback.PlayerUiState(
+            title = "Song name in a line...", isPlaying = true, positionMs = 61_000L, durationMs = 192_000L, hasTrack = true))
+    }
+
     @Test fun playerSheetAddToPlaylist() = shot("player_sheet_addtoplaylist") { com.abhi.musicapp.ui.screens.PlayerSheetFixture(com.abhi.musicapp.ui.screens.PlayerSheet.AddToPlaylist) }
     @Test fun playerSheetNewPlaylist() = shot("player_sheet_newplaylist") { com.abhi.musicapp.ui.screens.PlayerSheetFixture(com.abhi.musicapp.ui.screens.PlayerSheet.NewPlaylist) }
     @Test fun playerSheetSpeed() = shot("player_sheet_speed") { com.abhi.musicapp.ui.screens.PlayerSheetFixture(com.abhi.musicapp.ui.screens.PlayerSheet.Speed) }
