@@ -30,6 +30,7 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.border
 import androidx.compose.ui.unit.sp
 import com.abhi.musicapp.ui.theme.GeistMono
 import com.abhi.musicapp.ui.theme.GrayText
@@ -79,7 +80,7 @@ fun RecycleBinScreen(onBack: () -> Unit, fixture: List<BinRow> = emptyList()) {
     }) {
         Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
             fixture.forEach { row ->
-                Row(Modifier.fillMaxWidth().height(72.dp).clip(RoundedCornerShape(10.dp)).background(com.abhi.musicapp.ui.theme.FigmaWhite).padding(10.dp),
+                Row(Modifier.fillMaxWidth().height(72.dp).clip(RoundedCornerShape(10.dp)).background(com.abhi.musicapp.ui.theme.FigmaWhite).border(1.dp, androidx.compose.ui.graphics.Color(0xFFD9D9D9), RoundedCornerShape(10.dp)).padding(10.dp),
                     verticalAlignment = Alignment.CenterVertically) {
                     // Thumb is a photo in the design; photo assets are not shipped, neutral tile instead.
                     Box(Modifier.size(50.dp).clip(RoundedCornerShape(8.dp)).background(SurfaceSoft))

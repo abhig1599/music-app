@@ -288,3 +288,4 @@ Figma Search frames also contain an Android keyboard instance and "File or folde
 - Row-only Search change is now grounded. Compiled change, CI pending; no overlay yet for Recycle/Read Now/Home.
 - Recycle bin (47-14803) READ 17:49: title 'Recycle Bin' Helvetica Neue Bold 30, 169x37 hug, ls 0%, Black style; row title Helvetica Neue Regular 18, 113x21 hug; Frame 81 x22 y41 w351 gap24. Subtitle font still unread.
 - APPLIED 17:50: Recycle title 30 Bold, chevron back (Figma shows chevron; glyph hex inferred as in Download Detail), row title 18, subtitle 14 (derived). Read Now sizes still unread, unchanged.
+- APPLIED 18:06: Recycle rows get 1px D9D9D9 stroke (read earlier on other frames; Recycle-frame stroke itself visible in ref, hex assumed same, not panel-read on this frame). 6% width diff is an estimate, not measured.
