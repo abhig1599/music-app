@@ -225,3 +225,7 @@ Figma Search frames also contain an Android keyboard instance and "File or folde
 - "Pause all": Geist Mono 18, hug 98x23 (read). Applied (was 13). Chip label and superscript line heights set to 23 / 15 to match read hug heights (chip 36.95).
 - Row: Fill "White" (opacity not read), stroke D9D9D9 width 1 Inside (read). Composite fill SAMPLED from the 68% reference capture at F0F0F0 over Bg EAEAE8: that hex is a sample, not a panel read. Back circle also samples F0F0F0 (applied on Download Detail only).
 - Not read yet: progress glyph (faint dotted track + two-bar pause in Figma), chip-row backdrop band, cause of the ~3-4dp vertical offset (line heights are the first suspect).
+
+## Download Detail part 6 (reads 13:00 IST)
+- Group 5 (chip row band): 475x46 at x0, corner radius 10, fill White (opacity unread; same F0F0F0 sample used). Chips centered vertically (36.95 in 46). Band runs past the frame edge and is clipped; ours is clipped at content width 351 (small difference). Left inset ~5 is from the capture, not read.
+- Progress slot: 32x32 frame, inner Group 26.67x26.67 at (2.67,2.67), stroke 2 round, pause vector in the middle. Pause bar size/gap (2x8, gap 3) INFERRED. Figma track looks faint/dotted; ours is a plain faint ring.

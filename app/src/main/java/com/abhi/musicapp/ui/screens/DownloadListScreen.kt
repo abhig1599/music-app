@@ -49,7 +49,7 @@ fun DownloadListFixture(onBack: () -> Unit = {}) {
             modifier = Modifier.clip(RoundedCornerShape(8.72.dp)).background(Bg2Fill).padding(7.dp))
     }) {
         Column(verticalArrangement = Arrangement.spacedBy(24.dp)) {
-            Row(Modifier.horizontalScroll(androidx.compose.foundation.rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(12.dp)) { // Figma row overflows the frame (more chips off-screen)
+            Row(Modifier.fillMaxWidth().height(46.dp).clip(RoundedCornerShape(10.dp)).background(RowFill).horizontalScroll(androidx.compose.foundation.rememberScrollState()).padding(start = 5.dp), horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) { // Figma Group 5: 475x46, radius 10, White fill band (chip inset ~5 is measured from capture) // Figma row overflows the frame (more chips off-screen)
                 listOf(Triple("All", "20", true), Triple("Pending", "02", false), Triple("Downloaded", "06", false)).forEach { (t, n, sel) ->
                     val c = if (sel) PureWhite else InkBlack
                     Row(Modifier.clip(RoundedCornerShape(8.72.dp)).background(if (sel) Orangs else Bg2Fill).padding(6.97.dp),
@@ -72,7 +72,7 @@ fun DownloadListFixture(onBack: () -> Unit = {}) {
                             when (state) {
                                 0 -> Box(Modifier.size(26.67.dp).border(2.dp, InkBlack, CircleShape), contentAlignment = Alignment.Center) { Text("!", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = InkBlack) }
                                 1 -> { CircularProgressIndicator(progress = { 0.6f }, color = Orangs, trackColor = GrayLight, strokeWidth = 2.dp, modifier = Modifier.size(26.dp))
-                                    Box(Modifier.width(2.dp).height(8.dp).background(InkBlack)) }
+                                    Row(horizontalArrangement = Arrangement.spacedBy(3.dp)) { repeat(2) { Box(Modifier.width(2.dp).height(8.dp).clip(RoundedCornerShape(1.dp)).background(InkBlack)) } } } // pause bar sizes INFERRED, not read
                                 2 -> Box(Modifier.size(24.dp).clip(CircleShape).background(InkBlack), contentAlignment = Alignment.Center) { Icon(Icons.Filled.Check, null, tint = PureWhite, modifier = Modifier.size(14.dp)) }
                                 else -> androidx.compose.foundation.Canvas(Modifier.size(12.dp)) { // Figma: 12x12 vector in 24x24 frame, 2px round Black stroke
                                     val w = 2.dp.toPx()
