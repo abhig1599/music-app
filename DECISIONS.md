@@ -175,3 +175,4 @@ Open (tracked): Equaliser/Theme/Ringtone/Backup/Download-location screens have n
 ## Downloads list ("Download Detail", 59-2079)
 - "Downloads" + "Pause all" mono pill; chips All 20 (orange)/Pending 02/Downloaded 06/...; rows with per-state icon (error !, progress ring, check, X). Seen, estimated row 72 gap 6 - not yet built.
 - Download Detail built 7:17 as DownloadListFixture (fixture only, no route: no download engine, source/ToS open). Estimated geometry; state icons approximated (Material check/close, indicator ring); photos not shipped.
+- Plain Search frame 47-13151 read 7:38 (fresh lease): empty body (field + orange button + keyboard). Real Search now shows no rows until typing. Past-records thumbs in Figma are photos (not shipped).

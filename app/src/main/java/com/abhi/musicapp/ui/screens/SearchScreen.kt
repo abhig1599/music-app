@@ -75,7 +75,7 @@ fun SearchScreen(onBack: () -> Unit, fixture: SearchFixture = SearchFixture.None
         Spacer(Modifier.height(10.dp))
         Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
             val rows: List<Pair<String, String>> = when (fixture) {
-                SearchFixture.None -> DemoData.songs.filter { typed.isBlank() || it.first.contains(typed, ignoreCase = true) }
+                SearchFixture.None -> if (typed.isBlank()) emptyList() else DemoData.songs.filter { it.first.contains(typed, ignoreCase = true) } // Figma 47-13151: empty list until typing
                 else -> listOf("[songs name ]" to "File or folder name", "Love songs" to "10 songs", "Love songs" to "10 songs")
             }
             rows.forEach { (t, sub) ->
