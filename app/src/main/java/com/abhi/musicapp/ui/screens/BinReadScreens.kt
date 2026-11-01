@@ -109,12 +109,12 @@ fun ReadNowScreen(onBack: () -> Unit, fixtureApiName: String? = null) {
             if (fixtureApiName != null) {
                 Column(Modifier.fillMaxWidth().height(168.dp).clip(RoundedCornerShape(16.dp)).background(com.abhi.musicapp.ui.theme.FigmaWhite)
                     .padding(start = 14.dp, end = 14.dp, top = 16.dp, bottom = 10.dp)) {
-                    Text("API Collection", fontSize = 12.sp, color = InkBlack, modifier = Modifier.height(20.dp))
+                    Text("API Collection", fontSize = 16.sp, fontWeight = FontWeight.Medium, color = InkBlack, modifier = Modifier.height(20.dp))
                     Spacer(Modifier.height(13.dp))
                     Row(Modifier.height(46.dp), verticalAlignment = Alignment.CenterVertically) {
                         Column(Modifier.weight(1f)) {
-                            Text(fixtureApiName, fontFamily = mono, fontSize = 12.sp, fontWeight = FontWeight.Bold, color = InkBlack)
-                            Text("...hello", fontFamily = mono, fontSize = 9.sp, color = GrayText)
+                            Text(fixtureApiName, fontFamily = mono, fontSize = 12.sp, fontWeight = FontWeight.Medium, color = InkBlack) // Geist Mono Medium (size not panel-verified)
+                            Text("...hello", fontSize = 14.sp, color = GrayText) // Helvetica Neue Regular 14 Gray (read)
                         }
                         Icon(Icons.Filled.Delete, "Delete", tint = InkBlack, modifier = Modifier.size(20.dp))
                     }
@@ -123,23 +123,23 @@ fun ReadNowScreen(onBack: () -> Unit, fixtureApiName: String? = null) {
                 }
             }
             Column(Modifier.fillMaxWidth().height(267.52.dp).clip(RoundedCornerShape(16.dp)).background(com.abhi.musicapp.ui.theme.FigmaWhite).padding(start = 14.dp, end = 14.dp, top = 16.dp, bottom = 10.dp)) {
-                Text("API Collection", fontSize = 12.sp, color = InkBlack)
+                Text("API Collection", fontSize = 16.sp, fontWeight = FontWeight.Medium, color = InkBlack)
                 Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
-                    Text("No API added yet", fontSize = 11.sp, color = InkBlack)
+                    Text("No API added yet", fontSize = 14.sp, color = InkBlack) // Helvetica Neue Regular 14 (read)
                 }
                 ReadButton("Add API", dark = true, enabled = false)
             }
             // The design carries this explanatory note under the cards; reproduced as drawn.
             Text("Now I want to add a line that you can only add one API at a time, and if there are some issue with the Read Now feature, you can simply need to delete the API and add a new one to get it running.",
-                fontFamily = mono, fontSize = 12.sp, fontWeight = FontWeight.Medium, color = InkBlack)
+                fontFamily = mono, fontSize = 12.sp, fontWeight = FontWeight.Medium, color = GrayText) // Geist Mono Medium 12 Gray (read)
         }
     }
 }
 
 @Composable
 private fun ReadButton(label: String, dark: Boolean, enabled: Boolean = true) {
-    Box(Modifier.alpha(if (enabled) 1f else 0.5f).fillMaxWidth().height(48.dp).clip(RoundedCornerShape(10.dp))
+    Box(Modifier.alpha(if (enabled || dark) 1f else 0.5f).fillMaxWidth().height(48.dp).clip(RoundedCornerShape(10.dp))
         .background(if (dark) InkBlack else com.abhi.musicapp.ui.theme.GrayLight), contentAlignment = Alignment.Center) {
-        Text(label, fontFamily = GeistMono, fontSize = 11.sp, color = if (dark) PureWhite else GrayText)
+        Text(label, fontFamily = GeistMono, fontSize = 11.sp, color = if (dark) com.abhi.musicapp.ui.theme.FigmaWhite else GrayText)
     }
 }
