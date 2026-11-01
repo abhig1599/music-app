@@ -248,10 +248,26 @@ fun HomeScreen(
                 }
             }
         } else {
-            val rows: List<Pair<String, String>> = when (chip) {
+            // Figma sample rows (DemoData) only in design fixtures (fixture != null). Shipped state shows real data or an honest empty state.
+            val designFixture = fixture != null
+            val realFolders = LibraryRepository.folders(songs).map { it.first to "${it.second.size} songs" }
+            val rows: List<Pair<String, String>> = if (designFixture) when (chip) {
                 1 -> DemoData.folders
                 2 -> DemoData.playlists
                 else -> DemoData.songs
+            } else when (chip) {
+                1 -> realFolders
+                else -> emptyList()
+            }
+            if (rows.isEmpty()) {
+                Text(
+                    when (chip) {
+                        1 -> "No folders found. Needs audio permission and music files on the device."
+                        2 -> "No playlists yet."
+                        else -> "No songs found. Needs audio permission and music files on the device."
+                    },
+                    color = GrayText, fontSize = 13.sp, modifier = Modifier.padding(horizontal = 26.dp),
+                )
             }
             LazyColumn(modifier = Modifier.weight(1f)) {
                 items(rows.size) { i ->
@@ -260,7 +276,7 @@ fun HomeScreen(
                         title = title,
                         subtitle = sub,
                         trailing = {
-                            if (chip == 0 && i == 0) {
+                            if (chip == 0 && playerState.hasTrack && playerState.isPlaying && playerState.title == title) {
                                 Icon(Icons.Filled.GraphicEq, contentDescription = "Playing", tint = Orangs)
                             } else {
                                 Icon(Icons.Filled.ChevronRight, contentDescription = null, tint = GrayText)
