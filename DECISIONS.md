@@ -194,3 +194,7 @@ Open (tracked): Equaliser/Theme/Ringtone/Backup/Download-location screens have n
 - Past-records list Frame 71: X26 Y173 W344 H279, vertical gap 4. Row (Frame 43..): W344 H72 hug, pad 10, radius 10, fill White; content Frame 51 292x50 gap 13. "Remove all" frame: 344x51, vertical pad 16.
 - Applied to SearchScreen: row 48/radius 10/18sp placeholder, rows 72 white pad 10 gap 4, list start 173, Remove-all 51. NOT read: field stroke (1dp D3D3D1 inferred from render, not a read), row title/subtitle font sizes (still 14/10 estimates), thumb radius, X icon size.
 - Thumb-to-text gap 10 (Frame 51), action icon frame 24x24 (applied). Text font sizes of rows still unread.
+
+## Download Detail exact Design-panel reads (59-2079)
+Frame 81 at (22,41), 351 wide, hug, vertical gap 24. Back button 44x44 (padding 13.97/13.27, white fill). Header 344x37 hug. Chip group 475x46 (scrolls past frame edge; "more" chip still unread). Row list 351x306 hug, gap 6 => four 72px rows. Figma shows exactly 4 rows: error, progress, check, X (we had 6; fixed to 4). Section gap 24 applied (was 12).
+Still unread: chip radius/padding/fonts, row text sizes, state-icon glyph sizes, Pause all pill metrics, back button radius. Photos not shipped.

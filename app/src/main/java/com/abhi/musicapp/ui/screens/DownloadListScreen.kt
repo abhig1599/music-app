@@ -43,7 +43,7 @@ fun DownloadListFixture(onBack: () -> Unit = {}) {
         Text("Pause all", fontFamily = GeistMono, fontSize = 13.sp, color = InkBlack,
             modifier = Modifier.clip(RoundedCornerShape(8.dp)).background(GrayLight).padding(horizontal = 10.dp, vertical = 8.dp))
     }) {
-        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Column(verticalArrangement = Arrangement.spacedBy(24.dp)) {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 listOf("All 20" to true, "Pending 02" to false, "Downloaded 06" to false).forEach { (t, sel) ->
                     Text(t, fontFamily = GeistMono, fontSize = 12.sp, color = if (sel) PureWhite else InkBlack,
@@ -51,7 +51,7 @@ fun DownloadListFixture(onBack: () -> Unit = {}) {
                 }
             }
             Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                listOf(0, 1, 2, 3, 2, 1).forEach { state ->
+                listOf(0, 1, 2, 3).forEach { state ->
                     Row(Modifier.fillMaxWidth().height(72.dp).clip(RoundedCornerShape(10.dp)).background(PureWhite).padding(10.dp), verticalAlignment = Alignment.CenterVertically) {
                         Box(Modifier.size(50.dp).clip(RoundedCornerShape(8.dp)).background(GrayLight)) // photo not shipped
                         Spacer(Modifier.width(13.dp))
