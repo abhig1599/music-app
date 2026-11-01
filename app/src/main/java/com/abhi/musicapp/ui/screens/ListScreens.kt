@@ -12,6 +12,8 @@ import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -22,13 +24,22 @@ import com.abhi.musicapp.ui.theme.GrayText
 import com.abhi.musicapp.ui.theme.InkBlack
 
 @Composable
-fun FoldersScreen(onBack: () -> Unit) {
+fun FoldersScreen(onBack: () -> Unit, onOpenPlayer: () -> Unit = {}) {
     Column(modifier = Modifier.fillMaxSize()) {
         Header("Folders", onBack)
-        DemoData.folders.forEach { (name, count) ->
-            SongRow(name, count, trailing = {
+        val context = androidx.compose.ui.platform.LocalContext.current
+        var folders by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf<List<Pair<String, List<com.abhi.musicapp.library.Song>>>>(emptyList()) }
+        androidx.compose.runtime.LaunchedEffect(Unit) {
+            folders = com.abhi.musicapp.library.LibraryRepository.folders(com.abhi.musicapp.library.LibraryRepository.querySongs(context))
+        }
+        if (folders.isEmpty()) {
+            Text("No folders found. Needs audio permission and music files on the device.",
+                color = GrayText, fontSize = 13.sp, modifier = Modifier.padding(horizontal = 24.dp))
+        }
+        folders.forEach { (name, list) ->
+            SongRow(name, "${list.size} songs", trailing = {
                 Icon(Icons.Filled.ChevronRight, contentDescription = null, tint = GrayText)
-            }, onClick = {})
+            }, onClick = { com.abhi.musicapp.playback.PlayerManager.playAll(list, 0); onOpenPlayer() })
         }
     }
 }

@@ -2,6 +2,7 @@ package com.abhi.musicapp.ui.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -51,7 +52,10 @@ enum class SearchFixture { None, PastRecords, Recommendations }
  * Real app: no history is stored, so past records only appear in the fixture; results come from the on-device (demo) library.
  */
 @Composable
-fun SearchScreen(onBack: () -> Unit, fixture: SearchFixture = SearchFixture.None) {
+fun SearchScreen(onBack: () -> Unit, fixture: SearchFixture = SearchFixture.None, onOpenPlayer: () -> Unit = {}) {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    var library by remember { mutableStateOf<List<com.abhi.musicapp.library.Song>>(emptyList()) }
+    androidx.compose.runtime.LaunchedEffect(Unit) { if (fixture == SearchFixture.None) library = com.abhi.musicapp.library.LibraryRepository.querySongs(context) }
     var typed by remember { mutableStateOf("") }
     val query = if (fixture == SearchFixture.Recommendations) "Hello" else typed
     Column(Modifier.fillMaxSize().padding(start = 26.dp, end = 20.dp)) { // content width 344 (Figma selection badge 344x48 on field row); left 26 and right 20 are derived from the capture, not read
@@ -75,12 +79,13 @@ fun SearchScreen(onBack: () -> Unit, fixture: SearchFixture = SearchFixture.None
         }
         Spacer(Modifier.height(16.dp))
         Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            val matches = if (typed.isBlank()) emptyList() else library.filter { it.title.contains(typed, ignoreCase = true) || it.artist.contains(typed, ignoreCase = true) }
             val rows: List<Pair<String, String>> = when (fixture) {
-                SearchFixture.None -> if (typed.isBlank()) emptyList() else DemoData.songs.filter { it.first.contains(typed, ignoreCase = true) } // Figma 47-13151: empty list until typing
+                SearchFixture.None -> if (typed.isBlank()) emptyList() else matches.map { it.title to it.artist } // Figma 47-13151: empty list until typing
                 else -> listOf("[songs name ]" to "File or folder name", "Love songs" to "10 songs", "Love songs" to "10 songs")
             }
-            rows.forEach { (t, sub) ->
-                Row(Modifier.fillMaxWidth().height(72.dp).clip(RoundedCornerShape(10.dp)).background(androidx.compose.ui.graphics.Color(0xFFF0F0F0)).border(1.dp, androidx.compose.ui.graphics.Color(0xFFD9D9D9), RoundedCornerShape(10.dp)).padding(10.dp), verticalAlignment = Alignment.CenterVertically) {
+            rows.forEachIndexed { rowIdx, (t, sub) ->
+                Row(Modifier.fillMaxWidth().height(72.dp).clip(RoundedCornerShape(10.dp)).clickable(enabled = fixture == SearchFixture.None) { com.abhi.musicapp.playback.PlayerManager.playAll(matches, rowIdx); onOpenPlayer() }.background(androidx.compose.ui.graphics.Color(0xFFF0F0F0)).border(1.dp, androidx.compose.ui.graphics.Color(0xFFD9D9D9), RoundedCornerShape(10.dp)).padding(10.dp), verticalAlignment = Alignment.CenterVertically) {
                     Box(Modifier.size(50.dp).clip(RoundedCornerShape(10.dp)).background(PureWhite)) // Figma read: 50x50 radius 10, Image fill (photo not shipped = non-match)
                     Spacer(Modifier.width(10.dp))
                     Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) { // Figma read: text column gap 4

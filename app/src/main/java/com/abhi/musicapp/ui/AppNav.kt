@@ -80,7 +80,7 @@ fun AppNav() {
             )
         }
         composable(Routes.PLAYER) { PlayerScreen(onBack = { nav.popBackStack() }) }
-        composable(Routes.SEARCH) { SearchScreen(onBack = { nav.popBackStack() }) }
+        composable(Routes.SEARCH) { SearchScreen(onBack = { nav.popBackStack() }, onOpenPlayer = { nav.navigate(Routes.PLAYER) }) }
         composable(Routes.SETTINGS) {
             SettingsScreen(
                 onBack = { nav.popBackStack() },
@@ -118,7 +118,7 @@ fun AppNav() {
         }
         composable(Routes.BACKUP) { BackupScreen(onBack = { nav.popBackStack() }) }
         composable(Routes.DOWNLOADS) { DownloadsScreen(onBack = { nav.popBackStack() }) }
-        composable(Routes.FOLDERS) { FoldersScreen(onBack = { nav.popBackStack() }) }
+        composable(Routes.FOLDERS) { FoldersScreen(onBack = { nav.popBackStack() }, onOpenPlayer = { nav.navigate(Routes.PLAYER) }) }
         composable(Routes.PLAYLIST_DETAIL) { entry ->
             PlaylistDetailScreen(
                 name = entry.arguments?.getString("name") ?: "Playlist",

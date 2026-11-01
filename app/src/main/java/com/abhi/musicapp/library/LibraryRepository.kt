@@ -25,12 +25,13 @@ object LibraryRepository {
     fun querySongs(context: Context): List<Song> {
         if (!hasAudioPermission(context)) return emptyList()
         val collection = MediaStore.Audio.Media.getContentUri(MediaStore.VOLUME_EXTERNAL)
-        val projection = arrayOf(
+        val hasRel = Build.VERSION.SDK_INT >= 29
+        val projection = (listOf(
             MediaStore.Audio.Media._ID,
             MediaStore.Audio.Media.TITLE,
             MediaStore.Audio.Media.ARTIST,
             MediaStore.Audio.Media.DURATION,
-        )
+        ) + (if (hasRel) listOf(MediaStore.Audio.Media.RELATIVE_PATH) else emptyList())).toTypedArray()
         val songs = mutableListOf<Song>()
         context.contentResolver.query(
             collection,
@@ -43,6 +44,7 @@ object LibraryRepository {
             val titleCol = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.TITLE)
             val artistCol = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ARTIST)
             val durCol = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DURATION)
+            val relCol = if (hasRel) cursor.getColumnIndex(MediaStore.Audio.Media.RELATIVE_PATH) else -1
             while (cursor.moveToNext()) {
                 val id = cursor.getLong(idCol)
                 songs += Song(
@@ -51,9 +53,17 @@ object LibraryRepository {
                     artist = cursor.getString(artistCol) ?: "Unknown artist",
                     durationMs = cursor.getLong(durCol),
                     uri = ContentUris.withAppendedId(collection, id),
+                    folder = if (relCol >= 0) (cursor.getString(relCol) ?: "").trimEnd('/') else "",
                 )
             }
         }
         return songs
     }
+
+    /** Groups songs by MediaStore folder (RELATIVE_PATH, API 29+; empty on older devices). Name = last path segment. */
+    fun folders(songs: List<Song>): List<Pair<String, List<Song>>> =
+        songs.filter { it.folder.isNotEmpty() }
+            .groupBy { it.folder }
+            .map { (path, list) -> path.substringAfterLast('/') to list }
+            .sortedBy { it.first.lowercase() }
 }
