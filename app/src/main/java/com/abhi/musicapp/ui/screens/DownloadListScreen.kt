@@ -16,7 +16,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -47,9 +46,13 @@ fun DownloadListFixture(onBack: () -> Unit = {}) {
     }) {
         Column(verticalArrangement = Arrangement.spacedBy(24.dp)) {
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                listOf("All 20" to true, "Pending 02" to false, "Downloaded 06" to false).forEach { (t, sel) ->
-                    Text(t, fontFamily = GeistMono, fontSize = 12.sp, color = if (sel) PureWhite else InkBlack,
-                        modifier = Modifier.clip(RoundedCornerShape(8.72.dp)).background(if (sel) Orangs else Bg2Fill).padding(7.dp))
+                listOf(Triple("All", "20", true), Triple("Pending", "02", false), Triple("Downloaded", "06", false)).forEach { (t, n, sel) ->
+                    val c = if (sel) PureWhite else InkBlack
+                    Row(Modifier.clip(RoundedCornerShape(8.72.dp)).background(if (sel) Orangs else Bg2Fill).padding(6.97.dp),
+                        horizontalArrangement = Arrangement.spacedBy(2.62.dp), verticalAlignment = Alignment.Top) {
+                        Text(t, fontFamily = GeistMono, fontSize = 18.sp, color = c) // Figma: Geist Mono Regular 18
+                        Text(n, fontSize = 12.21.sp, color = c) // Figma: Inter Regular 12.21 (system sans stands in)
+                    }
                 }
             }
             Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -67,7 +70,11 @@ fun DownloadListFixture(onBack: () -> Unit = {}) {
                                 1 -> { CircularProgressIndicator(progress = { 0.6f }, color = Orangs, trackColor = GrayLight, strokeWidth = 2.dp, modifier = Modifier.size(26.dp))
                                     Box(Modifier.width(2.dp).height(8.dp).background(InkBlack)) }
                                 2 -> Box(Modifier.size(24.dp).clip(CircleShape).background(InkBlack), contentAlignment = Alignment.Center) { Icon(Icons.Filled.Check, null, tint = PureWhite, modifier = Modifier.size(14.dp)) }
-                                else -> Icon(Icons.Filled.Close, null, tint = InkBlack, modifier = Modifier.size(22.dp))
+                                else -> androidx.compose.foundation.Canvas(Modifier.size(12.dp)) { // Figma: 12x12 vector in 24x24 frame, 2px round Black stroke
+                                    val w = 2.dp.toPx()
+                                    drawLine(InkBlack, androidx.compose.ui.geometry.Offset(0f, 0f), androidx.compose.ui.geometry.Offset(size.width, size.height), w, androidx.compose.ui.graphics.StrokeCap.Round)
+                                    drawLine(InkBlack, androidx.compose.ui.geometry.Offset(size.width, 0f), androidx.compose.ui.geometry.Offset(0f, size.height), w, androidx.compose.ui.graphics.StrokeCap.Round)
+                                }
                             }
                         }
                     }

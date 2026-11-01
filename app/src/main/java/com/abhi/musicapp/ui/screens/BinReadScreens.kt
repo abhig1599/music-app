@@ -43,7 +43,12 @@ import com.abhi.musicapp.ui.theme.SurfaceSoft
 internal fun FigmaPage(title: String, onBack: () -> Unit, trailing: @Composable () -> Unit = {}, titleSize: androidx.compose.ui.unit.TextUnit = 28.sp, content: @Composable () -> Unit) {
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(start = 22.dp, end = 17.dp, top = 41.dp)) {
         Box(Modifier.size(44.dp).clip(CircleShape).background(PureWhite).clickable(onClick = onBack), contentAlignment = Alignment.Center) {
-            Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = InkBlack, modifier = Modifier.size(20.dp))
+            androidx.compose.foundation.Canvas(Modifier.size(width = 6.dp, height = 12.dp)) { // Figma Download Detail: chevron vector 6x12, 2px stroke, Gray (hex inferred)
+                val st = 2.dp.toPx()
+                val col = androidx.compose.ui.graphics.Color(0xFF6B6B6B)
+                drawLine(col, androidx.compose.ui.geometry.Offset(size.width, 0f), androidx.compose.ui.geometry.Offset(0f, size.height / 2), st, androidx.compose.ui.graphics.StrokeCap.Round)
+                drawLine(col, androidx.compose.ui.geometry.Offset(0f, size.height / 2), androidx.compose.ui.geometry.Offset(size.width, size.height), st, androidx.compose.ui.graphics.StrokeCap.Round)
+            }
         }
         Spacer(Modifier.height(24.dp))
         Row(Modifier.fillMaxWidth().height(37.dp), verticalAlignment = Alignment.CenterVertically) {

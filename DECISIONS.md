@@ -211,3 +211,10 @@ Still unread: chip label and superscript sizes, back chevron glyph, check/progre
 Measured from hug boxes in the Design panel overlay: row title text box 93-113 x 21 hug (Helvetica Neue 18, same as Download Detail), placeholder 239x20, "Remove all" 344 fill x 19 hug.
 INFERRED, not read from the font field: "Remove all" 16 (19px hug), subtitle mono 12 (visible width ~57px for "10 songs" = 7.2/char), header title 30 (header hug height 37 equals Download Detail's 30pt title). Applied these; font fields not individually opened.
 Figma Search frames also contain an Android keyboard instance and "File or folder name" subtitle on row 1 (we render no keyboard; system IME at runtime).
+
+## Download Detail part 4 (Design-panel reads, 59-2079, 11:50-11:52 IST)
+- Back: vector chevron, 12x6 rotated -90 (6 wide x 12 tall), stroke 2, color token "Gray" (hex NOT read; 0xFF6B6B6B is an INFERENCE). Applied in FigmaPage for all screens (only read on this frame).
+- Chip: auto-layout H, padding 6.97, radius 8.72, gap 2.62, Bg 2. Label Geist Mono Regular 18 (76x23 hug for "Pending"). Superscript Inter Regular 12.21 (16x15), top-aligned. Chip 94.62 wide. Superscript color not read (we reuse label color).
+- Check: 24x24 Black filled vector in the 32 slot (inner check size not read).
+- X: frame 24x24, vector 12x12 at (6,6), stroke Black 2 round, drawn with Canvas.
+- Progress glyph size still unread. Roboto stands in for Helvetica Neue and Inter.
