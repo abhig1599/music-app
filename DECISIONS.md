@@ -243,3 +243,7 @@ Figma Search frames also contain an Android keyboard instance and "File or folde
 ## Search content width (14:23 IST)
 - Figma shows the title/field rows as 344 wide (selection badge 344x48). In the capture the content spans x=26.5..370dp, so right inset is about 20, not 26. Ours was symmetric 26 (338 wide), which caused the chip to sit ~6dp left. Changed Search to start 26 / end 20. Left/right insets are DERIVED from the capture, not exact reads. Other screens untouched, unverified.
 - Chip width (121) is consistent with Geist Mono 18 x 10 chars + 2x6.97 padding, so the chip itself was not the cause.
+
+## Mono text width check (14:49 IST) - UNRESOLVED
+- Bundled geist_mono.ttf is a variable font (fvar present), unitsPerEm 1000, advance 600 (=10.8dp at 18sp). Expected chip widths: "Up to date" 121.4, "Pause all" 111.
+- Measured in CI renders (pixel scan of docs/screenshots): Search chip about 130, Download "Pause all" chip about 119. About 7-8dp wider than expected in both. Cause unknown (candidates: Robolectric text metrics, variable-font instance, rounding). Not fixed. Mono text widths are unverified vs Figma.
