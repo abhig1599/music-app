@@ -1,6 +1,7 @@
 package com.abhi.musicapp.ui.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -62,26 +63,26 @@ fun SearchScreen(onBack: () -> Unit, fixture: SearchFixture = SearchFixture.None
                 modifier = Modifier.clip(RoundedCornerShape(8.dp)).background(GrayLight).padding(horizontal = 10.dp, vertical = 8.dp))
         }
         Spacer(Modifier.height(26.dp))
-        Row(Modifier.fillMaxWidth().height(47.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-            Box(Modifier.weight(1f).height(47.dp).clip(RoundedCornerShape(14.dp)).background(SurfaceSoft).padding(horizontal = 10.dp), contentAlignment = Alignment.CenterStart) {
-                if (query.isEmpty()) Text("Search what you need baby...", fontSize = 13.sp, color = GrayText)
-                if (fixture == SearchFixture.None) BasicTextField(typed, { typed = it }, singleLine = true, textStyle = TextStyle(fontSize = 13.sp, color = InkBlack))
-                else if (query.isNotEmpty()) Text(query, fontSize = 13.sp, color = GrayText)
+        Row(Modifier.fillMaxWidth().height(48.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+            Box(Modifier.weight(1f).height(48.dp).clip(RoundedCornerShape(10.dp)).border(1.dp, androidx.compose.ui.graphics.Color(0xFFD3D3D1), RoundedCornerShape(10.dp)).padding(start = 12.dp, end = 8.dp), contentAlignment = Alignment.CenterStart) {
+                if (query.isEmpty()) Text("Search what you need baby...", fontSize = 18.sp, color = GrayText)
+                if (fixture == SearchFixture.None) BasicTextField(typed, { typed = it }, singleLine = true, textStyle = TextStyle(fontSize = 18.sp, color = InkBlack))
+                else if (query.isNotEmpty()) Text(query, fontSize = 18.sp, color = GrayText)
             }
-            Box(Modifier.size(47.dp).clip(RoundedCornerShape(14.dp)).background(Orangs), contentAlignment = Alignment.Center) {
+            Box(Modifier.size(48.dp).clip(RoundedCornerShape(10.dp)).background(Orangs), contentAlignment = Alignment.Center) {
                 Icon(Icons.Filled.Search, "Search", tint = InkBlack, modifier = Modifier.size(20.dp))
             }
         }
-        Spacer(Modifier.height(10.dp))
-        Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        Spacer(Modifier.height(16.dp))
+        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
             val rows: List<Pair<String, String>> = when (fixture) {
                 SearchFixture.None -> if (typed.isBlank()) emptyList() else DemoData.songs.filter { it.first.contains(typed, ignoreCase = true) } // Figma 47-13151: empty list until typing
                 else -> listOf("[songs name ]" to "File or folder name", "Love songs" to "10 songs", "Love songs" to "10 songs")
             }
             rows.forEach { (t, sub) ->
-                Row(Modifier.fillMaxWidth().height(66.dp).clip(RoundedCornerShape(10.dp)).background(SurfaceSoft).padding(horizontal = 6.dp), verticalAlignment = Alignment.CenterVertically) {
+                Row(Modifier.fillMaxWidth().height(72.dp).clip(RoundedCornerShape(10.dp)).background(PureWhite).padding(10.dp), verticalAlignment = Alignment.CenterVertically) {
                     Box(Modifier.size(50.dp).clip(RoundedCornerShape(8.dp)).background(PureWhite)) // photo thumbs not shipped
-                    Spacer(Modifier.width(10.dp))
+                    Spacer(Modifier.width(13.dp))
                     Column(Modifier.weight(1f)) {
                         Text(t, fontSize = 14.sp, color = InkBlack)
                         Text(sub, fontFamily = GeistMono, fontSize = 10.sp, color = InkBlack)
@@ -93,7 +94,7 @@ fun SearchScreen(onBack: () -> Unit, fixture: SearchFixture = SearchFixture.None
                 }
             }
             if (fixture == SearchFixture.PastRecords) {
-                Box(Modifier.fillMaxWidth().padding(top = 10.dp), contentAlignment = Alignment.Center) {
+                Box(Modifier.fillMaxWidth().height(51.dp), contentAlignment = Alignment.Center) {
                     Text("Remove all", fontSize = 12.sp, color = InkBlack)
                 }
             }
