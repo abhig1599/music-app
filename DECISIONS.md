@@ -198,3 +198,7 @@ Open (tracked): Equaliser/Theme/Ringtone/Backup/Download-location screens have n
 ## Download Detail exact Design-panel reads (59-2079)
 Frame 81 at (22,41), 351 wide, hug, vertical gap 24. Back button 44x44 (padding 13.97/13.27, white fill). Header 344x37 hug. Chip group 475x46 (scrolls past frame edge; "more" chip still unread). Row list 351x306 hug, gap 6 => four 72px rows. Figma shows exactly 4 rows: error, progress, check, X (we had 6; fixed to 4). Section gap 24 applied (was 12).
 Still unread: chip radius/padding/fonts, row text sizes, state-icon glyph sizes, Pause all pill metrics, back button radius. Photos not shipped.
+
+## Download Detail exact reads, part 2 (59-2079)
+Title "Downloads": Helvetica Neue Bold 30 (shared FigmaPage default stays 28 for other screens; Download Detail overrides to 30). "Pause all" pill: 111.95x36.95 hug, padding 6.97, radius 8.72, fill Bg 2 (#E3E3E1), auto-layout. Chip row Frame 4: 475x46, gap 12, padding 6, radius 10 (its white fill is not visible in the render, not applied). Chip: 65.56x36.95 hug, padding 6.97, radius 8.72, inner gap 2.62 (label to superscript), selected fill Orangs. Unselected chips assumed Bg 2 like the pill (not individually read).
+Still unread: chip/pill text sizes, "more" chip, row text sizes, state-icon sizes, back button radius.

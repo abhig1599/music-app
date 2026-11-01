@@ -37,17 +37,19 @@ import com.abhi.musicapp.ui.theme.PureWhite
  * Figma "Download Detail" (59-2079). FIXTURE ONLY: no download engine exists (source/ToS question open), so no route points here.
  * Geometry estimated from the 68% view (rows ~72dp, gap 6); not Design-panel reads. Row states: 0 error "!", 1 progress+pause, 2 done check, 3 X.
  */
+private val Bg2Fill = androidx.compose.ui.graphics.Color(0xFFE3E3E1) // Figma token Bg 2
+
 @Composable
 fun DownloadListFixture(onBack: () -> Unit = {}) {
-    FigmaPage("Downloads", onBack, trailing = {
+    FigmaPage("Downloads", onBack, titleSize = 30.sp, trailing = {
         Text("Pause all", fontFamily = GeistMono, fontSize = 13.sp, color = InkBlack,
-            modifier = Modifier.clip(RoundedCornerShape(8.dp)).background(GrayLight).padding(horizontal = 10.dp, vertical = 8.dp))
+            modifier = Modifier.clip(RoundedCornerShape(8.72.dp)).background(Bg2Fill).padding(7.dp))
     }) {
         Column(verticalArrangement = Arrangement.spacedBy(24.dp)) {
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 listOf("All 20" to true, "Pending 02" to false, "Downloaded 06" to false).forEach { (t, sel) ->
                     Text(t, fontFamily = GeistMono, fontSize = 12.sp, color = if (sel) PureWhite else InkBlack,
-                        modifier = Modifier.clip(RoundedCornerShape(16.dp)).background(if (sel) Orangs else GrayLight).padding(horizontal = 12.dp, vertical = 8.dp))
+                        modifier = Modifier.clip(RoundedCornerShape(8.72.dp)).background(if (sel) Orangs else Bg2Fill).padding(7.dp))
                 }
             }
             Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {

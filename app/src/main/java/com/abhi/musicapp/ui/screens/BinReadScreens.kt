@@ -40,14 +40,14 @@ import com.abhi.musicapp.ui.theme.SurfaceSoft
 // Shared page header from Figma (Recycle bin 47-14803, Read Now 59-2982, both 390x844, fill Bg):
 // Frame 81 at x22 y41, 351 wide, vertical gap 24: back circle 44, title row 351 x 37 (gap 24), content.
 @Composable
-internal fun FigmaPage(title: String, onBack: () -> Unit, trailing: @Composable () -> Unit = {}, content: @Composable () -> Unit) {
+internal fun FigmaPage(title: String, onBack: () -> Unit, trailing: @Composable () -> Unit = {}, titleSize: androidx.compose.ui.unit.TextUnit = 28.sp, content: @Composable () -> Unit) {
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(start = 22.dp, end = 17.dp, top = 41.dp)) {
         Box(Modifier.size(44.dp).clip(CircleShape).background(PureWhite).clickable(onClick = onBack), contentAlignment = Alignment.Center) {
             Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = InkBlack, modifier = Modifier.size(20.dp))
         }
         Spacer(Modifier.height(24.dp))
         Row(Modifier.fillMaxWidth().height(37.dp), verticalAlignment = Alignment.CenterVertically) {
-            Text(title, fontSize = 28.sp, fontWeight = FontWeight.Bold, color = InkBlack, modifier = Modifier.weight(1f))
+            Text(title, fontSize = titleSize, fontWeight = FontWeight.Bold, color = InkBlack, modifier = Modifier.weight(1f))
             trailing()
         }
         Spacer(Modifier.height(24.dp))
