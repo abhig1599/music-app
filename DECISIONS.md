@@ -158,3 +158,11 @@ Open (tracked): Equaliser/Theme/Ringtone/Backup/Download-location screens have n
 - Visible: title "Audio Sort" bold ~22, options Newest(orange, sort icon right)/Most Played/A to Z/Artist/Long Duration/Sort Duration in Geist Mono ~12, pitch ~39 (estimate). Previous labels/Done button were NOT from Figma; replaced.
 - Underlying screen is "Playlist" Home with orange "Update available" pill (Mono) - separate Home variant, not yet built.
 - Selection visual only, not wired to list order.
+
+## Download playlist flow (Figma 59-888/59-1056/59-1147/Download Detail 59-1730 neighbour) read 6:32
+- Existing Downloads screen (All/Pending/Downloaded tabs + link stub) was MY proposal and did not match. Replaced.
+- Figma "Download playlist page": Frame 81 x22 y41 351 gap 24; back 44x44 (White r22); title row 351x37; chips row 351x63 gap 12 (black "Spotify" pill with mono label, round YouTube chip); input row 344x48 gap 8 (field "Add playlist link..." + download button).
+- Other frames: add-link (link typed, "www.youtube/playlist"), loading ("Loading Playlist / found 10 songs"), show all songs ("+ add all Songs" bar + song rows), downloading ("Downloading started" toast, X per row), "Download add in the home page" (Home with orange ring on download tile).
+- Figma title typo "Downlaod Playlist": built as "Download Playlist" - flagged to Main.
+- Spotify/YouTube as sources implies a download source decision (still open; legal/ToS). Real app: no network, button disabled. Chips are not functional selectors.
+- "Downloads" list screen (All 20 / Pending 02 / Downloaded, Pause, rows with "Playlist Name") seen in frame 59-1730 neighbour: NOT yet built or measured.

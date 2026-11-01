@@ -139,6 +139,9 @@ class ScreenShotTest {
     }
 
     @Test fun downloads() = shot("downloads") { DownloadsScreen(onBack = {}) }
+    @Test fun downloadsLinkFixture() = shot("downloads_link_fixture") { DownloadsScreen(onBack = {}, fixture = com.abhi.musicapp.ui.screens.DlFixture.LinkAdded) }
+    @Test fun downloadsLoadingFixture() = shot("downloads_loading_fixture") { DownloadsScreen(onBack = {}, fixture = com.abhi.musicapp.ui.screens.DlFixture.Loading) }
+    @Test fun downloadsSongsFixture() = shot("downloads_songs_fixture") { DownloadsScreen(onBack = {}, fixture = com.abhi.musicapp.ui.screens.DlFixture.Songs) }
 
     @Test fun equaliser() = shot("equaliser") { EqualiserScreen(onBack = {}) }
 }
