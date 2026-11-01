@@ -57,7 +57,7 @@ fun SettingsScreen(onBack: () -> Unit, onRowClick: (String) -> Unit = {}, fixtur
     // expanded visibility 441, Read Now 58, Recycle Bin 58. Inner text sizes/fonts are ESTIMATES.
     val mono = com.abhi.musicapp.ui.theme.GeistMono
     var expanded by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(startExpanded) }
-    Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 22.dp)) {
+    Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(start = 22.dp, end = 17.dp)) {
         Spacer(Modifier.height(41.dp))
         Box(
             Modifier.size(44.dp).clip(androidx.compose.foundation.shape.CircleShape).background(com.abhi.musicapp.ui.theme.PureWhite)
