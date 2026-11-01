@@ -220,3 +220,8 @@ Figma Search frames also contain an Android keyboard instance and "File or folde
 - Progress glyph size still unread. Roboto stands in for Helvetica Neue and Inter.
 
 - Correction (Main, 12:24): chevron back is applied ONLY on Download Detail (chevronBack=true), where read. Other screens keep the earlier arrow, unverified against their Figma frames. Chip-row horizontalScroll is a fixture/runtime adaptation of Figma overflow (source shows clipping only; scrolling is not source-grounded).
+
+## Download Detail part 5 (reads 12:41-12:43 IST)
+- "Pause all": Geist Mono 18, hug 98x23 (read). Applied (was 13). Chip label and superscript line heights set to 23 / 15 to match read hug heights (chip 36.95).
+- Row: Fill "White" (opacity not read), stroke D9D9D9 width 1 Inside (read). Composite fill SAMPLED from the 68% reference capture at F0F0F0 over Bg EAEAE8: that hex is a sample, not a panel read. Back circle also samples F0F0F0 (applied on Download Detail only).
+- Not read yet: progress glyph (faint dotted track + two-bar pause in Figma), chip-row backdrop band, cause of the ~3-4dp vertical offset (line heights are the first suspect).

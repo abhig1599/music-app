@@ -37,13 +37,15 @@ import com.abhi.musicapp.ui.theme.PureWhite
  * Figma "Download Detail" (59-2079). FIXTURE ONLY: no download engine exists (source/ToS question open), so no route points here.
  * Geometry estimated from the 68% view (rows ~72dp, gap 6); not Design-panel reads. Row states: 0 error "!", 1 progress+pause, 2 done check, 3 X.
  */
+private val RowFill = androidx.compose.ui.graphics.Color(0xFFF0F0F0) // SAMPLED from reference pixels (Figma panel shows "White" fill; opacity not read)
+private val RowStroke = androidx.compose.ui.graphics.Color(0xFFD9D9D9) // Figma panel: D9D9D9, 1, Inside
 private val Bg2Fill = androidx.compose.ui.graphics.Color(0xFFE3E3E1) // Figma token Bg 2
 
 @Composable
 fun DownloadListFixture(onBack: () -> Unit = {}) {
     val inkC = InkBlack
     FigmaPage("Downloads", onBack, titleSize = 30.sp, chevronBack = true, trailing = {
-        Text("Pause all", fontFamily = GeistMono, fontSize = 13.sp, color = InkBlack,
+        Text("Pause all", fontFamily = GeistMono, fontSize = 18.sp, lineHeight = 23.sp, softWrap = false, color = InkBlack,
             modifier = Modifier.clip(RoundedCornerShape(8.72.dp)).background(Bg2Fill).padding(7.dp))
     }) {
         Column(verticalArrangement = Arrangement.spacedBy(24.dp)) {
@@ -52,14 +54,14 @@ fun DownloadListFixture(onBack: () -> Unit = {}) {
                     val c = if (sel) PureWhite else InkBlack
                     Row(Modifier.clip(RoundedCornerShape(8.72.dp)).background(if (sel) Orangs else Bg2Fill).padding(6.97.dp),
                         horizontalArrangement = Arrangement.spacedBy(2.62.dp), verticalAlignment = Alignment.Top) {
-                        Text(t, fontFamily = GeistMono, fontSize = 18.sp, color = c, softWrap = false) // Figma: Geist Mono Regular 18
-                        Text(n, fontSize = 12.21.sp, color = c, softWrap = false) // Figma: Inter Regular 12.21 (system sans stands in)
+                        Text(t, fontFamily = GeistMono, fontSize = 18.sp, lineHeight = 23.sp, color = c, softWrap = false) // Figma: Geist Mono Regular 18
+                        Text(n, fontSize = 12.21.sp, lineHeight = 15.sp, color = c, softWrap = false) // Figma: Inter Regular 12.21 (system sans stands in)
                     }
                 }
             }
             Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 listOf(0, 1, 2, 3).forEach { state ->
-                    Row(Modifier.fillMaxWidth().height(72.dp).clip(RoundedCornerShape(10.dp)).background(PureWhite).padding(10.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Row(Modifier.fillMaxWidth().height(72.dp).clip(RoundedCornerShape(10.dp)).background(RowFill).border(1.dp, RowStroke, RoundedCornerShape(10.dp)).padding(10.dp), verticalAlignment = Alignment.CenterVertically) {
                         Box(Modifier.size(50.dp).clip(RoundedCornerShape(8.dp)).background(GrayLight)) // photo not shipped
                         Spacer(Modifier.width(10.dp))
                         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {

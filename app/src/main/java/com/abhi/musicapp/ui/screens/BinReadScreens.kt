@@ -42,7 +42,7 @@ import com.abhi.musicapp.ui.theme.SurfaceSoft
 @Composable
 internal fun FigmaPage(title: String, onBack: () -> Unit, trailing: @Composable () -> Unit = {}, titleSize: androidx.compose.ui.unit.TextUnit = 28.sp, chevronBack: Boolean = false, content: @Composable () -> Unit) {
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(start = 22.dp, end = 17.dp, top = 41.dp)) {
-        Box(Modifier.size(44.dp).clip(CircleShape).background(PureWhite).clickable(onClick = onBack), contentAlignment = Alignment.Center) {
+        Box(Modifier.size(44.dp).clip(CircleShape).background(if (chevronBack) androidx.compose.ui.graphics.Color(0xFFF0F0F0) else PureWhite).clickable(onClick = onBack), contentAlignment = Alignment.Center) {
             if (chevronBack) {
             androidx.compose.foundation.Canvas(Modifier.size(width = 6.dp, height = 12.dp)) { // Figma Download Detail: chevron vector 6x12, 2px stroke, Gray (hex inferred)
                 val st = 2.dp.toPx()
