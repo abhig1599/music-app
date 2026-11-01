@@ -218,3 +218,5 @@ Figma Search frames also contain an Android keyboard instance and "File or folde
 - Check: 24x24 Black filled vector in the 32 slot (inner check size not read).
 - X: frame 24x24, vector 12x12 at (6,6), stroke Black 2 round, drawn with Canvas.
 - Progress glyph size still unread. Roboto stands in for Helvetica Neue and Inter.
+
+- Correction (Main, 12:24): chevron back is applied ONLY on Download Detail (chevronBack=true), where read. Other screens keep the earlier arrow, unverified against their Figma frames. Chip-row horizontalScroll is a fixture/runtime adaptation of Figma overflow (source shows clipping only; scrolling is not source-grounded).

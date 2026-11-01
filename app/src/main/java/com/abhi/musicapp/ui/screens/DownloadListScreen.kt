@@ -42,7 +42,7 @@ private val Bg2Fill = androidx.compose.ui.graphics.Color(0xFFE3E3E1) // Figma to
 @Composable
 fun DownloadListFixture(onBack: () -> Unit = {}) {
     val inkC = InkBlack
-    FigmaPage("Downloads", onBack, titleSize = 30.sp, trailing = {
+    FigmaPage("Downloads", onBack, titleSize = 30.sp, chevronBack = true, trailing = {
         Text("Pause all", fontFamily = GeistMono, fontSize = 13.sp, color = InkBlack,
             modifier = Modifier.clip(RoundedCornerShape(8.72.dp)).background(Bg2Fill).padding(7.dp))
     }) {
