@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -46,13 +47,13 @@ fun DownloadListFixture(onBack: () -> Unit = {}) {
             modifier = Modifier.clip(RoundedCornerShape(8.72.dp)).background(Bg2Fill).padding(7.dp))
     }) {
         Column(verticalArrangement = Arrangement.spacedBy(24.dp)) {
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            Row(Modifier.horizontalScroll(androidx.compose.foundation.rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(12.dp)) { // Figma row overflows the frame (more chips off-screen)
                 listOf(Triple("All", "20", true), Triple("Pending", "02", false), Triple("Downloaded", "06", false)).forEach { (t, n, sel) ->
                     val c = if (sel) PureWhite else InkBlack
                     Row(Modifier.clip(RoundedCornerShape(8.72.dp)).background(if (sel) Orangs else Bg2Fill).padding(6.97.dp),
                         horizontalArrangement = Arrangement.spacedBy(2.62.dp), verticalAlignment = Alignment.Top) {
-                        Text(t, fontFamily = GeistMono, fontSize = 18.sp, color = c) // Figma: Geist Mono Regular 18
-                        Text(n, fontSize = 12.21.sp, color = c) // Figma: Inter Regular 12.21 (system sans stands in)
+                        Text(t, fontFamily = GeistMono, fontSize = 18.sp, color = c, softWrap = false) // Figma: Geist Mono Regular 18
+                        Text(n, fontSize = 12.21.sp, color = c, softWrap = false) // Figma: Inter Regular 12.21 (system sans stands in)
                     }
                 }
             }
