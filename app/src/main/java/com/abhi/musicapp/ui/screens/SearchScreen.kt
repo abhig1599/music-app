@@ -80,7 +80,7 @@ fun SearchScreen(onBack: () -> Unit, fixture: SearchFixture = SearchFixture.None
                 else -> listOf("[songs name ]" to "File or folder name", "Love songs" to "10 songs", "Love songs" to "10 songs")
             }
             rows.forEach { (t, sub) ->
-                Row(Modifier.fillMaxWidth().height(72.dp).clip(RoundedCornerShape(10.dp)).background(PureWhite).border(1.dp, androidx.compose.ui.graphics.Color(0xFFD9D9D9), RoundedCornerShape(10.dp)).padding(10.dp), verticalAlignment = Alignment.CenterVertically) {
+                Row(Modifier.fillMaxWidth().height(72.dp).clip(RoundedCornerShape(10.dp)).background(androidx.compose.ui.graphics.Color(0xFFF0F0F0)).border(1.dp, androidx.compose.ui.graphics.Color(0xFFD9D9D9), RoundedCornerShape(10.dp)).padding(10.dp), verticalAlignment = Alignment.CenterVertically) {
                     Box(Modifier.size(50.dp).clip(RoundedCornerShape(10.dp)).background(PureWhite)) // Figma read: 50x50 radius 10, Image fill (photo not shipped = non-match)
                     Spacer(Modifier.width(10.dp))
                     Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) { // Figma read: text column gap 4

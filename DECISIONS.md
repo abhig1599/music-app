@@ -273,3 +273,6 @@ Figma Search frames also contain an Android keyboard instance and "File or folde
 ## Past-records subtitle (16:43 IST) - DERIVED, not a panel read
 - Figma text column hug width = 160 and "File or folder name" (19 chars) is the widest line; Geist Mono advance 0.6em => 160/(19*0.6) = 14.0. So subtitle size 14 (was inferred 12). Applied, marked derived.
 - Overlay (CI e.g. a44c260): row fill still looks greyer in Figma than our White (fill opacity unread, stroke D9D9D9 applied but faint); title/subtitle spacing in ours is looser (line-height Auto vs Roboto metrics). Not changed.
+
+## Row fill sampled (16:58 IST)
+- Figma panel says row fill = style "White", but the rendered Figma capture samples F0F0F0 in row interiors (same value as the Download Detail chip band F0F0F0). So the "White" style likely is not FFFFFF (hex not read from the styles panel). SAMPLED, not read. Applied F0F0F0 to the Search past-records rows only. NOT applied globally: other screens that use "White" (PureWhite in code) need their own check.
