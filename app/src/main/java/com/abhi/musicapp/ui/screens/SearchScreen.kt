@@ -85,7 +85,7 @@ fun SearchScreen(onBack: () -> Unit, fixture: SearchFixture = SearchFixture.None
                     Spacer(Modifier.width(10.dp))
                     Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) { // Figma read: text column gap 4
                         Text(t, fontSize = 18.sp, color = InkBlack)
-                        Text(sub, fontFamily = GeistMono, fontSize = 12.sp, color = InkBlack)
+                        Text(sub, fontFamily = GeistMono, fontSize = 14.sp, color = InkBlack) // DERIVED not read: Figma text column hugs 160 wide = 19 chars x 0.6em x 14sp
                     }
                     when (fixture) {
                         SearchFixture.PastRecords -> { val xInk = InkBlack; Box(Modifier.size(24.dp), contentAlignment = Alignment.Center) { // Figma: Vector 2px Black stroke; 12x12 size ASSUMED same as Download Detail X

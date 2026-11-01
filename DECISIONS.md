@@ -269,3 +269,7 @@ Figma Search frames also contain an Android keyboard instance and "File or folde
 - X: Frame 24x24, clip content, Vector inside (vector size still not read directly; 12 assumed).
 - Subtitle font/size NOT read (panel read failed; mono 12 still inferred). Remove-all font and magnifier glyph unread.
 - Why rows looked greyer in the capture: stroke D9D9D9 plus canvas scaling; not a different fill.
+
+## Past-records subtitle (16:43 IST) - DERIVED, not a panel read
+- Figma text column hug width = 160 and "File or folder name" (19 chars) is the widest line; Geist Mono advance 0.6em => 160/(19*0.6) = 14.0. So subtitle size 14 (was inferred 12). Applied, marked derived.
+- Overlay (CI e.g. a44c260): row fill still looks greyer in Figma than our White (fill opacity unread, stroke D9D9D9 applied but faint); title/subtitle spacing in ours is looser (line-height Auto vs Roboto metrics). Not changed.
