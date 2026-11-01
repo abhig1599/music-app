@@ -81,6 +81,10 @@ class ScreenShotTest {
     @Test fun playerSheetLyrics() = shot("player_sheet_lyrics") { com.abhi.musicapp.ui.screens.PlayerSheetFixture(com.abhi.musicapp.ui.screens.PlayerSheet.Lyrics) }
     @Test fun playerSheetQueue() = shot("player_sheet_queue") { com.abhi.musicapp.ui.screens.PlayerSheetFixture(com.abhi.musicapp.ui.screens.PlayerSheet.Queue) }
 
+    @Test fun playerSheetMenu() = shot("player_sheet_menu") { com.abhi.musicapp.ui.screens.PlayerSheetFixture(com.abhi.musicapp.ui.screens.PlayerSheet.Menu) }
+    @Test fun playerSheetFocusOpen() = shot("player_sheet_focusopen") { com.abhi.musicapp.ui.screens.PlayerSheetFixture(com.abhi.musicapp.ui.screens.PlayerSheet.FocusOpen) }
+    @Test fun playerSheetDeviceOpen() = shot("player_sheet_deviceopen") { com.abhi.musicapp.ui.screens.PlayerSheetFixture(com.abhi.musicapp.ui.screens.PlayerSheet.DeviceOpen) }
+
     @Test fun player() = shot("player") {
         // same sample state as the Figma frame: playing, 1:01 of 03:12
         PlayerScreen(onBack = {}, fixture = com.abhi.musicapp.playback.PlayerUiState(

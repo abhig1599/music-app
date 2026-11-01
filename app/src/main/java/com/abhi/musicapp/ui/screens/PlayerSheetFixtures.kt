@@ -20,6 +20,13 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.AddCircleOutline
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.DarkMode
+import androidx.compose.material.icons.filled.VolumeOff
+import androidx.compose.material.icons.filled.Bluetooth
+import androidx.compose.material.icons.filled.PhoneAndroid
+import androidx.compose.material.icons.filled.Speaker
+import androidx.compose.material.icons.filled.Headset
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.DragHandle
 import androidx.compose.material.icons.filled.Search
@@ -50,7 +57,7 @@ import com.abhi.musicapp.ui.theme.PureWhite
  * Photos not shipped (neutral tiles). Delete dialog keeps the Figma copy including its typos ("thi song will be move", "Deleat") as source text.
  * The Figma Delete dialog icon is a brand/graphic mark: not shipped, neutral placeholder.
  */
-enum class PlayerSheet { AddToPlaylist, NewPlaylist, Speed, Delete, LyricsEmpty, Lyrics, Queue }
+enum class PlayerSheet { Menu, FocusOpen, DeviceOpen, AddToPlaylist, NewPlaylist, Speed, Delete, LyricsEmpty, Lyrics, Queue }
 
 private val sheetShape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp)
 private val SheetBg = Color(0xFFF0F0F0)
@@ -63,6 +70,38 @@ fun PlayerSheetFixture(kind: PlayerSheet) {
         val dim = kind == PlayerSheet.NewPlaylist || kind == PlayerSheet.Delete
         if (dim) Box(Modifier.fillMaxSize().background(Color(0x66000000)))
         when (kind) {
+            PlayerSheet.Menu -> Column(Modifier.offset(x = 134.dp, y = 94.dp).width(232.dp).clip(RoundedCornerShape(8.dp)).background(SheetBg)) {
+                // Figma "Song Page - menu": Equaliser is drawn greyed out (disabled) in the design.
+                listOf("Sleep Time", "Add to playlist", "Share", "Speed", "Delete", "Equaliser", "Lyrics").forEach { t ->
+                    Row(Modifier.fillMaxWidth().height(51.dp).padding(horizontal = 12.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Box(Modifier.size(16.dp).clip(RoundedCornerShape(3.dp)).background(if (t == "Equaliser") GrayLight else GrayText)) // glyphs not matched
+                        Spacer(Modifier.width(10.dp))
+                        Text(t, fontSize = 12.sp, color = if (t == "Equaliser") GrayText.copy(alpha = 0.6f) else InkBlack)
+                    }
+                }
+            }
+            PlayerSheet.FocusOpen -> Box {
+                Box(Modifier.offset(x = 298.dp, y = 590.dp).size(72.dp, 212.dp).clip(RoundedCornerShape(36.dp)).background(SheetBg))
+                listOf(624, 692).forEachIndexed { i, cy ->
+                    Box(Modifier.offset(x = 302.dp, y = (cy - 32).dp).size(64.dp).clip(CircleShape).background(GrayLight), contentAlignment = Alignment.Center) {
+                        Icon(if (i == 0) Icons.Filled.VolumeOff else Icons.Filled.DarkMode, null, tint = InkBlack, modifier = Modifier.size(22.dp))
+                    }
+                }
+                Box(Modifier.offset(x = 298.dp, y = 726.dp).size(72.dp).clip(CircleShape).background(InkBlack), contentAlignment = Alignment.Center) {
+                    Icon(Icons.Filled.Close, null, tint = PureWhite, modifier = Modifier.size(24.dp))
+                }
+            }
+            PlayerSheet.DeviceOpen -> Box {
+                Box(Modifier.offset(x = 19.dp, y = 520.dp).size(72.dp, 282.dp).clip(RoundedCornerShape(36.dp)).background(SheetBg))
+                listOf(554, 624, 692).forEachIndexed { i, cy ->
+                    Box(Modifier.offset(x = 23.dp, y = (cy - 32).dp).size(64.dp).clip(CircleShape).background(GrayLight), contentAlignment = Alignment.Center) {
+                        Icon(listOf(Icons.Filled.Bluetooth, Icons.Filled.PhoneAndroid, Icons.Filled.Speaker)[i], null, tint = InkBlack, modifier = Modifier.size(22.dp))
+                    }
+                }
+                Box(Modifier.offset(x = 19.dp, y = 726.dp).size(72.dp).clip(CircleShape).background(InkBlack), contentAlignment = Alignment.Center) {
+                    Icon(Icons.Filled.Headset, null, tint = PureWhite, modifier = Modifier.size(24.dp))
+                }
+            }
             PlayerSheet.NewPlaylist -> Card(338.dp, 170.dp) {
                 Text("New playlist", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = InkBlack)
                 Spacer(Modifier.height(10.dp))
@@ -85,7 +124,7 @@ fun PlayerSheetFixture(kind: PlayerSheet) {
                     Text("Deleat", fontFamily = GeistMono, fontSize = 11.sp, color = Color(0xFFE5484D))
                 }
             }
-            else -> {
+            PlayerSheet.AddToPlaylist, PlayerSheet.Speed, PlayerSheet.LyricsEmpty, PlayerSheet.Lyrics, PlayerSheet.Queue -> {
                 val top = when (kind) { PlayerSheet.AddToPlaylist -> 558; PlayerSheet.Speed -> 470; else -> 440 }
                 Column(Modifier.fillMaxWidth().offset(y = top.dp).height((844 - top).dp).clip(sheetShape).background(SheetBg).padding(horizontal = 12.dp)) {
                     Box(Modifier.padding(top = 8.dp).align(Alignment.CenterHorizontally).size(width = 28.dp, height = 3.dp).clip(CircleShape).background(GrayLight))
@@ -131,7 +170,7 @@ fun PlayerSheetFixture(kind: PlayerSheet) {
                                 Text("Sample lyric line number ${i + 1} goes here", fontSize = 9.sp, color = if (i == 3) Orangs else InkBlack, modifier = Modifier.padding(vertical = 3.dp))
                             }
                         }
-                        else -> Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                        else -> Column(verticalArrangement = Arrangement.spacedBy(6.dp)) { // Queue
                             listOf("Malcolm Todd - Earrings", "Die With A Smile", "Die With A Smile", "Judas").forEachIndexed { i, t ->
                                 Row(Modifier.fillMaxWidth().height(42.dp).clip(RoundedCornerShape(8.dp)).border(1.dp, GrayLight, RoundedCornerShape(8.dp)).padding(horizontal = 6.dp), verticalAlignment = Alignment.CenterVertically) {
                                     Icon(Icons.Filled.DragHandle, null, tint = GrayText, modifier = Modifier.size(16.dp))
