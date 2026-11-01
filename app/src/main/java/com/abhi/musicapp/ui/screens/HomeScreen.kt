@@ -347,38 +347,32 @@ private fun GridTile(
     }
 }
 
-/** Sort options bottom sheet (his Sort design; options verified against the Figma sheet). */
+/** Sort sheet per Figma node 47-14214: "Audio Sort", six Geist Mono 12 options, selected one orange with sort icon.
+ *  Option labels copied verbatim (incl. "Sort Duration"). Sheet pad 20, gap 10, top radius 24 (Frame 43 read).
+ *  Row pitch ~39dp is estimated from the 68% view. Selection is visual only: not yet wired to list order. */
 @Composable
 fun SortSheetContent(onDone: () -> Unit) {
-    val options = listOf("Name A to Z", "Name Z to A", "Newest first", "Oldest first", "Longest first", "Shortest first")
+    val options = listOf("Newest", "Most Played", "A to Z", "Artist", "Long Duration", "Sort Duration")
     var selected by remember { mutableIntStateOf(0) }
-    Column(Modifier.padding(horizontal = 24.dp, vertical = 8.dp)) {
-        Text("Sort", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = InkBlack)
-        Spacer(Modifier.height(12.dp))
+    Column(Modifier.padding(start = 20.dp, end = 20.dp, top = 6.dp, bottom = 32.dp)) {
+        Text("Audio Sort", fontSize = 22.sp, fontWeight = FontWeight.Bold, color = InkBlack)
+        Spacer(Modifier.height(14.dp))
         options.forEachIndexed { i, opt ->
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clickable { selected = i }
-                    .padding(vertical = 12.dp),
+                    .height(39.dp)
+                    .clickable { selected = i; onDone() }
+                    .padding(horizontal = 10.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Text(opt, fontSize = 15.sp, color = InkBlack, modifier = Modifier.weight(1f))
-                if (selected == i) Text("✓", color = Orangs, fontWeight = FontWeight.Bold)
+                Text(
+                    opt, fontFamily = com.abhi.musicapp.ui.theme.GeistMono, fontSize = 12.sp,
+                    color = if (selected == i) Orangs else InkBlack.copy(alpha = 0.7f),
+                    modifier = Modifier.weight(1f),
+                )
+                if (selected == i) Icon(Icons.Filled.Sort, null, tint = Orangs, modifier = Modifier.size(16.dp))
             }
         }
-        Spacer(Modifier.height(16.dp))
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clip(androidx.compose.foundation.shape.RoundedCornerShape(14.dp))
-                .background(Orangs)
-                .clickable(onClick = onDone)
-                .padding(vertical = 14.dp),
-            horizontalArrangement = Arrangement.Center,
-        ) {
-            Text("Done", color = com.abhi.musicapp.ui.theme.PureWhite, fontWeight = FontWeight.Bold)
-        }
-        Spacer(Modifier.height(24.dp))
     }
 }

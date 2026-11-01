@@ -152,3 +152,9 @@ Frame 81: 351 x 692.52 Hug, vertical gap 24, children: Frame 11 (back), Frame 82
 Frame 42: 351x168 Hug, White, r16, pad L14 T16 R14 B10, gap 13; Frame 77 title row 105x20 (gap 6); Frame 78 API row 321 Fill x 46 Hug (bottom pad 4); Frame 32 button area 321 x 48 (vertical, gap 6). Frame 47: 351 x 267.52 Hug, same pad/radius. Note: Geist Mono Medium 12, 351 Fill x 80 Hug, line height Auto.
 Correction: earlier estimates (cards 166/265, note 9sp, buttons 40) replaced with these. Estimated sizes elsewhere (Settings text, Recycle pill) probably under-read too: re-read next.
 Open (tracked): Equaliser/Theme/Ringtone/Backup/Download-location screens have no entry point from the Figma Settings; routes kept, entry point undecided - do not drop, do not invent navigation.
+
+## Sort sheet (node 47-14214) read 6:19
+- Sheet Frame 43: 390x569 pad 20/20/20/142 gap 10 radius 24, fill White. Content column 351 gap 6; row frames 351x72 White r10 pad10 (same as Recycle rows) - hierarchy overlaps visually, only partly read.
+- Visible: title "Audio Sort" bold ~22, options Newest(orange, sort icon right)/Most Played/A to Z/Artist/Long Duration/Sort Duration in Geist Mono ~12, pitch ~39 (estimate). Previous labels/Done button were NOT from Figma; replaced.
+- Underlying screen is "Playlist" Home with orange "Update available" pill (Mono) - separate Home variant, not yet built.
+- Selection visual only, not wired to list order.
