@@ -166,3 +166,5 @@ Open (tracked): Equaliser/Theme/Ringtone/Backup/Download-location screens have n
 - Figma title typo "Downlaod Playlist": built as "Download Playlist" - flagged to Main.
 - Spotify/YouTube as sources implies a download source decision (still open; legal/ToS). Real app: no network, button disabled. Chips are not functional selectors.
 - "Downloads" list screen (All 20 / Pending 02 / Downloaded, Pause, rows with "Playlist Name") seen in frame 59-1730 neighbour: NOT yet built or measured.
+
+- Main 6:44: fixtures keep source typo "Downlaod Playlist" (recorded as source typo), runtime says "Download Playlist". YouTube chip asset missing = not matched (blank circle). Sort/download controls render-only; source/ToS question stays open.

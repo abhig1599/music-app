@@ -49,12 +49,14 @@ enum class DlFixture { None, LinkAdded, Loading, Songs }
 @Composable
 fun DownloadsScreen(onBack: () -> Unit, fixture: DlFixture = DlFixture.None) {
     var link by remember { mutableStateOf(if (fixture == DlFixture.None) "" else "www.youtube/playlist") }
-    FigmaPage("Download Playlist", onBack) {
+    // Fixtures keep the Figma source spelling "Downlaod Playlist" (source typo); runtime wording is corrected.
+    FigmaPage(if (fixture == DlFixture.None) "Download Playlist" else "Downlaod Playlist", onBack) {
         Column(verticalArrangement = Arrangement.spacedBy(24.dp)) {
             Row(Modifier.fillMaxWidth().height(63.dp), horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
                 Box(Modifier.height(44.dp).clip(RoundedCornerShape(22.dp)).background(InkBlack).padding(horizontal = 14.dp), contentAlignment = Alignment.Center) {
                     Text("Spotify", fontFamily = GeistMono, fontSize = 12.sp, color = PureWhite)
                 }
+                // YouTube chip: brand asset not shipped; blank circle placeholder (NOT visually matched).
                 Box(Modifier.size(44.dp).clip(CircleShape).background(SurfaceSoft))
             }
             Row(Modifier.width(344.dp).height(48.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
