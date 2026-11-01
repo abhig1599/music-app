@@ -61,7 +61,8 @@ class ScreenShotTest {
 
     @Test fun onboardingPermissions() = shot("onboarding_permissions") { OnboardingScreen(onDone = {}, initialStep = 2) }
 
-    @Test fun onboardingReader() = shot("onboarding_reader") { OnboardingScreen(onDone = {}, initialStep = 3) }
+    @Test fun onboardingReader() = shot("onboarding_reader") { OnboardingScreen(onDone = {}, initialStep = 3, figmaFixture = true) }
+    @Test fun onboardingReaderShipped() = shot("onboarding_reader_shipped") { OnboardingScreen(onDone = {}, initialStep = 3) }
 
     @Test fun home() = shot("home") {
         HomeScreen({}, {}, {}, {}, {}, {}, fixture = com.abhi.musicapp.playback.PlayerUiState(

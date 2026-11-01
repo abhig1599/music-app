@@ -61,7 +61,7 @@ private val Mono = com.abhi.musicapp.ui.theme.GeistMono
  *    his consent sentence is replaced because no T&C documents exist.
  */
 @Composable
-fun OnboardingScreen(onDone: () -> Unit, initialStep: Int = 1) {
+fun OnboardingScreen(onDone: () -> Unit, initialStep: Int = 1, figmaFixture: Boolean = false) {
     var step by remember { mutableIntStateOf(initialStep) }
     val sheetTop = if (step == 3) 252.dp else 339.dp
 
@@ -82,7 +82,7 @@ fun OnboardingScreen(onDone: () -> Unit, initialStep: Int = 1) {
                 when (step) {
                     1 -> LanguageStep()
                     2 -> PermissionsStep()
-                    else -> ReaderStep(onSkip = onDone)
+                    else -> ReaderStep(onSkip = onDone, figmaFixture = figmaFixture)
                 }
             }
             if (step < 3) {
@@ -211,7 +211,8 @@ private fun PermissionRow(title: String, detail: String, on: Boolean, onToggle: 
 }
 
 @Composable
-private fun ReaderStep(onSkip: () -> Unit) {
+private fun ReaderStep(onSkip: () -> Unit, figmaFixture: Boolean) {
+    if (!figmaFixture) { ReaderStepShipped(onSkip); return }
     Column {
         SheetTitle("Enable Reader")
         Spacer(Modifier.height(14.dp))
@@ -229,6 +230,35 @@ private fun ReaderStep(onSkip: () -> Unit) {
         Spacer(Modifier.height(8.dp))
         Text("Reader setup is not connected yet; fields are disabled until its behaviour is decided.",
             fontSize = 9.sp, color = GrayText, fontFamily = Mono)
+        Spacer(Modifier.weight(1f, fill = false).height(40.dp))
+        Box(
+            modifier = Modifier
+                .fillMaxWidth().height(46.dp)
+                .clip(RoundedCornerShape(10.dp))
+                .background(Color(0xFFE3E3E1))
+                .clickable(onClick = onSkip),
+            contentAlignment = Alignment.Center,
+        ) { Text("Skip & Get Started", fontFamily = Mono, fontSize = 13.sp, color = InkBlack) }
+        Spacer(Modifier.height(14.dp))
+    }
+}
+
+/** Shipped state: Reader has no decided behaviour, so nothing is offered or promised. */
+@Composable
+private fun ReaderStepShipped(onSkip: () -> Unit) {
+    Column {
+        SheetTitle("Reader (unavailable)")
+        Spacer(Modifier.height(14.dp))
+        Text(
+            "Reader is not available in this version. There is nothing to set up yet.",
+            fontFamily = Mono, fontSize = 10.sp, color = InkBlack, lineHeight = 13.sp,
+        )
+        Spacer(Modifier.height(14.dp))
+        DisabledField("API Name")
+        Spacer(Modifier.height(10.dp))
+        DisabledField("API Key")
+        Spacer(Modifier.height(8.dp))
+        Text("These fields are disabled.", fontSize = 9.sp, color = GrayText, fontFamily = Mono)
         Spacer(Modifier.weight(1f, fill = false).height(40.dp))
         Box(
             modifier = Modifier

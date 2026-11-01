@@ -315,3 +315,7 @@ Figma Search frames also contain an Android keyboard instance and "File or folde
 - logcat: FATAL EXCEPTION main, com.abhi.musicapp, IllegalArgumentException "Service not registered: ...MediaControllerImplBase$SessionServiceConnection" via ContextImpl.unbindService from MediaControllerImplBase.release.
 - Code-read cause (HYPOTHESIS until a re-run confirms): PlayerManager (process-wide object) built the MediaController with the Activity context from AppNav (LocalContext). The service connection is then tied to that Activity; Android force-unbinds it on Activity destroy and Media3's later release unbinds again. Same trace family as androidx/media issue 239 (reported with Activity-bound controllers). Fix: bind with applicationContext. Regression test only guards the context choice, not Media3 binding.
 - Not established: crash time relative to the first Next tap. Harness now timestamps steps and prints pid/focus after taps plus 50 logcat lines before the FATAL.
+
+## Onboarding Reader step (shipped vs fixture)
+- Shipped: title "Reader (unavailable)", copy says Reader is not available and nothing can be set up, fields "API Name" / "API Key" disabled, no link, no Figma sample hint. Fixture (figmaFixture=true, screenshot onboarding_reader) keeps the Figma original incl. "API Key (....hmwg)". No real key is stored, requested or exposed anywhere.
+- Media-key pause/resume in the smoke is service validation only, not UI proof.
