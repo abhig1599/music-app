@@ -247,3 +247,10 @@ Figma Search frames also contain an Android keyboard instance and "File or folde
 ## Mono text width check (14:49 IST) - UNRESOLVED
 - Bundled geist_mono.ttf is a variable font (fvar present), unitsPerEm 1000, advance 600 (=10.8dp at 18sp). Expected chip widths: "Up to date" 121.4, "Pause all" 111.
 - Measured in CI renders (pixel scan of docs/screenshots): Search chip about 130, Download "Pause all" chip about 119. About 7-8dp wider than expected in both. Cause unknown (candidates: Robolectric text metrics, variable-font instance, rounding). Not fixed. Mono text widths are unverified vs Figma.
+
+## Search past-records reads (14:50 IST, node 47-13667)
+- Rows (Frame 43/44/45): 344 Fill x 72 hug, auto layout padding 10, radius 10, fill White (opacity unread). Content 322x50; text column 292 Fill x 50. Matches our row geometry (72, pad 10, radius 10).
+- "Remove all" (Frame 72): 344 Fill x 51 hug, padding V16 H0, gap 10, NO fill, NO stroke. Matches our 51dp plain text. Font size (16 in ours) still not read.
+- Row X: Vector with 2px Black stroke (same as Download Detail X). Ours uses Material Close icon: NOT yet replaced (non-match).
+- Thumb radius: not read (panel selection got confused). Still inferred 8.
+- Row stack gap between rows not read.
