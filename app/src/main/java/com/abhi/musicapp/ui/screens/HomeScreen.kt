@@ -81,6 +81,8 @@ fun HomeScreen(
     onOpenFolders: () -> Unit,
     onOpenPlaylist: (String) -> Unit,
     fixture: com.abhi.musicapp.playback.PlayerUiState? = null,
+    /** Render-only: Figma 'Home page- update avilable' shows an orange header pill. No updater exists, so the app never sets this. */
+    updateAvailableFixture: Boolean = false,
 ) {
     var chip by remember { mutableIntStateOf(0) }
     var showSort by remember { mutableStateOf(false) }
@@ -106,10 +108,10 @@ fun HomeScreen(
             Text("Playlist", fontSize = 28.sp, fontWeight = FontWeight.Bold, color = InkBlack)
             Spacer(Modifier.weight(1f))
             Text(
-                "Up to date", fontFamily = monoFont, fontSize = 14.sp, color = InkBlack,
+                if (updateAvailableFixture) "Update available" else "Up to date", fontFamily = monoFont, fontSize = 14.sp, color = InkBlack,
                 modifier = Modifier
                     .clip(androidx.compose.foundation.shape.RoundedCornerShape(8.dp))
-                    .background(blockBg)
+                    .background(if (updateAvailableFixture) com.abhi.musicapp.ui.theme.Orangs else blockBg)
                     .padding(horizontal = 10.dp, vertical = 8.dp),
             )
         }

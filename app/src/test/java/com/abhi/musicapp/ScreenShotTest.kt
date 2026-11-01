@@ -68,6 +68,11 @@ class ScreenShotTest {
             title = "Song name in a line...", isPlaying = true, positionMs = 61_000L, durationMs = 192_000L, hasTrack = true))
     }
 
+    @Test fun homeUpdateFixture() = shot("home_update_fixture") {
+        HomeScreen({}, {}, {}, {}, {}, {}, updateAvailableFixture = true, fixture = com.abhi.musicapp.playback.PlayerUiState(
+            title = "Song name in a line...", isPlaying = true, positionMs = 61_000L, durationMs = 192_000L, hasTrack = true))
+    }
+
     @Test fun player() = shot("player") {
         // same sample state as the Figma frame: playing, 1:01 of 03:12
         PlayerScreen(onBack = {}, fixture = com.abhi.musicapp.playback.PlayerUiState(
