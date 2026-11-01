@@ -21,6 +21,12 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.QueueMusic
 import androidx.compose.material.icons.filled.Headset
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.DarkMode
+import androidx.compose.material.icons.filled.VolumeOff
+import androidx.compose.material.icons.filled.Speaker
+import androidx.compose.material.icons.filled.PhoneAndroid
+import androidx.compose.material.icons.filled.Bluetooth
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
@@ -68,7 +74,9 @@ private fun formatTotal(ms: Long): String {
  * pixel-exact. Focus glyph provisional (his pending decision).
  */
 @Composable
-fun PlayerScreen(onBack: () -> Unit, fixture: PlayerUiState? = null) {
+fun PlayerScreen(onBack: () -> Unit, fixture: PlayerUiState? = null, initialOverlay: Int = 0) {
+    // 0 none, 1 three-dots menu, 2 focus-mode popup, 3 output-device popup (Figma 'Song Page - menu', 'Song focus mode', 'Song Focus connected device').
+    var overlay by androidx.compose.runtime.remember { androidx.compose.runtime.mutableIntStateOf(initialOverlay) }
     val live by PlayerManager.state.collectAsState()
     val state = fixture ?: live
     val progress = if (state.durationMs > 0)
@@ -89,7 +97,8 @@ fun PlayerScreen(onBack: () -> Unit, fixture: PlayerUiState? = null) {
         ) {
             Text("Playlist", fontSize = 28.sp, fontWeight = FontWeight.Bold, color = InkBlack,
                 modifier = Modifier.weight(1f).clickable(onClick = onBack))
-            Icon(Icons.Filled.MoreVert, contentDescription = "Menu", tint = InkBlack)
+            Icon(Icons.Filled.MoreVert, contentDescription = "Menu", tint = InkBlack,
+                modifier = Modifier.clickable { overlay = if (overlay == 1) 0 else 1 })
         }
         TickDial(progress = progress, modifier = Modifier.offset(48.dp, 135.dp).size(301.dp).graphicsLayer { scaleX = dialScale; scaleY = dialScale; transformOrigin = androidx.compose.ui.graphics.TransformOrigin(0.5f, 0f) }, ticks = 48, pointer = true) {}
         Column(
@@ -145,7 +154,7 @@ fun PlayerScreen(onBack: () -> Unit, fixture: PlayerUiState? = null) {
                 contentAlignment = Alignment.Center,
             ) { Icon(Icons.Filled.SkipNext, contentDescription = "Next", tint = InkBlack) }
         }
-        Box(Modifier.offset(19.dp, (726.dp - shrink)).size(72.dp).clip(CircleShape).background(circle), contentAlignment = Alignment.Center) {
+        Box(Modifier.offset(19.dp, (726.dp - shrink)).size(72.dp).clip(CircleShape).background(circle).clickable { overlay = if (overlay == 3) 0 else 3 }, contentAlignment = Alignment.Center) {
             Icon(Icons.Filled.Headset, contentDescription = "Audio output", tint = InkBlack)
         }
         Row(
@@ -156,8 +165,40 @@ fun PlayerScreen(onBack: () -> Unit, fixture: PlayerUiState? = null) {
             Icon(Icons.AutoMirrored.Filled.QueueMusic, contentDescription = null, tint = InkBlack)
             Text("Queue", fontSize = 13.sp, fontWeight = FontWeight.Medium, color = InkBlack)
         }
-        Box(Modifier.offset(298.dp, (726.dp - shrink)).size(72.dp).clip(CircleShape).background(circle), contentAlignment = Alignment.Center) {
+        Box(Modifier.offset(298.dp, (726.dp - shrink)).size(72.dp).clip(CircleShape).background(circle).clickable { overlay = if (overlay == 2) 0 else 2 }, contentAlignment = Alignment.Center) {
             Icon(Icons.Filled.SelfImprovement, contentDescription = "Focus mode (icon pending his decision)", tint = InkBlack)
+        }
+
+        val sheet = androidx.compose.ui.graphics.Color(0xFFF6F6F4) // estimated popup fill
+        val pill = com.abhi.musicapp.ui.theme.GrayLight
+        if (overlay != 0) Box(Modifier.fillMaxSize().clickable(indication = null, interactionSource = androidx.compose.runtime.remember { androidx.compose.foundation.interaction.MutableInteractionSource() }) { overlay = 0 })
+        if (overlay == 1) Column(Modifier.offset(134.dp, 94.dp).width(232.dp).clip(androidx.compose.foundation.shape.RoundedCornerShape(8.dp)).background(sheet)) {
+            // Equaliser is drawn greyed out in the Figma menu: kept disabled (no EQ exists). Other entries only close the menu until their sheets are wired.
+            listOf("Sleep Time", "Add to playlist", "Share", "Speed", "Delete", "Equaliser", "Lyrics").forEach { t ->
+                val off = t == "Equaliser"
+                Row(Modifier.fillMaxWidth().height(51.dp).then(if (off) Modifier else Modifier.clickable { overlay = 0 }).padding(horizontal = 12.dp),
+                    verticalAlignment = Alignment.CenterVertically) {
+                    Box(Modifier.size(16.dp).clip(androidx.compose.foundation.shape.RoundedCornerShape(3.dp)).background(if (off) pill else com.abhi.musicapp.ui.theme.GrayText)) // glyphs not matched
+                    androidx.compose.foundation.layout.Spacer(Modifier.width(10.dp))
+                    Text(t, fontSize = 12.sp, color = if (off) com.abhi.musicapp.ui.theme.GrayText.copy(alpha = 0.6f) else InkBlack)
+                }
+            }
+        }
+        if (overlay == 2 || overlay == 3) {
+            val left = overlay == 3
+            val icons = if (left) listOf(Icons.Filled.Bluetooth, Icons.Filled.PhoneAndroid, Icons.Filled.Speaker) else listOf(Icons.Filled.VolumeOff, Icons.Filled.DarkMode)
+            val n = icons.size
+            val x = if (left) 19.dp else 298.dp
+            Box(Modifier.offset(x, 726.dp - shrink - (70.dp * n) - 16.dp).size(72.dp, 70.dp * n + 88.dp).clip(CircleShape).background(sheet))
+            icons.forEachIndexed { i, ic ->
+                // Buttons are visual only: no device list or audio-route capability exists in the app yet.
+                Box(Modifier.offset(x + 4.dp, 726.dp - shrink - (70.dp * (n - i)) + 4.dp - 6.dp).size(64.dp).clip(CircleShape).background(pill), contentAlignment = Alignment.Center) {
+                    Icon(ic, contentDescription = null, tint = InkBlack, modifier = Modifier.size(22.dp))
+                }
+            }
+            Box(Modifier.offset(x, 726.dp - shrink).size(72.dp).clip(CircleShape).background(InkBlack).clickable { overlay = 0 }, contentAlignment = Alignment.Center) {
+                Icon(if (left) Icons.Filled.Headset else Icons.Filled.Close, contentDescription = "Close", tint = androidx.compose.ui.graphics.Color.White)
+            }
         }
     }
 }

@@ -65,43 +65,12 @@ private val SheetBg = Color(0xFFF0F0F0)
 @Composable
 fun PlayerSheetFixture(kind: PlayerSheet) {
     Box(Modifier.fillMaxSize()) {
-        PlayerScreen(onBack = {}, fixture = PlayerUiState(title = "Malcolm Todd - Earrings", artist = "", isPlaying = true,
+        PlayerScreen(onBack = {}, initialOverlay = when (kind) { PlayerSheet.Menu -> 1; PlayerSheet.FocusOpen -> 2; PlayerSheet.DeviceOpen -> 3; else -> 0 }, fixture = PlayerUiState(title = "Malcolm Todd - Earrings", artist = "", isPlaying = true,
             positionMs = 61_000L, durationMs = 192_000L, hasTrack = true))
         val dim = kind == PlayerSheet.NewPlaylist || kind == PlayerSheet.Delete
         if (dim) Box(Modifier.fillMaxSize().background(Color(0x66000000)))
         when (kind) {
-            PlayerSheet.Menu -> Column(Modifier.offset(x = 134.dp, y = 94.dp).width(232.dp).clip(RoundedCornerShape(8.dp)).background(SheetBg)) {
-                // Figma "Song Page - menu": Equaliser is drawn greyed out (disabled) in the design.
-                listOf("Sleep Time", "Add to playlist", "Share", "Speed", "Delete", "Equaliser", "Lyrics").forEach { t ->
-                    Row(Modifier.fillMaxWidth().height(51.dp).padding(horizontal = 12.dp), verticalAlignment = Alignment.CenterVertically) {
-                        Box(Modifier.size(16.dp).clip(RoundedCornerShape(3.dp)).background(if (t == "Equaliser") GrayLight else GrayText)) // glyphs not matched
-                        Spacer(Modifier.width(10.dp))
-                        Text(t, fontSize = 12.sp, color = if (t == "Equaliser") GrayText.copy(alpha = 0.6f) else InkBlack)
-                    }
-                }
-            }
-            PlayerSheet.FocusOpen -> Box {
-                Box(Modifier.offset(x = 298.dp, y = 590.dp).size(72.dp, 212.dp).clip(RoundedCornerShape(36.dp)).background(SheetBg))
-                listOf(624, 692).forEachIndexed { i, cy ->
-                    Box(Modifier.offset(x = 302.dp, y = (cy - 32).dp).size(64.dp).clip(CircleShape).background(GrayLight), contentAlignment = Alignment.Center) {
-                        Icon(if (i == 0) Icons.Filled.VolumeOff else Icons.Filled.DarkMode, null, tint = InkBlack, modifier = Modifier.size(22.dp))
-                    }
-                }
-                Box(Modifier.offset(x = 298.dp, y = 726.dp).size(72.dp).clip(CircleShape).background(InkBlack), contentAlignment = Alignment.Center) {
-                    Icon(Icons.Filled.Close, null, tint = PureWhite, modifier = Modifier.size(24.dp))
-                }
-            }
-            PlayerSheet.DeviceOpen -> Box {
-                Box(Modifier.offset(x = 19.dp, y = 520.dp).size(72.dp, 282.dp).clip(RoundedCornerShape(36.dp)).background(SheetBg))
-                listOf(554, 624, 692).forEachIndexed { i, cy ->
-                    Box(Modifier.offset(x = 23.dp, y = (cy - 32).dp).size(64.dp).clip(CircleShape).background(GrayLight), contentAlignment = Alignment.Center) {
-                        Icon(listOf(Icons.Filled.Bluetooth, Icons.Filled.PhoneAndroid, Icons.Filled.Speaker)[i], null, tint = InkBlack, modifier = Modifier.size(22.dp))
-                    }
-                }
-                Box(Modifier.offset(x = 19.dp, y = 726.dp).size(72.dp).clip(CircleShape).background(InkBlack), contentAlignment = Alignment.Center) {
-                    Icon(Icons.Filled.Headset, null, tint = PureWhite, modifier = Modifier.size(24.dp))
-                }
-            }
+            PlayerSheet.Menu, PlayerSheet.FocusOpen, PlayerSheet.DeviceOpen -> Unit // rendered by PlayerScreen itself (real overlay)
             PlayerSheet.NewPlaylist -> Card(338.dp, 170.dp) {
                 Text("New playlist", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = InkBlack)
                 Spacer(Modifier.height(10.dp))
