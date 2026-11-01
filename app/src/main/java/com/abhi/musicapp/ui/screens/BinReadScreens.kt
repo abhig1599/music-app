@@ -79,7 +79,7 @@ fun RecycleBinScreen(onBack: () -> Unit, fixture: List<BinRow> = emptyList()) {
     }) {
         Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
             fixture.forEach { row ->
-                Row(Modifier.fillMaxWidth().height(72.dp).clip(RoundedCornerShape(10.dp)).background(PureWhite).padding(10.dp),
+                Row(Modifier.fillMaxWidth().height(72.dp).clip(RoundedCornerShape(10.dp)).background(com.abhi.musicapp.ui.theme.FigmaWhite).padding(10.dp),
                     verticalAlignment = Alignment.CenterVertically) {
                     // Thumb is a photo in the design; photo assets are not shipped, neutral tile instead.
                     Box(Modifier.size(50.dp).clip(RoundedCornerShape(8.dp)).background(SurfaceSoft))
@@ -106,7 +106,7 @@ fun ReadNowScreen(onBack: () -> Unit, fixtureApiName: String? = null) {
     FigmaPage("Read Now", onBack) {
         Column(verticalArrangement = Arrangement.spacedBy(24.dp)) {
             if (fixtureApiName != null) {
-                Column(Modifier.fillMaxWidth().height(168.dp).clip(RoundedCornerShape(16.dp)).background(PureWhite)
+                Column(Modifier.fillMaxWidth().height(168.dp).clip(RoundedCornerShape(16.dp)).background(com.abhi.musicapp.ui.theme.FigmaWhite)
                     .padding(start = 14.dp, end = 14.dp, top = 16.dp, bottom = 10.dp)) {
                     Text("API Collection", fontSize = 12.sp, color = InkBlack, modifier = Modifier.height(20.dp))
                     Spacer(Modifier.height(13.dp))
@@ -121,7 +121,7 @@ fun ReadNowScreen(onBack: () -> Unit, fixtureApiName: String? = null) {
                     ReadButton("Add API", dark = false, enabled = false)
                 }
             }
-            Column(Modifier.fillMaxWidth().height(267.52.dp).clip(RoundedCornerShape(16.dp)).background(PureWhite).padding(start = 14.dp, end = 14.dp, top = 16.dp, bottom = 10.dp)) {
+            Column(Modifier.fillMaxWidth().height(267.52.dp).clip(RoundedCornerShape(16.dp)).background(com.abhi.musicapp.ui.theme.FigmaWhite).padding(start = 14.dp, end = 14.dp, top = 16.dp, bottom = 10.dp)) {
                 Text("API Collection", fontSize = 12.sp, color = InkBlack)
                 Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
                     Text("No API added yet", fontSize = 11.sp, color = InkBlack)

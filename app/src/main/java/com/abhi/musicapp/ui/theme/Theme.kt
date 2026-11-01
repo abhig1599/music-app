@@ -16,7 +16,9 @@ private val LightInk = Color(0xFF1E1E1E)       // "Black"
 private val DarkBg = Color(0xFF1E1E1E)
 private val DarkSurface = Color(0xFF2A2A2A)
 private val DarkInk = Color(0xFFF0F0F0)
-val PureWhite = Color(0xFFFFFFFF)  // "White"
+val PureWhite = Color(0xFFFFFFFF)  // literal white (NOT the Figma "White" style)
+/** Figma color style "White" = F0F0F0 100% (read from Edit color style, 2026-11-01 17:09). */
+val FigmaWhite = Color(0xFFF0F0F0)
 val GrayLight = Color(0xFFD9D9D9)  // "Gray-light"
 val GrayText = Color(0xFF8A8A8A)
 

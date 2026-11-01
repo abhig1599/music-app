@@ -280,3 +280,9 @@ Figma Search frames also contain an Android keyboard instance and "File or folde
 ## "White" style hex READ (17:09 IST)
 - Figma Edit color style "White" (view only, closed without edits): F0F0F0, 100%. Reconciles the 16:58 sampled row fill: Search past-records row F0F0F0 is now source-grounded (row fill = style White).
 - Theme.kt has `PureWhite = FFFFFF // "White"`: token mismatch with Figma. NOT changed globally yet. PureWhite is used in ~14 files; each use must be checked as (a) Figma style "White" -> F0F0F0 or (b) literal white (e.g. glyph on orange, keyboard) -> keep. Inventory: Common 6, SleepPill 4, Settings 4, BinRead 5, Downloads 3, DownloadList 2, Player 3, PlayerSheetFixtures 2, Themes 2, Backup/Eq/Onboarding/Ringtone/Search 1 each, Theme.kt 3.
+
+## FigmaWhite token applied (17:21 IST) - per-use, source-grounded
+- Added FigmaWhite = F0F0F0 (style read). PureWhite stays literal FFFFFF.
+- Switched ONLY: Recycle bin rows (BinReadScreens:82, Figma "row ... White"), Read Now cards (109, 124; Frame 42/47 "White"), Home list row (Common:112; Home row "fill White"). 
+- Not switched (no per-use Figma evidence yet): IconTile (Common:67), Settings, Sheets, Themes, Player, etc. Literal white uses (glyph on dark/orange) stay PureWhite.
+- Row-only Search change is now grounded. Compiled change, CI pending; no overlay yet for Recycle/Read Now/Home.

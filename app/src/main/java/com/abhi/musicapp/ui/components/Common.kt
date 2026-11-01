@@ -109,7 +109,7 @@ fun SongRow(
             .fillMaxWidth()
             .padding(horizontal = 20.dp, vertical = 3.dp) // Figma: rows 351 wide at x20, gap 6
             .clip(RoundedCornerShape(10.dp))
-            .background(PureWhite)
+            .background(com.abhi.musicapp.ui.theme.FigmaWhite)
             .border(1.dp, Color(0xFFD3D3D1), RoundedCornerShape(10.dp))
             .clickable(onClick = onClick)
             .padding(10.dp),
