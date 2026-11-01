@@ -71,7 +71,7 @@ data class BinRow(val name: String, val daysLeft: Int)
  */
 @Composable
 fun RecycleBinScreen(onBack: () -> Unit, fixture: List<BinRow> = emptyList()) {
-    FigmaPage("Recycle Bin", onBack, trailing = {
+    FigmaPage("Recycle Bin", onBack, titleSize = 30.sp, chevronBack = true, trailing = {
         // "Empty Bin" pill: size/fill are estimates. Disabled: nothing can be binned yet.
         Box(Modifier.alpha(if (fixture.isEmpty()) 0.5f else 1f).clip(RoundedCornerShape(8.dp)).background(SurfaceSoft).padding(horizontal = 10.dp, vertical = 6.dp)) {
             Text("Empty Bin", fontFamily = GeistMono, fontSize = 13.sp, color = InkBlack)
@@ -85,8 +85,8 @@ fun RecycleBinScreen(onBack: () -> Unit, fixture: List<BinRow> = emptyList()) {
                     Box(Modifier.size(50.dp).clip(RoundedCornerShape(8.dp)).background(SurfaceSoft))
                     Spacer(Modifier.width(13.dp))
                     Column(Modifier.weight(1f)) {
-                        Text(row.name, fontSize = 13.sp, color = InkBlack)
-                        Text("${row.daysLeft} days left", fontFamily = GeistMono, fontSize = 10.sp, color = InkBlack)
+                        Text(row.name, fontSize = 18.sp, color = InkBlack) // Figma read: Helvetica Neue Regular 18
+                        Text("${row.daysLeft} days left", fontFamily = GeistMono, fontSize = 14.sp, /* DERIVED, not panel-verified */ color = InkBlack)
                     }
                     Icon(Icons.Filled.Undo, "Restore", tint = InkBlack, modifier = Modifier.size(24.dp))
                 }

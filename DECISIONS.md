@@ -286,3 +286,5 @@ Figma Search frames also contain an Android keyboard instance and "File or folde
 - Switched ONLY: Recycle bin rows (BinReadScreens:82, Figma "row ... White"), Read Now cards (109, 124; Frame 42/47 "White"), Home list row (Common:112; Home row "fill White"). 
 - Not switched (no per-use Figma evidence yet): IconTile (Common:67), Settings, Sheets, Themes, Player, etc. Literal white uses (glyph on dark/orange) stay PureWhite.
 - Row-only Search change is now grounded. Compiled change, CI pending; no overlay yet for Recycle/Read Now/Home.
+- Recycle bin (47-14803) READ 17:49: title 'Recycle Bin' Helvetica Neue Bold 30, 169x37 hug, ls 0%, Black style; row title Helvetica Neue Regular 18, 113x21 hug; Frame 81 x22 y41 w351 gap24. Subtitle font still unread.
+- APPLIED 17:50: Recycle title 30 Bold, chevron back (Figma shows chevron; glyph hex inferred as in Download Detail), row title 18, subtitle 14 (derived). Read Now sizes still unread, unchanged.
