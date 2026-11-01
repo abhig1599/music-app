@@ -40,6 +40,7 @@ private val Bg2Fill = androidx.compose.ui.graphics.Color(0xFFE3E3E1) // Figma to
 
 @Composable
 fun DownloadListFixture(onBack: () -> Unit = {}) {
+    val inkC = InkBlack
     FigmaPage("Downloads", onBack, titleSize = 30.sp, trailing = {
         Text("Pause all", fontFamily = GeistMono, fontSize = 13.sp, color = InkBlack,
             modifier = Modifier.clip(RoundedCornerShape(8.72.dp)).background(Bg2Fill).padding(7.dp))
@@ -72,8 +73,8 @@ fun DownloadListFixture(onBack: () -> Unit = {}) {
                                 2 -> Box(Modifier.size(24.dp).clip(CircleShape).background(InkBlack), contentAlignment = Alignment.Center) { Icon(Icons.Filled.Check, null, tint = PureWhite, modifier = Modifier.size(14.dp)) }
                                 else -> androidx.compose.foundation.Canvas(Modifier.size(12.dp)) { // Figma: 12x12 vector in 24x24 frame, 2px round Black stroke
                                     val w = 2.dp.toPx()
-                                    drawLine(InkBlack, androidx.compose.ui.geometry.Offset(0f, 0f), androidx.compose.ui.geometry.Offset(size.width, size.height), w, androidx.compose.ui.graphics.StrokeCap.Round)
-                                    drawLine(InkBlack, androidx.compose.ui.geometry.Offset(size.width, 0f), androidx.compose.ui.geometry.Offset(0f, size.height), w, androidx.compose.ui.graphics.StrokeCap.Round)
+                                    drawLine(inkC, androidx.compose.ui.geometry.Offset(0f, 0f), androidx.compose.ui.geometry.Offset(size.width, size.height), w, androidx.compose.ui.graphics.StrokeCap.Round)
+                                    drawLine(inkC, androidx.compose.ui.geometry.Offset(size.width, 0f), androidx.compose.ui.geometry.Offset(0f, size.height), w, androidx.compose.ui.graphics.StrokeCap.Round)
                                 }
                             }
                         }
