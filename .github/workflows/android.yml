@@ -25,10 +25,10 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
 
       - name: Build debug APK
-        run: ./gradlew :app:assembleDebug --stacktrace
+        run: ./gradlew :app:assembleDebug --stacktrace 2>&1 | tee /tmp/build.log; exit ${PIPESTATUS[0]}
 
       - name: Record screen screenshots
-        run: ./gradlew :app:recordRoborazziDebug --stacktrace
+        run: ./gradlew :app:recordRoborazziDebug --stacktrace 2>&1 | tee -a /tmp/build.log; exit ${PIPESTATUS[0]}
 
       - name: Upload debug APK
         uses: actions/upload-artifact@v4
@@ -53,4 +53,15 @@ jobs:
           git add docs/screenshots/
           git diff --cached --quiet && exit 0
           git commit -m "Update rendered screen screenshots [skip ci]"
+          git push
+
+      - name: Commit compile/test errors back to repo on failure
+        if: failure()
+        run: |
+          mkdir -p docs
+          grep -E "^e: |error:|FAILED|What went wrong|Caused by|Exception" /tmp/build.log | head -60 > docs/ci-last-failure.txt || true
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/ci-last-failure.txt
+          git commit -m "CI failure log [skip ci]" || exit 0
           git push
