@@ -42,8 +42,17 @@ object PlayerManager {
 
     private var queue: List<Song> = emptyList()
 
-    fun connect(context: Context) {
+    /**
+     * The controller lives in this process-wide singleton, so it must be bound with the
+     * application context. Binding it with an Activity context ties the service connection to
+     * that Activity, which Android force-unbinds when the Activity is destroyed; Media3 then
+     * unbinds again and crashes with "Service not registered" (see androidx/media issue 239).
+     */
+    internal fun controllerContext(context: Context): Context = context.applicationContext
+
+    fun connect(activityOrAppContext: Context) {
         if (controller != null) return
+        val context = controllerContext(activityOrAppContext)
         val token = SessionToken(context, ComponentName(context, PlaybackService::class.java))
         val future = MediaController.Builder(context, token).buildAsync()
         future.addListener({

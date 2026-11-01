@@ -3,7 +3,8 @@
 set -u
 OUT=smoke-out; mkdir -p $OUT; R=$OUT/report.txt; : > $R
 PKG=com.abhi.musicapp
-say(){ echo "$*" | tee -a $R; }
+say(){ echo "$(date +%H:%M:%S) $*" | tee -a $R; }
+focus(){ say "  [$1] pid=$(adb shell pidof $PKG | tr -d '\r') focus=$(adb shell dumpsys window | grep -m1 mCurrentFocus | sed 's/.*u0 //')"; }
 adb wait-for-device; adb shell input keyevent 82
 say "device sdk: $(adb shell getprop ro.build.version.sdk)"
 # synthetic 6s stereo tone
@@ -56,8 +57,8 @@ tap_text(){ refresh "$2"; c=$(center "$1"); if [ -n "$c" ]; then set -- $c; adb 
 W=$(adb shell wm size | grep -o '[0-9]*x[0-9]*$' | cut -dx -f1)
 
 adb shell am start -n $PKG/.MainActivity >/dev/null; sleep 6; shot 01_launch; refresh 01_launch
-say "launch ui has 'Next': $(grep -c 'text="Next"' /tmp/ui.xml)"
-tap_text "Next" s1; sleep 2; tap_text "Next" s2; sleep 2; shot 02_permissions; refresh 02_permissions; labels perms
+focus launched; say "launch ui has 'Next': $(grep -c 'text="Next"' /tmp/ui.xml)"
+tap_text "Next" s1; focus after_next1; sleep 2; tap_text "Next" s2; focus after_next2; sleep 2; shot 02_permissions; refresh 02_permissions; labels perms
 # permission toggle is the box at the right of the 'Music and audio' row
 c=$(center "Music and audio"); if [ -n "$c" ]; then set -- $c; adb shell input tap $((W-70)) $2; say "tapped audio toggle at y=$2"; fi
 sleep 3; shot 03_after_audio_tap; refresh 03_after_audio_tap; labels after_toggle; say "foreground: $(adb shell dumpsys window | grep -m1 mCurrentFocus)"
@@ -77,7 +78,9 @@ adb shell input keyevent 4; sleep 1
 adb logcat -d > $OUT/logcat.txt
 NF=$(grep -c 'FATAL EXCEPTION' $OUT/logcat.txt)
 say "FATAL EXCEPTION count: $NF"
-if [ "$NF" != "0" ]; then say "--- FATAL block(s) (logcat, trimmed; no user data) ---"; grep -A14 'FATAL EXCEPTION' $OUT/logcat.txt | cut -c1-220 | head -60 | tee -a $R; fi
+say "--- am/lifecycle lines for $PKG (logcat) ---"; grep -E 'ActivityManager|ActivityTaskManager|WindowManager' $OUT/logcat.txt | grep -E "$PKG" | cut -c1-200 | head -30 | tee -a $R
+if [ "$NF" != "0" ]; then
+  L1=$(grep -n -m1 'FATAL EXCEPTION' $OUT/logcat.txt | cut -d: -f1); say "--- 50 logcat lines BEFORE first FATAL (line $L1) ---"; sed -n "$((L1>50?L1-50:1)),$((L1-1))p" $OUT/logcat.txt | cut -c1-200 | tee -a $R; say "--- FATAL block(s) (logcat, trimmed; no user data) ---"; grep -A14 'FATAL EXCEPTION' $OUT/logcat.txt | cut -c1-220 | head -60 | tee -a $R; fi
 say "app process pids in logcat: $(grep -c "$PKG" $OUT/logcat.txt) lines mention $PKG"
 say "--- permission-related logcat (first 8) ---"; grep -i -m8 'READ_MEDIA_AUDIO\|GrantPermissions\|permission.*audio' $OUT/logcat.txt | cut -c1-200 | tee -a $R
 PLAYED=$(adb shell dumpsys media_session | grep -c 'state=3'); [ -z "${PLAYED:-}" ] && PLAYED=0
