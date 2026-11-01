@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.wrapContentWidth
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.foundation.layout.requiredWidth
@@ -111,8 +112,9 @@ fun HomeScreen(
             Text("Playlist", fontSize = 28.sp, fontWeight = FontWeight.Bold, color = InkBlack)
             Spacer(Modifier.weight(1f))
             Text(
-                if (updateAvailableFixture) "Update available" else "Up to date", fontFamily = monoFont, fontSize = 14.sp, color = InkBlack,
+                when { updateAvailableFixture -> "Update available"; fixture != null -> "Up to date"; else -> "Not checked" }, fontFamily = monoFont, fontSize = 14.sp, color = InkBlack, // shipped: no update check exists, so no "Up to date" claim (design fixtures keep Figma text)
                 modifier = Modifier
+                    .alpha(if (fixture == null && !updateAvailableFixture) 0.5f else 1f)
                     .clip(androidx.compose.foundation.shape.RoundedCornerShape(8.dp))
                     .background(if (updateAvailableFixture) com.abhi.musicapp.ui.theme.Orangs else blockBg)
                     .padding(horizontal = 10.dp, vertical = 8.dp),
