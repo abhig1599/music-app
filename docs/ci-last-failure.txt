@@ -1,6 +1,6 @@
-> Task :app:compileDebugKotlin FAILED
 e: file:///home/runner/work/music-app/music-app/app/src/main/java/com/abhi/musicapp/ui/screens/SearchScreen.kt:94:42 @Composable invocations can only happen from the context of a @Composable function
 e: file:///home/runner/work/music-app/music-app/app/src/main/java/com/abhi/musicapp/ui/screens/SearchScreen.kt:95:42 @Composable invocations can only happen from the context of a @Composable function
+> Task :app:compileDebugKotlin FAILED
 * What went wrong:
 * Exception is:
 org.gradle.api.tasks.TaskExecutionException: Execution failed for task ':app:compileDebugKotlin'.
@@ -9,4 +9,4 @@ Caused by: org.gradle.workers.internal.DefaultWorkerExecutor$WorkExecutionExcept
 	at org.gradle.api.internal.tasks.execution.CatchExceptionTaskExecuter.execute(CatchExceptionTaskExecuter.java:36)
 Caused by: org.jetbrains.kotlin.gradle.tasks.CompilationErrorException: Compilation error. See log for more details
 	at org.jetbrains.kotlin.gradle.tasks.TasksUtilsKt.throwExceptionIfCompilationFailed(tasksUtils.kt:21)
-BUILD FAILED in 35s
+BUILD FAILED in 34s
