@@ -73,6 +73,14 @@ class ScreenShotTest {
             title = "Song name in a line...", isPlaying = true, positionMs = 61_000L, durationMs = 192_000L, hasTrack = true))
     }
 
+    @Test fun playerSheetAddToPlaylist() = shot("player_sheet_addtoplaylist") { com.abhi.musicapp.ui.screens.PlayerSheetFixture(com.abhi.musicapp.ui.screens.PlayerSheet.AddToPlaylist) }
+    @Test fun playerSheetNewPlaylist() = shot("player_sheet_newplaylist") { com.abhi.musicapp.ui.screens.PlayerSheetFixture(com.abhi.musicapp.ui.screens.PlayerSheet.NewPlaylist) }
+    @Test fun playerSheetSpeed() = shot("player_sheet_speed") { com.abhi.musicapp.ui.screens.PlayerSheetFixture(com.abhi.musicapp.ui.screens.PlayerSheet.Speed) }
+    @Test fun playerSheetDelete() = shot("player_sheet_delete") { com.abhi.musicapp.ui.screens.PlayerSheetFixture(com.abhi.musicapp.ui.screens.PlayerSheet.Delete) }
+    @Test fun playerSheetLyricsEmpty() = shot("player_sheet_lyricsempty") { com.abhi.musicapp.ui.screens.PlayerSheetFixture(com.abhi.musicapp.ui.screens.PlayerSheet.LyricsEmpty) }
+    @Test fun playerSheetLyrics() = shot("player_sheet_lyrics") { com.abhi.musicapp.ui.screens.PlayerSheetFixture(com.abhi.musicapp.ui.screens.PlayerSheet.Lyrics) }
+    @Test fun playerSheetQueue() = shot("player_sheet_queue") { com.abhi.musicapp.ui.screens.PlayerSheetFixture(com.abhi.musicapp.ui.screens.PlayerSheet.Queue) }
+
     @Test fun player() = shot("player") {
         // same sample state as the Figma frame: playing, 1:01 of 03:12
         PlayerScreen(onBack = {}, fixture = com.abhi.musicapp.playback.PlayerUiState(
