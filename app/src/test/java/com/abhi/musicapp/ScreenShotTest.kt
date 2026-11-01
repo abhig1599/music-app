@@ -115,6 +115,7 @@ class ScreenShotTest {
             positionMs = 61_000L, durationMs = 192_000L, hasTrack = true))
     }
 
+    @Test fun downloadListFixture() = shot("download_list_fixture") { com.abhi.musicapp.ui.screens.DownloadListFixture() }
     @Test fun search() = shot("search") { SearchScreen(onBack = {}) }
     @Test fun searchPastFixture() = shot("search_past_fixture") { SearchScreen(onBack = {}, fixture = com.abhi.musicapp.ui.screens.SearchFixture.PastRecords) }
     @Test fun searchRecsFixture() = shot("search_recs_fixture") { SearchScreen(onBack = {}, fixture = com.abhi.musicapp.ui.screens.SearchFixture.Recommendations) }
