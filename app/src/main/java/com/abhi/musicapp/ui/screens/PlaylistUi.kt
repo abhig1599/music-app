@@ -46,6 +46,7 @@ fun AddToPlaylistSheet(songId: Long, onDone: () -> Unit) {
     var creating by remember { mutableStateOf(false) }
     var name by remember { mutableStateOf("") }
     var error by remember { mutableStateOf<String?>(null) }
+    var doneName by remember { mutableStateOf<String?>(null) } // Figma 'Add to playlist - done' confirmation
     Box(Modifier.fillMaxSize().background(Color(0x66000000)).clickable { onDone() }) {
         Column(
             Modifier.align(Alignment.BottomCenter).fillMaxWidth().clip(RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp))
@@ -64,7 +65,7 @@ fun AddToPlaylistSheet(songId: Long, onDone: () -> Unit) {
                 error?.let { Text(it, fontSize = 12.sp, color = GrayText, modifier = Modifier.padding(top = 6.dp)) }
                 Spacer(Modifier.height(10.dp))
                 Box(Modifier.fillMaxWidth().height(44.dp).clip(RoundedCornerShape(8.dp)).background(GrayLight).clickable {
-                    if (store.create(name)) { store.addSong(name.trim(), songId); onDone() }
+                    if (store.create(name)) { store.addSong(name.trim(), songId); doneName = name.trim() }
                     else error = "Enter a name that isn't used already."
                 }, contentAlignment = Alignment.Center) { Text("Create", fontSize = 13.sp, color = InkBlack) }
             } else {
@@ -75,7 +76,7 @@ fun AddToPlaylistSheet(songId: Long, onDone: () -> Unit) {
                 playlists.forEach { p ->
                     Spacer(Modifier.height(6.dp))
                     Row(Modifier.fillMaxWidth().height(48.dp).clip(RoundedCornerShape(8.dp)).border(1.dp, GrayLight, RoundedCornerShape(8.dp))
-                        .clickable { store.addSong(p.name, songId); onDone() }.padding(horizontal = 12.dp), verticalAlignment = Alignment.CenterVertically) {
+                        .clickable { store.addSong(p.name, songId); doneName = p.name }.padding(horizontal = 12.dp), verticalAlignment = Alignment.CenterVertically) {
                         Column(Modifier.weight(1f)) {
                             Text(p.name, fontSize = 13.sp, fontWeight = FontWeight.Medium, color = InkBlack)
                             Text("${p.songIds.size} songs", fontSize = 11.sp, color = GrayText)
@@ -84,6 +85,26 @@ fun AddToPlaylistSheet(songId: Long, onDone: () -> Unit) {
                 }
             }
             Spacer(Modifier.height(8.dp))
+        }
+    }
+    doneName?.let { n ->
+        // Figma "Add to playlist - done" (read 20:31, view-only): dimmed player, centred light card with an orange badge graphic
+        // (asset NOT shipped), text "Add to the [playlist name]" (Figma wording kept, name filled in), and a "Back" button.
+        // Card size/fonts not measured.
+        Box(Modifier.fillMaxSize().background(Color(0x66000000)).clickable { onDone() }, contentAlignment = Alignment.Center) {
+            Column(
+                Modifier.padding(horizontal = 24.dp).fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(Color(0xFFF0F0F0))
+                    .clickable(enabled = false) {}.padding(12.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                Spacer(Modifier.height(48.dp)) // badge graphic not shipped
+                Text("Add to the\n$n", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = InkBlack,
+                    textAlign = androidx.compose.ui.text.style.TextAlign.Center)
+                Spacer(Modifier.height(12.dp))
+                Box(Modifier.fillMaxWidth().height(44.dp).clip(RoundedCornerShape(8.dp)).background(GrayLight).clickable { onDone() }, contentAlignment = Alignment.Center) {
+                    Text("Back", fontSize = 13.sp, color = InkBlack)
+                }
+            }
         }
     }
 }
