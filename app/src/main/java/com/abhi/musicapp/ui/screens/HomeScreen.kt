@@ -138,11 +138,12 @@ fun HomeScreen(
                     Row {
                         CircleTile(Icons.Filled.Settings, "Settings", onOpenSettings, circleBg, Modifier.size(63.dp))
                         Spacer(Modifier.width(12.dp))
+                        val ringColor = com.abhi.musicapp.ui.theme.Orangs
                         CircleTile(Icons.Filled.Download, "Downloads", onOpenDownloads, circleBg,
                             Modifier.size(63.dp).then(if (downloadRingFixture) Modifier.drawWithContent {
                                 drawContent()
                                 val w = 3.dp.toPx()
-                                drawArc(com.abhi.musicapp.ui.theme.Orangs, -90f, 100f, false,
+                                drawArc(ringColor, -90f, 100f, false,
                                     topLeft = androidx.compose.ui.geometry.Offset(w / 2, w / 2),
                                     size = androidx.compose.ui.geometry.Size(size.width - w, size.height - w),
                                     style = androidx.compose.ui.graphics.drawscope.Stroke(w, cap = androidx.compose.ui.graphics.StrokeCap.Round))
