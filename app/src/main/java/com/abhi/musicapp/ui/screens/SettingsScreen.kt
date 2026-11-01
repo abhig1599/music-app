@@ -79,9 +79,21 @@ fun SettingsScreen(onBack: () -> Unit, onRowClick: (String) -> Unit = {}, fixtur
         FigmaCard {
             CardTitle("Permission")
             Spacer(Modifier.height(13.dp))
-            ToggleRow("Music and audio", "Needed to read your songs", fixture)
+            val ctx = androidx.compose.ui.platform.LocalContext.current
+            var tick by androidx.compose.runtime.remember { androidx.compose.runtime.mutableIntStateOf(0) }
+            androidx.compose.runtime.DisposableEffect(ctx) {
+                val owner = ctx as? androidx.lifecycle.LifecycleOwner
+                val obs = androidx.lifecycle.LifecycleEventObserver { _, e -> if (e == androidx.lifecycle.Lifecycle.Event.ON_RESUME) tick++ }
+                owner?.lifecycle?.addObserver(obs)
+                onDispose { owner?.lifecycle?.removeObserver(obs) }
+            }
+            // Shipped: switch shows the REAL OS grant state (read-only); tapping opens system settings. Fixture: Figma sample values.
+            val audioOn = if (fixture) true else tick.let { com.abhi.musicapp.library.LibraryRepository.hasAudioPermission(ctx) }
+            val notifOn = if (fixture) false else tick.let { com.abhi.musicapp.library.LibraryRepository.hasNotificationPermission(ctx) }
+            val open: (() -> Unit)? = if (fixture) null else ({ com.abhi.musicapp.library.LibraryRepository.openAppSettings(ctx) })
+            ToggleRow("Music and audio", if (fixture) "Needed to read your songs" else "Needed to read your songs. Tap to open system settings", audioOn, open)
             Spacer(Modifier.height(13.dp))
-            ToggleRow("Notifications", "Playback controls in the shade", false)
+            ToggleRow("Notifications", if (fixture) "Playback controls in the shade" else "Playback controls in the shade. Tap to open system settings", notifOn, open)
         }
         Spacer(Modifier.height(6.dp))
         FigmaCard {
@@ -146,13 +158,13 @@ private fun CardTitle(text: String, modifier: Modifier = Modifier) =
     Text(text, fontSize = 13.sp, fontWeight = FontWeight.Medium, color = InkBlack, modifier = modifier)
 
 @Composable
-private fun ToggleRow(title: String, detail: String, on: Boolean) {
-    Row(verticalAlignment = Alignment.CenterVertically) {
+private fun ToggleRow(title: String, detail: String, on: Boolean, onClick: (() -> Unit)? = null) {
+    Row(verticalAlignment = Alignment.CenterVertically, modifier = if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier) {
         Column(Modifier.weight(1f)) {
             Text(title, fontFamily = com.abhi.musicapp.ui.theme.GeistMono, fontSize = 11.sp, fontWeight = FontWeight.Bold, color = InkBlack)
             Text(detail, fontFamily = com.abhi.musicapp.ui.theme.GeistMono, fontSize = 9.sp, color = GrayText)
         }
-        // Render-only switch; not wired to real permission state yet.
+        // Display-only switch (reflects OS state when onClick != null; it does not change permissions).
         Box(
             Modifier.size(34.dp, 20.dp).clip(RoundedCornerShape(10.dp))
                 .background(if (on) InkBlack else com.abhi.musicapp.ui.theme.SurfaceSoft),

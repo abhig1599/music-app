@@ -28,7 +28,7 @@ class HomeStateTest {
     @Test fun shippedHomeWithNoPermissionShowsEmptyStateNotSampleRows() {
         rule.setContent { MusicAppTheme { HomeScreen({}, {}, {}, {}, {}, {}) } } // fixture = null, Robolectric app has no audio permission
         rule.waitForIdle()
-        rule.onNodeWithText("No songs found. Needs audio permission and music files on the device.").assertExists()
+        rule.onNodeWithText("Music permission is off, so your songs can't be read. Tap here to open system settings.").assertExists()
         rule.onNodeWithText("Love songs").assertDoesNotExist()
         rule.onNodeWithContentDescription("Playing").assertDoesNotExist()
         rule.onNodeWithText("Song name in a line...").assertDoesNotExist()

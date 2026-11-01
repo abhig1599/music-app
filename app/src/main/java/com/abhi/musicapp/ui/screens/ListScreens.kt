@@ -33,7 +33,7 @@ fun FoldersScreen(onBack: () -> Unit, onOpenPlayer: () -> Unit = {}) {
             folders = com.abhi.musicapp.library.LibraryRepository.folders(com.abhi.musicapp.library.LibraryRepository.querySongs(context))
         }
         if (folders.isEmpty()) {
-            Text("No folders found. Needs audio permission and music files on the device.",
+            Text(if (!com.abhi.musicapp.library.LibraryRepository.hasAudioPermission(context)) "Music permission is off, so folders can't be read. Enable it in system settings." else "No folders found on this device.",
                 color = GrayText, fontSize = 13.sp, modifier = Modifier.padding(horizontal = 24.dp))
         }
         folders.forEach { (name, list) ->

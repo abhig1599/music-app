@@ -94,7 +94,15 @@ fun HomeScreen(
     var songs by remember { mutableStateOf<List<Song>>(emptyList()) }
     val livePlayerState by PlayerManager.state.collectAsState()
     val playerState = fixture ?: livePlayerState
-    LaunchedEffect(Unit) {
+    var reload by remember { mutableIntStateOf(0) }
+    androidx.compose.runtime.DisposableEffect(context) {
+        val owner = context as? androidx.lifecycle.LifecycleOwner
+        val obs = androidx.lifecycle.LifecycleEventObserver { _, e -> if (e == androidx.lifecycle.Lifecycle.Event.ON_RESUME) reload++ }
+        owner?.lifecycle?.addObserver(obs)
+        onDispose { owner?.lifecycle?.removeObserver(obs) }
+    }
+    val audioGranted = remember(reload) { LibraryRepository.hasAudioPermission(context) }
+    LaunchedEffect(reload) {
         songs = LibraryRepository.querySongs(context)
     }
 
@@ -264,11 +272,13 @@ fun HomeScreen(
             if (rows.isEmpty()) {
                 Text(
                     when (chip) {
-                        1 -> "No folders found. Needs audio permission and music files on the device."
                         2 -> "No playlists yet."
-                        else -> "No songs found. Needs audio permission and music files on the device."
+                        else -> if (!audioGranted) "Music permission is off, so your songs can't be read. Tap here to open system settings."
+                            else if (chip == 1) "No folders found on this device." else "No songs found on this device."
                     },
-                    color = GrayText, fontSize = 13.sp, modifier = Modifier.padding(horizontal = 26.dp),
+                    color = GrayText, fontSize = 13.sp,
+                    modifier = Modifier.padding(horizontal = 26.dp).then(
+                        if (chip != 2 && !audioGranted) Modifier.clickable { LibraryRepository.openAppSettings(context) } else Modifier),
                 )
             }
             LazyColumn(modifier = Modifier.weight(1f)) {
