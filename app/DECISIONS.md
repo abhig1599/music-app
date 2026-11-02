@@ -1,0 +1,1 @@
+- 21:20 Font scale 1.3 render showed the total time "03:10" under the dial clipped (fixed 68dp column). Fixed by letting the column grow. Settings 360 render made tall (1700dp) so the About card is visible.

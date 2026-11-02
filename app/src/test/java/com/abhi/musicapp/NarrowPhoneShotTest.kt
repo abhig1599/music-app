@@ -44,6 +44,7 @@ class NarrowPhoneShotTest {
     }
 
     @Test fun settingsNarrow() {
+        org.robolectric.RuntimeEnvironment.setQualifiers("w360dp-h1700dp-xhdpi")
         composeRule.setContent { FitDesignWidth { MusicAppTheme { bg { com.abhi.musicapp.ui.screens.SettingsScreen(onBack = {}) }() } } }
         composeRule.waitForIdle()
         composeRule.onRoot().captureRoboImage("build/outputs/roborazzi/narrow360_settings.png")
