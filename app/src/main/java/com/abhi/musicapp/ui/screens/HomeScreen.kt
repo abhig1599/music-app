@@ -63,6 +63,7 @@ import com.abhi.musicapp.playback.PlayerManager
 import com.abhi.musicapp.ui.components.FilterChip
 import com.abhi.musicapp.ui.components.IconTile
 import com.abhi.musicapp.ui.components.MiniPlayer
+import com.abhi.musicapp.ui.pressScale
 import com.abhi.musicapp.ui.components.ScreenTitle
 import com.abhi.musicapp.ui.components.SectionHeader
 import com.abhi.musicapp.ui.components.SongRow
@@ -318,12 +319,18 @@ fun HomeScreen(
         }
 
         // Figma base Home (36-12141) has no player bar; it appears only in "Home page - song playing". Show only when a track is loaded.
-        if (playerState.hasTrack) MiniPlayer(
-            title = playerState.title,
-            time = formatMs(playerState.positionMs),
-            darkVariant = true,
-            onClick = onOpenPlayer,
-        )
+        androidx.compose.animation.AnimatedVisibility(
+            visible = playerState.hasTrack,
+            enter = if (com.abhi.musicapp.ui.reducedMotion()) androidx.compose.animation.EnterTransition.None else
+                androidx.compose.animation.slideInVertically(androidx.compose.animation.core.spring(dampingRatio = 0.8f, stiffness = androidx.compose.animation.core.Spring.StiffnessMediumLow)) { it / 2 } + androidx.compose.animation.fadeIn(),
+        ) {
+            MiniPlayer(
+                title = playerState.title,
+                time = formatMs(playerState.positionMs),
+                darkVariant = true,
+                onClick = onOpenPlayer,
+            )
+        }
     }
 
     if (showSort) {
@@ -346,7 +353,7 @@ private fun CircleTile(
     modifier: Modifier = Modifier,
 ) {
     Box(
-        modifier = modifier.clip(CircleShape).background(bg).clickable(onClick = onClick),
+        modifier = modifier.pressScale().clip(CircleShape).background(bg).clickable(onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
         Icon(icon, contentDescription = label, tint = InkBlack, modifier = Modifier.size(24.dp))

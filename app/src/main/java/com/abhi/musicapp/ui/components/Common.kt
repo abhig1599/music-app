@@ -1,5 +1,6 @@
 package com.abhi.musicapp.ui.components
 
+import com.abhi.musicapp.ui.pressScale
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -204,6 +205,7 @@ fun MiniPlayer(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 18.dp, vertical = 4.dp) // Figma: x18, 355 wide
+            .pressScale(0.97f)
             .clip(RoundedCornerShape(14.dp))
             .background(bg)
             .clickable(onClick = onClick)

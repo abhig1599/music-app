@@ -14,6 +14,8 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
+import com.abhi.musicapp.ui.pressScale
+import com.abhi.musicapp.ui.reducedMotion
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
@@ -81,8 +83,11 @@ fun PlayerScreen(onBack: () -> Unit, fixture: PlayerUiState? = null, initialOver
     var overlay by androidx.compose.runtime.remember { androidx.compose.runtime.mutableIntStateOf(initialOverlay) }
     val live by PlayerManager.state.collectAsState()
     val state = fixture ?: live
-    val progress = if (state.durationMs > 0)
+    val rawProgress = if (state.durationMs > 0)
         state.positionMs.toFloat() / state.durationMs.toFloat() else 0f
+    // Position arrives every 500ms; ease between ticks so the dial glides (instant when motion is reduced or on a fixture).
+    val progress = if (fixture != null || reducedMotion()) rawProgress else
+        androidx.compose.animation.core.animateFloatAsState(rawProgress, androidx.compose.animation.core.tween(520, easing = androidx.compose.animation.core.LinearEasing), label = "dial").value
     val circle = com.abhi.musicapp.ui.theme.SurfaceSoft
 
     val mono = com.abhi.musicapp.ui.theme.GeistMono // Figma: Geist Mono (not bundled until licence check)
@@ -134,12 +139,12 @@ fun PlayerScreen(onBack: () -> Unit, fixture: PlayerUiState? = null, initialOver
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Box(
-                modifier = Modifier.size(63.dp).clip(CircleShape).background(PureWhite)
+                modifier = Modifier.pressScale().size(63.dp).clip(CircleShape).background(PureWhite)
                     .clickable { PlayerManager.previous() },
                 contentAlignment = Alignment.Center,
             ) { Icon(Icons.Filled.SkipPrevious, contentDescription = "Previous", tint = InkBlack) }
             Box(
-                modifier = Modifier.size(63.dp).clip(CircleShape)
+                modifier = Modifier.pressScale().size(63.dp).clip(CircleShape)
                     .background(if (state.isPlaying) Orangs else InkBlack)
                     .clickable { PlayerManager.togglePlayPause() },
                 contentAlignment = Alignment.Center,
@@ -151,12 +156,12 @@ fun PlayerScreen(onBack: () -> Unit, fixture: PlayerUiState? = null, initialOver
                 )
             }
             Box(
-                modifier = Modifier.size(63.dp).clip(CircleShape).background(PureWhite)
+                modifier = Modifier.pressScale().size(63.dp).clip(CircleShape).background(PureWhite)
                     .clickable { PlayerManager.next() },
                 contentAlignment = Alignment.Center,
             ) { Icon(Icons.Filled.SkipNext, contentDescription = "Next", tint = InkBlack) }
         }
-        Box(Modifier.offset(19.dp, (726.dp - shrink)).size(72.dp).clip(CircleShape).background(circle).clickable { overlay = if (overlay == 3) 0 else 3 }, contentAlignment = Alignment.Center) {
+        Box(Modifier.offset(19.dp, (726.dp - shrink)).pressScale().size(72.dp).clip(CircleShape).background(circle).clickable { overlay = if (overlay == 3) 0 else 3 }, contentAlignment = Alignment.Center) {
             Icon(Icons.Filled.Headset, contentDescription = "Audio output", tint = InkBlack)
         }
         Row(
@@ -167,7 +172,7 @@ fun PlayerScreen(onBack: () -> Unit, fixture: PlayerUiState? = null, initialOver
             Icon(Icons.AutoMirrored.Filled.QueueMusic, contentDescription = null, tint = InkBlack)
             Text("Queue", fontSize = 13.sp, fontWeight = FontWeight.Medium, color = InkBlack)
         }
-        Box(Modifier.offset(298.dp, (726.dp - shrink)).size(72.dp).clip(CircleShape).background(circle).clickable { overlay = if (overlay == 2) 0 else 2 }, contentAlignment = Alignment.Center) {
+        Box(Modifier.offset(298.dp, (726.dp - shrink)).pressScale().size(72.dp).clip(CircleShape).background(circle).clickable { overlay = if (overlay == 2) 0 else 2 }, contentAlignment = Alignment.Center) {
             Icon(Icons.Filled.SelfImprovement, contentDescription = "Focus mode (icon pending his decision)", tint = InkBlack)
         }
 
