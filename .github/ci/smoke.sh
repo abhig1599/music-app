@@ -107,6 +107,14 @@ SEEN_PLAY=0; SEEN_PAUSE=0; SEEN_RESUME=0
 if tap_exact "smoke_tone" s4; then
   sleep 4; shot 06_after_tap; say "session after tap: $(pbs)"; focus playing; r=$(pbs); case "$r" in *"/PLAYING/"*) SEEN_PLAY=1;; esac
   sleep 5; say "session +5s: $(pbs)"
+  UI_PAUSE=0; UI_RESUME=0
+  refresh 06b_home_playing; labels home_playing
+  if tap_exact "Pause" 06c_miniplayer; then sleep 3; shot 06d_player_open; refresh 06d_player_open; labels player_screen; focus player_screen
+    if tap_exact "Pause" 06e_player_pause; then sleep 2; r=$(pbs); say "after UI tap on player Pause: $r"; case "$r" in *"/PAUSED/"*) UI_PAUSE=1;; esac; shot 06f_ui_paused
+      if tap_exact "Play" 06g_player_play; then sleep 3; r=$(pbs); say "after UI tap on player Play: $r"; case "$r" in *"/PLAYING/"*) UI_RESUME=1;; esac; shot 06h_ui_resumed; fi
+    fi
+  fi
+  say "UI pause observed: $UI_PAUSE; UI resume observed: $UI_RESUME (taps on in-app controls, emulator, synthetic tone)"
   adb shell input keyevent 127; sleep 2; r=$(pbs); say "after MEDIA_PAUSE key (not a UI tap): $r"; case "$r" in *"/PAUSED/"*) SEEN_PAUSE=1;; esac
   adb shell input keyevent 126; sleep 3; r=$(pbs); say "after MEDIA_PLAY key (not a UI tap): $r"; case "$r" in *"/PLAYING/"*) SEEN_RESUME=1;; esac
   shot 07_after_resume
@@ -120,6 +128,6 @@ if [ "$NF" != "0" ]; then
   L1=$(grep -n -m1 'FATAL EXCEPTION' $OUT/logcat.txt | cut -d: -f1); say "--- 50 logcat lines before first FATAL (line $L1) ---"; sed -n "$((L1>50?L1-50:1)),$((L1-1))p" $OUT/logcat.txt | cut -c1-200 | tee -a $R
   say "--- FATAL block ---"; grep -A14 'FATAL EXCEPTION' $OUT/logcat.txt | cut -c1-220 | head -60 | tee -a $R
 fi
-say "(synthetic tone only; UI taps for pause/play not exercised: media keys used; no real music files; emulator only)"
+say "(synthetic tone only; UI pause/resume result is in the lines above; media keys also used; no real music files; emulator only)"
 if [ "$TONE_OK" = "1" ] && [ "$SEEN_PLAY" = "1" ] && [ "$SEEN_PAUSE" = "1" ] && [ "$SEEN_RESUME" = "1" ] && [ "$NF" = "0" ]; then say "SMOKE VERDICT: our MediaSession PLAYING, PAUSED, PLAYING observed; no FATAL (emulator evidence only)"; exit 0
 else say "SMOKE VERDICT: INCOMPLETE play=$SEEN_PLAY pause=$SEEN_PAUSE resume=$SEEN_RESUME fatal=$NF - NOT a pass"; exit 1; fi
