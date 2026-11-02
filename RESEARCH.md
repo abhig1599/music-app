@@ -51,3 +51,12 @@ See DECISIONS.md "Verified platform facts" for the full URL list. Key ones:
 - No prototype wiring anywhere. Queue screen not found. Font modal: Helvetica Neue.
 - Placeholders in his copy ("Permission1/2", "[Playlist/Source]", "version 00.00.00")
   replaced or flagged in build.
+
+## 2026-11-03 04:00 Read Doc. = speak-to-document (user clarification, design/prep only, nothing built)
+User: the "Read Doc." tile is for recording yourself speaking and getting a document (checklists, notes, meeting notes). Options for the speech step, no code written, no permission added (manifest has no RECORD_AUDIO and no INTERNET today):
+A. Android SpeechRecognizer (system service, free, no key). createOnDeviceSpeechRecognizer needs API 31+ and an installed on-device language pack; plain SpeechRecognizer may send audio to the phone vendor's cloud service. Short utterances, not long meeting recording. Source: developer.android.com/reference/android/speech/SpeechRecognizer.
+B. Vosk (Apache-2.0, fully offline, ~50 MB small models, Indian English available, lower accuracy). Source: alphacephei.com/vosk/models.
+C. whisper.cpp (MIT, offline, tiny/base models, better accuracy, heavier, slower on phones, model download needed).
+D. His own Gemini/custom API key (the Figma "Enable Reader" fields): better text and structuring but audio leaves the phone and key storage is a vault/secret matter. Not assumed.
+Text-to-document step (checklist/notes) is separate: plain local formatting rules work offline; "AI summary" needs D.
+Open product decisions: engine and privacy (offline vs cloud), where recordings/docs live and whether audio is kept, doc format (checklist / notes / meeting notes), editor ("moti kind of thing" unresolved).
