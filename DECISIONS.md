@@ -357,3 +357,7 @@ cand-0.1.0 cannot be updated (different signing key; original key not recoverabl
 
 ## 2026-11-03 03:25 App icon: user-supplied image replaces my drawn note
 User sent a reference image (grey circle, folded corner, orange note) and asked for it as the main icon. The circle artwork is cropped from that image (docs/assets/user_icon_reference.jpg), scaled to the 66dp adaptive safe zone on a white background (the image's own background). Monochrome layer = the orange note only. Colours, note and fold are unchanged; only adaptation for launcher masks. Not checked on a physical launcher.
+
+## 2026-11-03 04:05 Scan dial + category bar (user requests)
+- Tapping the folder in the dial runs the existing rescan (MediaScanner over Music/Downloads/Podcasts/Audiobooks/Documents to depth 4, plus whatever MediaStore already indexed), animates the rays (rotation, off when system animations are off), then shows a small black in-app notice. Counts are real: before/after MediaStore song ids ("N songs added", "N no longer found", "No new songs found", permission-off message). Scope is the phone's audio under the granted music permission, not Google Drive and not all-files access. Files outside those folders or hidden by scoped storage can be missed; this is not proof a missing song is absent. 20s safety timeout if the scanner callback never fires.
+- Category bar (All/Folders/Playlist/Artists) now scrolls sideways (user confirmed). Artists has no view behind it.

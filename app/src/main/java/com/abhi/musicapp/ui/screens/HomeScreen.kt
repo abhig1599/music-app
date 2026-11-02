@@ -16,6 +16,10 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.launch
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.platform.testTag
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.horizontalScroll
@@ -108,10 +112,15 @@ fun HomeScreen(
         onDispose { owner?.lifecycle?.removeObserver(obs) }
     }
     val audioGranted = remember(reload) { LibraryRepository.hasAudioPermission(context) }
+    var scanning by remember { mutableStateOf(false) }
+    var scanNotice by remember { mutableStateOf<String?>(null) }
+    val scope = androidx.compose.runtime.rememberCoroutineScope()
+    LaunchedEffect(scanNotice) { if (scanNotice != null) { kotlinx.coroutines.delay(3500); scanNotice = null } }
     LaunchedEffect(reload) {
         songs = LibraryRepository.querySongs(context)
     }
 
+    Box(Modifier.fillMaxSize()) {
     Column(modifier = Modifier.fillMaxSize()) {
         // Measured from his Figma home frame (390x844 dp, 68%-zoom crop rescaled 1:1):
         // header centre y~65, mosaic y 110-272 / 289-450, chips y 471-507, list from y 528.
@@ -169,13 +178,31 @@ fun HomeScreen(
             }
             Spacer(Modifier.weight(1f))
             Box(modifier = Modifier.width(147.dp).fillMaxHeight(), contentAlignment = Alignment.Center) {
-                ScanRays(modifier = Modifier.size(147.dp))
+                ScanRays(modifier = Modifier.size(147.dp), scanning = scanning)
                 Box(
                     modifier = Modifier.size(60.dp).clip(CircleShape).background(com.abhi.musicapp.ui.theme.GrayLight)
-                        .clickable { LibraryRepository.rescan(context) { reload++ }; reload++ },
+                        .clickable(enabled = !scanning) {
+                            scanning = true
+                            val before = songs.map { it.id }.toSet()
+                            val hadPermission = LibraryRepository.hasAudioPermission(context)
+                            var finished = false
+                            fun finish() {
+                                if (finished) return
+                                finished = true
+                                scope.launch {
+                                    val after = if (hadPermission) withContext(kotlinx.coroutines.Dispatchers.IO) { LibraryRepository.querySongs(context) } else songs
+                                    songs = after
+                                    scanNotice = LibraryRepository.scanSummary(hadPermission, before, after.map { it.id }.toSet())
+                                    scanning = false
+                                    reload++
+                                }
+                            }
+                            LibraryRepository.rescan(context) { finish() }
+                            scope.launch { kotlinx.coroutines.delay(20000); finish() }
+                        },
                     contentAlignment = Alignment.Center,
                 ) {
-                    Icon(Icons.Filled.Folder, contentDescription = "Scan device",
+                    Icon(Icons.Filled.Folder, contentDescription = if (scanning) "Scanning for songs" else "Scan device",
                         tint = InkBlack, modifier = Modifier.size(24.dp))
                 }
             }
@@ -342,6 +369,15 @@ fun HomeScreen(
             )
         }
     }
+    scanNotice?.let { msg ->
+        Box(
+            Modifier.align(Alignment.BottomCenter).padding(bottom = if (playerState.hasTrack) 110.dp else 40.dp)
+                .clip(androidx.compose.foundation.shape.RoundedCornerShape(14.dp)).background(InkBlack)
+                .padding(horizontal = 18.dp, vertical = 12.dp)
+                .semantics { liveRegion = androidx.compose.ui.semantics.LiveRegionMode.Polite }.testTag("scanNotice"),
+        ) { Text(msg, color = androidx.compose.ui.graphics.Color.White, fontSize = 14.sp, fontFamily = com.abhi.musicapp.ui.theme.GeistMono) }
+    }
+    }
 
     if (showSort) {
         ModalBottomSheet(
@@ -372,10 +408,15 @@ private fun CircleTile(
 
 /** His scan dial: 12 thick rays, orange fading cluster at the upper left (decorative, not playback state). */
 @Composable
-private fun ScanRays(modifier: Modifier = Modifier) {
+private fun ScanRays(modifier: Modifier = Modifier, scanning: Boolean = false) {
+    val spin = if (scanning && !com.abhi.musicapp.ui.reducedMotion()) {
+        val t = androidx.compose.animation.core.rememberInfiniteTransition(label = "scan")
+        val a by t.animateFloat(0f, 360f, androidx.compose.animation.core.infiniteRepeatable(androidx.compose.animation.core.tween(1400, easing = androidx.compose.animation.core.LinearEasing)), label = "scanAngle")
+        a
+    } else 0f
     val lit = Orangs
     val dim = com.abhi.musicapp.ui.theme.GrayLight
-    androidx.compose.foundation.Canvas(modifier = modifier) {
+    androidx.compose.foundation.Canvas(modifier = modifier.graphicsLayer { rotationZ = spin }) {
         val cx = size.width / 2f
         val cy = size.height / 2f
         val outer = size.minDimension / 2f

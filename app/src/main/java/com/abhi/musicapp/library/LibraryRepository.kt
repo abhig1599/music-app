@@ -66,6 +66,20 @@ object LibraryRepository {
         return found.size
     }
 
+    /** Truthful result text for a scan: counts come from the before/after MediaStore song ids, never from files handed to the scanner. */
+    fun scanSummary(hadPermission: Boolean, before: Set<Long>, after: Set<Long>): String {
+        if (!hadPermission) return "Music permission is off, can't scan"
+        val added = (after - before).size
+        val removed = (before - after).size
+        fun songs(n: Int) = if (n == 1) "1 song" else "$n songs"
+        return when {
+            added > 0 && removed > 0 -> "${songs(added)} added, ${removed} no longer found"
+            added > 0 -> "${songs(added)} added"
+            removed > 0 -> "${songs(removed)} no longer found"
+            else -> "No new songs found"
+        }
+    }
+
     fun querySongs(context: Context): List<Song> {
         if (!hasAudioPermission(context)) return emptyList()
         val collection = MediaStore.Audio.Media.getContentUri(MediaStore.VOLUME_EXTERNAL)
