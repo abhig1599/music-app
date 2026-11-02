@@ -13,8 +13,8 @@ android {
         applicationId = "com.abhi.musicapp"
         minSdk = 26
         targetSdk = 34
-        versionCode = 2
-        versionName = "0.1.1"
+        versionCode = 3
+        versionName = "0.1.2"
     }
 
     // Fixed debug key (private repo, debug build only) so later debug APKs install over earlier ones.
@@ -29,7 +29,14 @@ android {
     }
 
     buildTypes {
+        // Debug builds install as a SEPARATE app (com.abhi.musicapp.test, label "Music App Test") so they
+        // coexist with the already-installed cand-0.1.0 app and never touch its data.
+        debug {
+            applicationIdSuffix = ".test"
+            resValue("string", "app_name", "Music App Test")
+        }
         release {
+            resValue("string", "app_name", "Music App")
             isMinifyEnabled = false
         }
     }

@@ -3,7 +3,7 @@
 # Exit 0 only if our package's MediaSession was seen PLAYING, then PAUSED, then PLAYING again, with no FATAL.
 set -u
 OUT=smoke-out; mkdir -p $OUT; R=$OUT/report.txt; : > $R
-PKG=com.abhi.musicapp
+PKG=com.abhi.musicapp.test
 say(){ echo "$(date +%H:%M:%S) $*" | tee -a $R; }
 mq(){ say "MEDIASTORE[$1] t=$(date +%H:%M:%S)"; adb shell content query --uri content://media/external/audio/media --projection _id:_display_name:is_music:relative_path:duration:volume_name:date_added > $OUT/mq_$1.txt 2>&1; rc=$?; say "  query exit=$rc rows=$(grep -c '^Row:' $OUT/mq_$1.txt) smoke_tone_rows=$(grep -c smoke_tone $OUT/mq_$1.txt)"; grep -m3 smoke_tone $OUT/mq_$1.txt | cut -c1-300 | tee -a $R; [ "$rc" != "0" ] || [ "$(grep -c '^Row:' $OUT/mq_$1.txt)" = "0" ] && head -3 $OUT/mq_$1.txt | cut -c1-200 | tee -a $R; }
 adb wait-for-device; adb shell input keyevent 82
@@ -92,7 +92,7 @@ mine=[o for o in out if o[0]==pkg]
 print('OURS:' + (';'.join(f'{a}/{b}/pos{c}' for a,b,c in mine) if mine else 'none') + ' ALL_OWNERS:' + ','.join(sorted(set(str(o[0]) for o in out))))
 PY
 }
-adb shell am start -n $PKG/.MainActivity >/dev/null; sleep 6; shot 01_launch; refresh 01_launch; focus launched; labels language
+adb shell am start -n $PKG/com.abhi.musicapp.MainActivity >/dev/null; sleep 6; shot 01_launch; refresh 01_launch; focus launched; labels language
 tap_exact "Next" s1; sleep 2; shot 02_permissions; refresh 02_permissions; focus after_next1; labels permissions
 c=$(row_toggle "Music and audio"); if [ -n "$c" ]; then set -- $c; say "audio toggle node found by clickable-in-row"; adb shell input tap $1 $2; else say "audio toggle node NOT found by row"; fi
 sleep 3; shot 03_after_audio_tap; refresh 03_after_audio_tap; labels after_toggle; focus after_toggle
@@ -115,7 +115,7 @@ say "home shows smoke_tone: $(grep -c 'smoke_tone' /tmp/ui.xml)"
 mq home_loaded
 if [ "$(grep -c 'smoke_tone' /tmp/ui.xml)" = "0" ]; then
   say "smoke_tone not listed on Home. Forcing ON_RESUME via HOME key + relaunch (Scan device is a no-op handler in source)"
-  adb shell input keyevent 3; sleep 2; adb shell am start -n $PKG/.MainActivity >/dev/null; sleep 5
+  adb shell input keyevent 3; sleep 2; adb shell am start -n $PKG/com.abhi.musicapp.MainActivity >/dev/null; sleep 5
   shot 05b_after_relaunch; refresh 05b_after_relaunch; labels home_after_relaunch; focus after_relaunch
   say "home shows smoke_tone after relaunch: $(grep -c 'smoke_tone' /tmp/ui.xml)"; mq after_relaunch
   say "MediaProvider logcat tail:"; adb logcat -d -s MediaProvider:* MediaScanner:* 2>/dev/null | tail -25 | cut -c1-220 | tee -a $R
