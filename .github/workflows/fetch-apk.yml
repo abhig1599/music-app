@@ -1,0 +1,30 @@
+name: Copy release APK to delivery branch (manual)
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  copy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download release asset and verify checksum
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release download cand-0.1.0 -p 'music-app-cand-0.1.0-debug.apk' -D /tmp/apk
+          echo "0b5cb9779ff28c3292962fa4593a4cdec5029a5a327c3945e8dc53093d9a8796  /tmp/apk/music-app-cand-0.1.0-debug.apk" | sha256sum -c -
+          ls -l /tmp/apk
+      - name: Push APK to delivery branch (private repo; no rebuild)
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout --orphan delivery-cand-0.1.0
+          git rm -rf . -q
+          cp /tmp/apk/music-app-cand-0.1.0-debug.apk .
+          git add music-app-cand-0.1.0-debug.apk
+          git commit -m "Delivery copy of release cand-0.1.0 APK (checksum verified, not rebuilt)"
+          git push -f origin delivery-cand-0.1.0
