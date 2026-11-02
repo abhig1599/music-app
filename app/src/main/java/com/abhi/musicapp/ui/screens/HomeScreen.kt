@@ -408,7 +408,7 @@ private fun CircleTile(
 
 /** His scan dial: 12 thick rays, orange fading cluster at the upper left (decorative, not playback state). */
 @Composable
-private fun ScanRays(modifier: Modifier = Modifier, scanning: Boolean = false) {
+internal fun ScanRays(modifier: Modifier = Modifier, scanning: Boolean = false) {
     val spin = if (scanning && !com.abhi.musicapp.ui.reducedMotion()) {
         val t = androidx.compose.animation.core.rememberInfiniteTransition(label = "scan")
         val a by t.animateFloat(0f, 360f, androidx.compose.animation.core.infiniteRepeatable(androidx.compose.animation.core.tween(1400, easing = androidx.compose.animation.core.LinearEasing)), label = "scanAngle")
