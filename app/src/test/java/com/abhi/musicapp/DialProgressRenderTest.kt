@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.padding
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onRoot
@@ -21,7 +22,7 @@ import org.robolectric.annotation.GraphicsMode
 /** Player dial at 0/25/50/100 percent (test render of the dial only, not a phone screenshot). */
 @RunWith(AndroidJUnit4::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
-@Config(sdk = [34], qualifiers = "w800dp-h240dp-xhdpi")
+@Config(sdk = [34], qualifiers = "w900dp-h280dp-xhdpi")
 class DialProgressRenderTest {
     @get:Rule val rule = createComposeRule()
 
@@ -30,7 +31,7 @@ class DialProgressRenderTest {
             MusicAppTheme {
                 Row(Modifier.background(androidx.compose.material3.MaterialTheme.colorScheme.background)) {
                     listOf(0f, 0.25f, 0.5f, 1f).forEach { p ->
-                        Box(Modifier.size(200.dp)) { TickDial(progress = p, modifier = Modifier.size(190.dp), ticks = 48, pointer = true, showProgress = true) {} }
+                        androidx.compose.foundation.layout.Column(Modifier.padding(12.dp), horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally) { Box(Modifier.size(190.dp)) { TickDial(progress = p, modifier = Modifier.size(190.dp), ticks = 48, pointer = true, showProgress = true) {} }; androidx.compose.material3.Text("${(p * 100).toInt()}%") }
                     }
                 }
             }

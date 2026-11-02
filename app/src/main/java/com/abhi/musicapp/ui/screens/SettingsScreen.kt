@@ -56,7 +56,7 @@ import com.abhi.musicapp.ui.theme.SurfaceSoft
  * Rows are stubs until each feature lands; "Planned" marks designed-but-not-built rows.
  */
 @Composable
-fun SettingsScreen(onBack: () -> Unit, onRowClick: (String) -> Unit = {}, fixture: Boolean = false, startExpanded: Boolean = false) {
+fun SettingsScreen(onBack: () -> Unit, onRowClick: (String) -> Unit = {}, fixture: Boolean = false, startExpanded: Boolean = false, previewFolders: List<Pair<String, String>>? = null) {
     // fixture=true shows the design's sample values (07H 27M, permission on). Real app: no usage tracker or grant state yet, so placeholders/off.
     // Figma "Settings" (node 47-14503, 390x1508): content column x22 y41, 351 wide, gap 24:
     // back button 44x44 white circle, title row 37, then cards (white, r16, pad L/R 14 T 16 B 10, gap 6).
@@ -118,8 +118,8 @@ fun SettingsScreen(onBack: () -> Unit, onRowClick: (String) -> Unit = {}, fixtur
                 Spacer(Modifier.height(13.dp))
                 // Design sample paths only in fixtures. Shipped state lists real MediaStore folders (read-only: no hide/show logic exists yet).
                 val vctx = androidx.compose.ui.platform.LocalContext.current
-                var realFolders by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf<List<Pair<String, String>>>(emptyList()) }
-                if (!fixture) androidx.compose.runtime.LaunchedEffect(Unit) {
+                var realFolders by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf<List<Pair<String, String>>>(previewFolders ?: emptyList()) }
+                if (!fixture && previewFolders == null) androidx.compose.runtime.LaunchedEffect(Unit) {
                     val all = com.abhi.musicapp.library.LibraryRepository.queryAllSongs(vctx)
                     realFolders = all.filter { it.folder.isNotEmpty() }.map { it.folder }.distinct().sorted().map { it.substringAfterLast('/') to it }
                 }

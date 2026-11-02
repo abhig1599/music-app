@@ -168,7 +168,7 @@ fun TickDial(
                 val d = minOf(i, ticks - i)
                 val ahead = i - lit
                 val color = if (pointer && showProgress) {
-                    when { i < lit -> litTick; ahead == 0 -> litTick.copy(alpha = 0.6f); ahead == 1 -> litTick.copy(alpha = 0.35f); else -> dimTick }
+                    when { progress <= 0f -> dimTick; i < lit -> litTick; ahead == 0 -> litTick.copy(alpha = 0.6f); ahead == 1 -> litTick.copy(alpha = 0.35f); else -> dimTick }
                 } else if (pointer) {
                     when (d) {
                         0 -> litTick
