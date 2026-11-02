@@ -1,5 +1,9 @@
 package com.abhi.musicapp.ui.screens
 
+import androidx.compose.ui.semantics.setProgress
+import androidx.compose.ui.semantics.progressBarRangeInfo
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.semantics.semantics
 import com.abhi.musicapp.ui.tapOrHold
@@ -80,6 +84,14 @@ private fun formatTotal(ms: Long): String {
  * prev/next, 60dp play), bottom row y~785 (72dp circles). Not yet verified
  * pixel-exact. Focus glyph provisional (his pending decision).
  */
+/** Fraction change for a drag around the dial centre: angle delta (wrapped to +-180 deg) / 360, clamped 0..1 so it never wraps from end to start. */
+internal fun scrubFraction(start: Float, prevAngleDeg: Float, curAngleDeg: Float): Float {
+    var d = curAngleDeg - prevAngleDeg
+    while (d > 180f) d -= 360f
+    while (d < -180f) d += 360f
+    return (start + d / 360f).coerceIn(0f, 1f)
+}
+
 @Composable
 fun PlayerScreen(onBack: () -> Unit, fixture: PlayerUiState? = null, initialOverlay: Int = 0, sourceLabel: String? = null) {
     // 0 none, 1 three-dots menu, 2 focus-mode popup, 3 output-device popup (Figma 'Song Page - menu', 'Song focus mode', 'Song Focus connected device').
@@ -89,7 +101,9 @@ fun PlayerScreen(onBack: () -> Unit, fixture: PlayerUiState? = null, initialOver
     val rawProgress = if (state.durationMs > 0)
         state.positionMs.toFloat() / state.durationMs.toFloat() else 0f
     // Position arrives every 500ms; ease between ticks so the dial glides (instant when motion is reduced or on a fixture).
-    val progress = if (fixture != null || reducedMotion()) rawProgress else
+    var lastAng by androidx.compose.runtime.remember { androidx.compose.runtime.mutableFloatStateOf(0f) }
+    var scrub by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf<Float?>(null) }
+    val progress = if (scrub != null) scrub!! else if (fixture != null || reducedMotion()) rawProgress else
         androidx.compose.animation.core.animateFloatAsState(rawProgress, androidx.compose.animation.core.tween(260, easing = androidx.compose.animation.core.LinearEasing), label = "dial").value
     val circle = com.abhi.musicapp.ui.theme.SurfaceSoft
 
@@ -110,14 +124,27 @@ fun PlayerScreen(onBack: () -> Unit, fixture: PlayerUiState? = null, initialOver
             Icon(Icons.Filled.MoreVert, contentDescription = "Menu", tint = InkBlack,
                 modifier = Modifier.clickable { overlay = if (overlay == 1) 0 else 1 })
         }
-        TickDial(progress = progress, modifier = Modifier.offset(48.dp, 135.dp).size(301.dp).graphicsLayer { scaleX = dialScale; scaleY = dialScale; transformOrigin = androidx.compose.ui.graphics.TransformOrigin(0.5f, 0f) }, ticks = 48, pointer = true, showProgress = fixture == null) {}
+        TickDial(progress = progress, modifier = Modifier.offset(48.dp, 135.dp).size(301.dp)
+            .pointerInput(fixture == null && state.durationMs > 0) {
+                if (fixture != null || state.durationMs <= 0) return@pointerInput
+                // DJ-style scrub: drag around the dial; time and ticks follow the finger, the seek is applied on release.
+                // Relative to where the finger lands (no jump), clamped at start/end (no wrap).
+                fun ang(o: androidx.compose.ui.geometry.Offset) = Math.toDegrees(kotlin.math.atan2((o.y - size.height / 2f).toDouble(), (o.x - size.width / 2f).toDouble())).toFloat()
+                detectDragGestures(
+                    onDragStart = { o -> scrub = rawProgress; lastAng = ang(o) },
+                    onDrag = { change, _ -> change.consume(); val a = ang(change.position); scrub = scrubFraction(scrub ?: rawProgress, lastAng, a); lastAng = a },
+                    onDragEnd = { scrub?.let { PlayerManager.seekTo((it * state.durationMs).toLong()) }; scrub = null },
+                    onDragCancel = { scrub = null },
+                )
+            }
+            .semantics { if (state.durationMs > 0) { progressBarRangeInfo = androidx.compose.ui.semantics.ProgressBarRangeInfo(rawProgress, 0f..1f); setProgress("Seek") { v -> PlayerManager.seekTo((v.coerceIn(0f, 1f) * state.durationMs).toLong()); true } } }.graphicsLayer { scaleX = dialScale; scaleY = dialScale; transformOrigin = androidx.compose.ui.graphics.TransformOrigin(0.5f, 0f) }, ticks = 48, pointer = true, showProgress = fixture == null) {}
         Column(
             modifier = Modifier.offset(147.dp, 135.dp + (252.dp - 135.dp) * dialScale).width(104.dp).wrapContentHeight(unbounded = true, align = Alignment.Top).graphicsLayer { scaleX = dialScale; scaleY = dialScale },
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(1.dp),
         ) {
             Row(verticalAlignment = Alignment.Top) {
-                Text(formatMs(state.positionMs), fontSize = 35.68.sp, fontFamily = mono, color = InkBlack)
+                Text(formatMs(if (scrub != null) (scrub!! * state.durationMs).toLong() else state.positionMs), fontSize = 35.68.sp, fontFamily = mono, color = InkBlack)
                 Text("M", fontSize = 20.sp, color = InkBlack)
             }
             Box(Modifier.size(width = 104.dp, height = 1.dp).background(GrayLight))
