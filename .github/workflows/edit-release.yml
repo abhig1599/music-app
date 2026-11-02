@@ -1,0 +1,28 @@
+name: Correct release notes and print asset sha256 (manual)
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Release tag
+        default: cand-0.1.5
+
+permissions:
+  contents: write
+
+jobs:
+  edit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Edit notes on the existing release (assets and tag untouched)
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ inputs.tag }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          gh release edit "$TAG" --title "$TAG (experimental debug build)" \
+            --notes "Debug APK built by CI from the tagged commit. Private repo release. Experimental: CI ran unit tests and Robolectric render tests only. No emulator or physical-device test, so hardware behaviour (playback, seeking, audio output, scan) is unverified. Known limits are in DECISIONS.md."
+          mkdir -p /tmp/apk
+          gh release download "$TAG" -p "music-app-$TAG-debug.apk" -D /tmp/apk
+          sha256sum /tmp/apk/*.apk
+          gh release view "$TAG" --json name,isPrerelease,assets --jq '{name,isPrerelease,assets:[.assets[]|{name,size,digest}]}'

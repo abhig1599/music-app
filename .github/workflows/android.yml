@@ -73,6 +73,6 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           cp app/build/outputs/apk/debug/app-debug.apk "music-app-${GITHUB_REF_NAME}-debug.apk"
-          gh release create "$GITHUB_REF_NAME" --prerelease --title "$GITHUB_REF_NAME (debug build, emulator-tested only)" \
-            --notes "Debug APK built by CI from commit ${GITHUB_SHA}. Private repo release. Not tested on a physical device. Known limits are in DECISIONS.md." \
+          gh release create "$GITHUB_REF_NAME" --prerelease --title "$GITHUB_REF_NAME (experimental debug build)" \
+            --notes "Debug APK built by CI from commit ${GITHUB_SHA}. Private repo release. Experimental: CI ran unit tests and Robolectric render tests only. No emulator or physical-device test, so hardware behaviour (playback, seeking, audio output, scan) is unverified. Known limits are in DECISIONS.md." \
             "music-app-${GITHUB_REF_NAME}-debug.apk"
