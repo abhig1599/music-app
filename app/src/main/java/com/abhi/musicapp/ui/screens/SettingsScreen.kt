@@ -74,9 +74,9 @@ fun SettingsScreen(onBack: () -> Unit, onRowClick: (String) -> Unit = {}, fixtur
         Text("Settings", fontSize = 28.sp, fontWeight = FontWeight.Bold, color = InkBlack, modifier = Modifier.height(37.dp))
         Spacer(Modifier.height(24.dp))
 
-        FigmaCard(Modifier.height(82.dp)) {
+        FigmaCard(Modifier.heightIn(min = 82.dp)) {
             // Play-time stat: needs real listening statistics; no tracker exists yet, so this is a render placeholder.
-            Column(verticalArrangement = Arrangement.Center, modifier = Modifier.fillMaxHeight()) {
+            Column(verticalArrangement = Arrangement.Center, modifier = Modifier.heightIn(min = 56.dp)) {
                 Text(if (fixture) "07H 27M" else "--H --M", fontFamily = mono, fontSize = 28.sp, color = InkBlack)
                 Text("Play Time", fontFamily = mono, fontSize = 11.sp, color = InkBlack)
             }

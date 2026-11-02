@@ -192,7 +192,7 @@ fun PlayerScreen(onBack: () -> Unit, fixture: PlayerUiState? = null, initialOver
                 if (state.hasTrack) state.title else "Nothing playing",
                 fontSize = 32.sp, fontWeight = FontWeight.Medium, color = InkBlack,
                 maxLines = 1, softWrap = false, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis, letterSpacing = (-0.8).sp, textAlign = androidx.compose.ui.text.style.TextAlign.Center,
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 14.dp),
             )
         }
         Row(
