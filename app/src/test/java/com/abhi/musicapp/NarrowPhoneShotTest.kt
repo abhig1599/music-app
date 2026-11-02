@@ -79,6 +79,9 @@ class NarrowPhoneShotTest {
     @Test fun aboutReachableAndOpensLink() {
         org.robolectric.RuntimeEnvironment.setQualifiers("w360dp-h800dp-xhdpi")
         composeRule.setContent { FitDesignWidth { MusicAppTheme { bg { com.abhi.musicapp.ui.screens.SettingsScreen(onBack = {}) }() } } }
+        composeRule.onNodeWithText("Privacy policy (portfolio page for now)").assertDoesNotExist() // collapsed by default
+        val header = composeRule.onNodeWithText("About")
+        header.performScrollTo(); header.performClick(); composeRule.waitForIdle()
         val node = composeRule.onNodeWithText("Privacy policy (portfolio page for now)")
         node.performScrollTo()
         node.assertIsDisplayed()

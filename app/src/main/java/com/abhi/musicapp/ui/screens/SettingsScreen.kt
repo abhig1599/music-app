@@ -1,5 +1,11 @@
 package com.abhi.musicapp.ui.screens
 
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.animation.animateContentSize
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.ui.semantics.stateDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.platform.testTag
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.border
@@ -50,14 +56,13 @@ import com.abhi.musicapp.ui.theme.SurfaceSoft
  * Rows are stubs until each feature lands; "Planned" marks designed-but-not-built rows.
  */
 @Composable
-fun SettingsScreen(onBack: () -> Unit, onRowClick: (String) -> Unit = {}, fixture: Boolean = false, startExpanded: Boolean = true) {
+fun SettingsScreen(onBack: () -> Unit, onRowClick: (String) -> Unit = {}, fixture: Boolean = false, startExpanded: Boolean = false) {
     // fixture=true shows the design's sample values (07H 27M, permission on). Real app: no usage tracker or grant state yet, so placeholders/off.
     // Figma "Settings" (node 47-14503, 390x1508): content column x22 y41, 351 wide, gap 24:
     // back button 44x44 white circle, title row 37, then cards (white, r16, pad L/R 14 T 16 B 10, gap 6).
     // Card heights read: play time 82, permission 166, updates 221, collapsed visibility 58,
     // expanded visibility 441, Read Now 58, Recycle Bin 58. Inner text sizes/fonts are ESTIMATES.
     val mono = com.abhi.musicapp.ui.theme.GeistMono
-    var expanded by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(startExpanded) }
     Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(start = 22.dp, end = 17.dp)) {
         Spacer(Modifier.height(41.dp))
         Box(
@@ -77,8 +82,7 @@ fun SettingsScreen(onBack: () -> Unit, onRowClick: (String) -> Unit = {}, fixtur
             }
         }
         Spacer(Modifier.height(6.dp))
-        FigmaCard {
-            CardTitle("Permission")
+        AccordionCard("Permission", startExpanded) {
             Spacer(Modifier.height(13.dp))
             val ctx = androidx.compose.ui.platform.LocalContext.current
             var tick by androidx.compose.runtime.remember { androidx.compose.runtime.mutableIntStateOf(0) }
@@ -97,8 +101,7 @@ fun SettingsScreen(onBack: () -> Unit, onRowClick: (String) -> Unit = {}, fixtur
             ToggleRow("Notifications", if (fixture) "Playback controls in the shade" else "Notification permission. Tap to open system settings", notifOn, open)
         }
         Spacer(Modifier.height(6.dp))
-        FigmaCard {
-            CardTitle("Check for updates")
+        AccordionCard("Check for updates", startExpanded) {
             Spacer(Modifier.height(13.dp))
             Text("Current Version", fontFamily = mono, fontSize = 12.sp, color = InkBlack)
             val sctx = androidx.compose.ui.platform.LocalContext.current
@@ -110,18 +113,14 @@ fun SettingsScreen(onBack: () -> Unit, onRowClick: (String) -> Unit = {}, fixtur
             if (fixture) WideButton("Update available (design state only)", dark = true, enabled = true)
         }
         Spacer(Modifier.height(6.dp))
-        FigmaCard(Modifier.clickable { expanded = !expanded }) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                CardTitle("Visibility", Modifier.weight(1f))
-                Icon(if (expanded) Icons.Filled.ExpandLess else Icons.Filled.ExpandMore, null, tint = InkBlack)
-            }
-            if (expanded) {
+        AccordionCard("Visibility", startExpanded) {
+            run {
                 Spacer(Modifier.height(13.dp))
                 // Design sample paths only in fixtures. Shipped state lists real MediaStore folders (read-only: no hide/show logic exists yet).
                 val vctx = androidx.compose.ui.platform.LocalContext.current
                 var realFolders by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf<List<Pair<String, String>>>(emptyList()) }
                 if (!fixture) androidx.compose.runtime.LaunchedEffect(Unit) {
-                    val all = com.abhi.musicapp.library.LibraryRepository.querySongs(vctx)
+                    val all = com.abhi.musicapp.library.LibraryRepository.queryAllSongs(vctx)
                     realFolders = all.filter { it.folder.isNotEmpty() }.map { it.folder }.distinct().sorted().map { it.substringAfterLast('/') to it }
                 }
                 val sample = listOf("Recording" to ".../DCIM/Audio/Recording", "Download" to ".../DCIM/Audio/Downloads",
@@ -131,10 +130,22 @@ fun SettingsScreen(onBack: () -> Unit, onRowClick: (String) -> Unit = {}, fixtur
                     if (!com.abhi.musicapp.library.LibraryRepository.hasAudioPermission(vctx)) "Music permission is off, so folders can't be listed. Use the Permission card above."
                     else "No music folders found on this device.", fontSize = 11.sp, color = GrayText)
                 val visibleFolders = if (fixture) sample else realFolders
+                val vstore = androidx.compose.runtime.remember { com.abhi.musicapp.library.VisibilityStore(vctx) }
+                var hiddenSet by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(vstore.hidden()) }
                 visibleFolders.forEach { (n, path) ->
-                    Row(Modifier.padding(vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-                        Box(Modifier.size(12.dp).clip(androidx.compose.foundation.shape.CircleShape)
-                            .border(1.dp, GrayLight, androidx.compose.foundation.shape.CircleShape))
+                    val shown = fixture || path !in hiddenSet
+                    Row(
+                        Modifier.padding(vertical = 4.dp).fillMaxWidth().testTag("visibility:$path")
+                            .semantics { stateDescription = if (shown) "Shown" else "Hidden" }
+                            .then(if (fixture) Modifier else Modifier.clickable { vstore.setHidden(path, shown); hiddenSet = vstore.hidden() }),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Box(Modifier.size(14.dp).clip(androidx.compose.foundation.shape.CircleShape)
+                            .background(if (shown && !fixture) InkBlack else androidx.compose.ui.graphics.Color.Transparent)
+                            .border(1.dp, if (shown && !fixture) InkBlack else GrayLight, androidx.compose.foundation.shape.CircleShape),
+                            contentAlignment = Alignment.Center) {
+                            if (shown && !fixture) Icon(Icons.Filled.Check, null, tint = com.abhi.musicapp.ui.theme.PureWhite, modifier = Modifier.size(10.dp))
+                        }
                         Spacer(Modifier.width(10.dp))
                         Column {
                             Text(n, fontFamily = mono, fontSize = 11.sp, color = InkBlack)
@@ -142,6 +153,7 @@ fun SettingsScreen(onBack: () -> Unit, onRowClick: (String) -> Unit = {}, fixtur
                         }
                     }
                 }
+                if (!fixture && visibleFolders.isNotEmpty()) Text("Checked folders are shown. Unchecking hides a folder's songs in this app only. No files are changed or deleted.", fontSize = 9.sp, color = GrayText, fontFamily = mono)
                 Spacer(Modifier.height(13.dp))
                 // Figma shows two Save buttons (first disabled-looking, second enabled-looking). Visual only, no save logic.
                 // Design fixture only: the shipped state has no hide/show logic, so it draws no Save buttons.
@@ -158,9 +170,35 @@ fun SettingsScreen(onBack: () -> Unit, onRowClick: (String) -> Unit = {}, fixtur
         Spacer(Modifier.height(6.dp))
         NavCard("Recycle Bin") { onRowClick("Recycle bin") }
         Spacer(Modifier.height(6.dp))
-        AboutCard()
+        AboutCard(startExpanded)
 
         Spacer(Modifier.height(24.dp))
+    }
+}
+
+/**
+ * FAQ-style section: tap the header row to expand downward / collapse. Each section opens independently
+ * (no single-open rule chosen). Spring height change is skipped when system animations are off.
+ */
+@Composable
+private fun AccordionCard(title: String, startExpanded: Boolean, content: @Composable androidx.compose.foundation.layout.ColumnScope.() -> Unit) {
+    var open by androidx.compose.runtime.saveable.rememberSaveable { androidx.compose.runtime.mutableStateOf(startExpanded) }
+    val reduce = com.abhi.musicapp.ui.reducedMotion()
+    val rot by androidx.compose.animation.core.animateFloatAsState(
+        if (open) 180f else 0f,
+        if (reduce) androidx.compose.animation.core.snap() else androidx.compose.animation.core.tween(220), label = "chevron")
+    FigmaCard(if (reduce) Modifier else Modifier.animateContentSize(androidx.compose.animation.core.spring(dampingRatio = 0.9f, stiffness = androidx.compose.animation.core.Spring.StiffnessMediumLow))) {
+        Row(
+            Modifier.fillMaxWidth().heightIn(min = 48.dp)
+                .clickable(role = androidx.compose.ui.semantics.Role.Button) { open = !open }
+                .semantics { stateDescription = if (open) "Expanded" else "Collapsed" }
+                .testTag("accordion:$title"),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            CardTitle(title, Modifier.weight(1f))
+            Icon(Icons.Filled.ExpandMore, contentDescription = null, tint = InkBlack, modifier = Modifier.graphicsLayer { rotationZ = rot })
+        }
+        if (open) content()
     }
 }
 
@@ -259,7 +297,7 @@ private fun SettingsCategory(
 private const val ABOUT_LINK = "https://abhicreative.world"
 
 @Composable
-private fun AboutCard() {
+private fun AboutCard(startExpanded: Boolean) {
     val ctx = androidx.compose.ui.platform.LocalContext.current
     val open = {
         runCatching {
@@ -267,8 +305,7 @@ private fun AboutCard() {
         }
         Unit
     }
-    FigmaCard {
-        CardTitle("About")
+    AccordionCard("About", startExpanded) {
         // Labels say what they are: no real privacy policy or terms page exists yet, all rows open the portfolio.
         listOf("Privacy policy (portfolio page for now)", "Terms of service (portfolio page for now)", "About the maker (portfolio)").forEach { label ->
             Row(Modifier.fillMaxWidth().heightIn(min = 48.dp).clickable(onClick = open), verticalAlignment = Alignment.CenterVertically) {

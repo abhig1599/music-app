@@ -101,7 +101,11 @@ object LibraryRepository {
         }
     }
 
-    fun querySongs(context: Context): List<Song> {
+    /** Songs the app shows: everything MediaStore lists minus folders hidden in Settings > Visibility. Every list, search and queue uses this. */
+    fun querySongs(context: Context): List<Song> = VisibilityStore.filterVisible(queryAllSongs(context), VisibilityStore(context).hidden())
+
+    /** Unfiltered library, only for Settings > Visibility (so a hidden folder stays listed and can be shown again). */
+    fun queryAllSongs(context: Context): List<Song> {
         if (!hasAudioPermission(context)) return emptyList()
         val collection = MediaStore.Audio.Media.getContentUri(MediaStore.VOLUME_EXTERNAL)
         val hasRel = Build.VERSION.SDK_INT >= 29

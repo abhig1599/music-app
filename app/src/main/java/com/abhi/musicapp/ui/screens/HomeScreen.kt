@@ -315,7 +315,7 @@ fun HomeScreen(
                 else -> DemoData.songs
             } else when (chip) {
                 1 -> realFolders
-                2 -> remember(reload, chip) { com.abhi.musicapp.library.PlaylistStore(context).load().map { it.name to "${it.songIds.size} songs" } }
+                2 -> remember(reload, chip) { com.abhi.musicapp.library.PlaylistStore(context).load().map { it.name to "${it.songIds.count { id -> songs.any { s -> s.id == id } }} songs" } }
                 else -> emptyList()
             }
             if (rows.isEmpty()) {
