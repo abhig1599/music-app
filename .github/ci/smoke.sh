@@ -103,6 +103,12 @@ if [ "$GR" = "0" ]; then say "FALLBACK: pm grant (in-app dialog path NOT verifie
 tap_exact "Next" s2; sleep 2; shot 04_reader; refresh 04_reader; labels reader_page; focus reader_page
 tap_exact "Get Started" s3; sleep 4; shot 05_home; refresh 05_home; labels home
 say "home shows smoke_tone: $(grep -c 'smoke_tone' /tmp/ui.xml)"
+if [ "$(grep -c 'smoke_tone' /tmp/ui.xml)" = "0" ]; then
+  say "smoke_tone not listed (run 6: 'No songs found'); re-index via adb scan then tap in-app 'Scan device'"
+  adb shell content call --uri content://media/ --method scan_file --arg /sdcard/Music/smoke_tone.wav >/dev/null 2>&1; sleep 3
+  tap_exact "Scan device" s3b || true; sleep 5; refresh 05b_after_scan; labels home_after_scan
+  say "home shows smoke_tone after scan: $(grep -c 'smoke_tone' /tmp/ui.xml)"
+fi
 SEEN_PLAY=0; SEEN_PAUSE=0; SEEN_RESUME=0
 if tap_exact "smoke_tone" s4; then
   sleep 4; shot 06_after_tap; say "session after tap: $(pbs)"; focus playing; r=$(pbs); case "$r" in *"/PLAYING/"*) SEEN_PLAY=1;; esac
