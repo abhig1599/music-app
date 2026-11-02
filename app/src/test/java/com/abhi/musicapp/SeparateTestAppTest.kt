@@ -15,6 +15,6 @@ class SeparateTestAppTest {
         val app = ApplicationProvider.getApplicationContext<android.app.Application>()
         assertEquals("com.abhi.musicapp.test", app.packageName)
         assertEquals("Music App Test", app.applicationInfo.loadLabel(app.packageManager).toString())
-        assertEquals("0.1.4", app.packageManager.getPackageInfo(app.packageName, 0).versionName)
+        assertEquals("0.1.5", app.packageManager.getPackageInfo(app.packageName, 0).versionName)
     }
 }
