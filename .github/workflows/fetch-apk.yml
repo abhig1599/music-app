@@ -2,6 +2,13 @@ name: Copy release APK to delivery branch (manual)
 
 on:
   workflow_dispatch:
+    inputs:
+      tag:
+        description: Release tag
+        default: cand-0.1.4
+      sha256:
+        description: Expected sha256 of the APK
+        default: 21a16f4d15151ebc1ff5f4ddd260f0ac11c6e9d5d749c7ee4ff0a5f0b5eefc00
 
 permissions:
   contents: write
@@ -14,17 +21,21 @@ jobs:
       - name: Download release asset and verify checksum
         env:
           GH_TOKEN: ${{ github.token }}
+          TAG: ${{ inputs.tag }}
+          SHA: ${{ inputs.sha256 }}
         run: |
-          gh release download cand-0.1.0 -p 'music-app-cand-0.1.0-debug.apk' -D /tmp/apk
-          echo "0b5cb9779ff28c3292962fa4593a4cdec5029a5a327c3945e8dc53093d9a8796  /tmp/apk/music-app-cand-0.1.0-debug.apk" | sha256sum -c -
+          gh release download "$TAG" -p "music-app-$TAG-debug.apk" -D /tmp/apk
+          echo "$SHA  /tmp/apk/music-app-$TAG-debug.apk" | sha256sum -c -
           ls -l /tmp/apk
       - name: Push APK to delivery branch (private repo; no rebuild)
+        env:
+          TAG: ${{ inputs.tag }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git checkout --orphan delivery-cand-0.1.0
+          git checkout --orphan "delivery-$TAG"
           git rm -rf . -q
-          cp /tmp/apk/music-app-cand-0.1.0-debug.apk .
-          git add music-app-cand-0.1.0-debug.apk
-          git commit -m "Delivery copy of release cand-0.1.0 APK (checksum verified, not rebuilt)"
-          git push -f origin delivery-cand-0.1.0
+          cp "/tmp/apk/music-app-$TAG-debug.apk" .
+          git add .
+          git commit -m "Delivery copy of release $TAG APK (checksum verified, not rebuilt)"
+          git push -f origin "delivery-$TAG"
