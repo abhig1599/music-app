@@ -42,6 +42,7 @@ import com.abhi.musicapp.ui.theme.InkBlack
 fun AddToPlaylistSheet(songId: Long, onDone: () -> Unit) {
     val context = LocalContext.current
     val store = remember { PlaylistStore(context) }
+    val visibleIds = remember { com.abhi.musicapp.library.LibraryRepository.querySongs(context).map { it.id }.toSet() }
     var playlists by remember { mutableStateOf(store.load()) }
     var creating by remember { mutableStateOf(false) }
     var name by remember { mutableStateOf("") }
@@ -52,34 +53,34 @@ fun AddToPlaylistSheet(songId: Long, onDone: () -> Unit) {
             Modifier.align(Alignment.BottomCenter).fillMaxWidth().clip(RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp))
                 .background(Color(0xFFF0F0F0)).clickable(enabled = false) {}.padding(12.dp),
         ) {
-            Text(if (creating) "New playlist" else "Add to playlist", fontSize = 16.sp, fontWeight = FontWeight.Medium, color = InkBlack)
+            Text(if (creating) "New playlist" else "Add to playlist", fontSize = 17.sp, fontWeight = FontWeight.Medium, color = InkBlack)
             Spacer(Modifier.height(12.dp))
             if (songId < 0) {
-                Text("No song is loaded.", fontSize = 13.sp, color = GrayText)
+                Text("No song is loaded.", fontSize = 14.sp, color = GrayText)
             } else if (creating) {
                 Box(Modifier.fillMaxWidth().height(44.dp).clip(RoundedCornerShape(8.dp)).background(Color(0xFFF7F7F7))
                     .border(1.dp, GrayLight, RoundedCornerShape(8.dp)).padding(horizontal = 10.dp), contentAlignment = Alignment.CenterStart) {
-                    if (name.isEmpty()) Text("Playlist Name...", fontSize = 13.sp, color = GrayText)
-                    BasicTextField(name, { name = it; error = null }, singleLine = true, textStyle = TextStyle(fontSize = 13.sp, color = InkBlack))
+                    if (name.isEmpty()) Text("Playlist Name...", fontSize = 14.sp, color = GrayText)
+                    BasicTextField(name, { name = it; error = null }, singleLine = true, textStyle = TextStyle(fontSize = 14.sp, color = InkBlack))
                 }
-                error?.let { Text(it, fontSize = 12.sp, color = GrayText, modifier = Modifier.padding(top = 6.dp)) }
+                error?.let { Text(it, fontSize = 13.sp, color = GrayText, modifier = Modifier.padding(top = 6.dp)) }
                 Spacer(Modifier.height(10.dp))
                 Box(Modifier.fillMaxWidth().height(44.dp).clip(RoundedCornerShape(8.dp)).background(GrayLight).clickable {
                     if (store.create(name)) { store.addSong(name.trim(), songId); doneName = name.trim() }
                     else error = "Enter a name that isn't used already."
-                }, contentAlignment = Alignment.Center) { Text("Create", fontSize = 13.sp, color = InkBlack) }
+                }, contentAlignment = Alignment.Center) { Text("Create", fontSize = 14.sp, color = InkBlack) }
             } else {
                 Row(Modifier.fillMaxWidth().height(48.dp).clip(RoundedCornerShape(8.dp)).border(1.dp, GrayLight, RoundedCornerShape(8.dp))
                     .clickable { creating = true }.padding(horizontal = 12.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Text("New playlist", fontSize = 13.sp, fontWeight = FontWeight.Medium, color = InkBlack)
+                    Text("New playlist", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = InkBlack)
                 }
                 playlists.forEach { p ->
                     Spacer(Modifier.height(6.dp))
                     Row(Modifier.fillMaxWidth().height(48.dp).clip(RoundedCornerShape(8.dp)).border(1.dp, GrayLight, RoundedCornerShape(8.dp))
                         .clickable { store.addSong(p.name, songId); doneName = p.name }.padding(horizontal = 12.dp), verticalAlignment = Alignment.CenterVertically) {
                         Column(Modifier.weight(1f)) {
-                            Text(p.name, fontSize = 13.sp, fontWeight = FontWeight.Medium, color = InkBlack)
-                            Text("${p.songIds.size} songs", fontSize = 11.sp, color = GrayText)
+                            Text(p.name, fontSize = 14.sp, fontWeight = FontWeight.Medium, color = InkBlack)
+                            Text("${p.songIds.count { it in visibleIds }} songs", fontSize = 12.sp, color = GrayText)
                         }
                     }
                 }
@@ -98,11 +99,11 @@ fun AddToPlaylistSheet(songId: Long, onDone: () -> Unit) {
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Spacer(Modifier.height(48.dp)) // badge graphic not shipped
-                Text("Add to the\n$n", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = InkBlack,
+                Text("Add to the\n$n", fontSize = 15.sp, fontWeight = FontWeight.Medium, color = InkBlack,
                     textAlign = androidx.compose.ui.text.style.TextAlign.Center)
                 Spacer(Modifier.height(12.dp))
                 Box(Modifier.fillMaxWidth().height(44.dp).clip(RoundedCornerShape(8.dp)).background(GrayLight).clickable { onDone() }, contentAlignment = Alignment.Center) {
-                    Text("Back", fontSize = 13.sp, color = InkBlack)
+                    Text("Back", fontSize = 14.sp, color = InkBlack)
                 }
             }
         }

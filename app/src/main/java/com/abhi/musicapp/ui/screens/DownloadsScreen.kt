@@ -54,15 +54,15 @@ fun DownloadsScreen(onBack: () -> Unit, fixture: DlFixture = DlFixture.None) {
         Column(verticalArrangement = Arrangement.spacedBy(24.dp)) {
             Row(Modifier.fillMaxWidth().height(63.dp), horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
                 Box(Modifier.height(44.dp).clip(RoundedCornerShape(22.dp)).background(InkBlack).padding(horizontal = 14.dp), contentAlignment = Alignment.Center) {
-                    Text("Spotify", fontFamily = GeistMono, fontSize = 12.sp, color = PureWhite)
+                    Text("Spotify", fontFamily = GeistMono, fontSize = 13.sp, color = PureWhite)
                 }
                 // YouTube chip: brand asset not shipped; blank circle placeholder (NOT visually matched).
                 Box(Modifier.size(44.dp).clip(CircleShape).background(SurfaceSoft))
             }
             Row(Modifier.width(344.dp).height(48.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                 Box(Modifier.weight(1f).height(48.dp).clip(RoundedCornerShape(10.dp)).background(SurfaceSoft).padding(horizontal = 10.dp), contentAlignment = Alignment.CenterStart) {
-                    if (link.isEmpty()) Text("Add playlist link...", fontSize = 13.sp, color = GrayText)
-                    BasicTextField(link, { link = it }, singleLine = true, textStyle = TextStyle(fontSize = 13.sp, color = InkBlack))
+                    if (link.isEmpty()) Text("Add playlist link...", fontSize = 14.sp, color = GrayText)
+                    BasicTextField(link, { link = it }, singleLine = true, textStyle = TextStyle(fontSize = 14.sp, color = InkBlack))
                 }
                 Box(Modifier.size(44.dp).alpha(0.5f).clip(RoundedCornerShape(10.dp)).background(PureWhite), contentAlignment = Alignment.Center) {
                     Icon(Icons.Filled.Download, "Download (not available yet)", tint = InkBlack, modifier = Modifier.size(20.dp))
@@ -72,17 +72,17 @@ fun DownloadsScreen(onBack: () -> Unit, fixture: DlFixture = DlFixture.None) {
                 Column(Modifier.fillMaxWidth().padding(top = 8.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     if (fixture == DlFixture.Loading) {
                         Box(Modifier.size(32.dp).clip(CircleShape).background(SurfaceSoft))
-                        Text("Loading Playlist", fontSize = 12.sp, color = InkBlack)
-                        Text("found 10 songs", fontFamily = GeistMono, fontSize = 10.sp, color = InkBlack)
+                        Text("Loading Playlist", fontSize = 13.sp, color = InkBlack)
+                        Text("found 10 songs", fontFamily = GeistMono, fontSize = 11.sp, color = InkBlack)
                     } else {
                         Box(Modifier.fillMaxWidth().height(40.dp).clip(RoundedCornerShape(10.dp)).background(SurfaceSoft), contentAlignment = Alignment.Center) {
-                            Text("+ add all Songs", fontFamily = GeistMono, fontSize = 12.sp, color = InkBlack)
+                            Text("+ add all Songs", fontFamily = GeistMono, fontSize = 13.sp, color = InkBlack)
                         }
                         listOf("Rolling in the Deep", "Shape of You", "Shape of You", "Stay").forEach { n ->
                             Row(Modifier.fillMaxWidth().height(53.dp).clip(RoundedCornerShape(10.dp)).background(SurfaceSoft).padding(6.dp), verticalAlignment = Alignment.CenterVertically) {
                                 Box(Modifier.size(36.dp).clip(RoundedCornerShape(6.dp)).background(PureWhite))
                                 Spacer(Modifier.width(10.dp))
-                                Column { Text(n, fontSize = 14.sp, color = InkBlack); Text("by", fontFamily = GeistMono, fontSize = 10.sp, color = InkBlack) }
+                                Column { Text(n, fontSize = 15.sp, color = InkBlack); Text("by", fontFamily = GeistMono, fontSize = 11.sp, color = InkBlack) }
                             }
                         }
                     }

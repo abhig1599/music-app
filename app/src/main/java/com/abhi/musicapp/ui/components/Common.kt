@@ -55,7 +55,7 @@ fun ScreenTitle(title: String, trailing: String? = null) {
     ) {
         Text(title, fontSize = 32.sp, fontWeight = FontWeight.Bold, color = InkBlack)
         Spacer(Modifier.weight(1f))
-        if (trailing != null) Text(trailing, fontSize = 13.sp, color = GrayText)
+        if (trailing != null) Text(trailing, fontSize = 14.sp, color = GrayText)
     }
 }
 
@@ -88,10 +88,10 @@ fun FilterChip(label: String, count: String?, active: Boolean, onClick: () -> Un
             .padding(horizontal = 7.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(label, color = fg, fontSize = 15.sp, maxLines = 1, softWrap = false, fontFamily = com.abhi.musicapp.ui.theme.GeistMono)
+        Text(label, color = fg, fontSize = 16.sp, maxLines = 1, softWrap = false, fontFamily = com.abhi.musicapp.ui.theme.GeistMono)
         if (count != null) {
             Spacer(Modifier.width(2.dp))
-            Text(count, color = if (active) PureWhite else GrayText, fontSize = 10.sp,
+            Text(count, color = if (active) PureWhite else GrayText, fontSize = 11.sp,
                 modifier = Modifier.offset(y = (-6).dp))
         }
     }
@@ -128,9 +128,9 @@ fun SongRow(
         }
         Spacer(Modifier.width(13.dp))
         Column(Modifier.weight(1f)) {
-            Text(title, color = InkBlack, fontSize = 15.sp, fontWeight = FontWeight.Medium,
+            Text(title, color = InkBlack, fontSize = 16.sp, fontWeight = FontWeight.Medium,
                 maxLines = 1, overflow = TextOverflow.Ellipsis)
-            Text(subtitle, color = GrayText, fontSize = 12.sp)
+            Text(subtitle, color = GrayText, fontSize = 13.sp)
         }
         trailing()
     }
@@ -214,8 +214,8 @@ fun MiniPlayer(
     ) {
         if (darkVariant) {
             Column(Modifier.weight(1f).padding(end = 8.dp)) {
-                Text(title, color = fg, fontSize = 13.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                Text(time.padStart(5, '0'), color = GrayText, fontSize = 10.sp)
+                Text(title, color = fg, fontSize = 14.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Text(time.padStart(5, '0'), color = GrayText, fontSize = 11.sp)
             }
             val padded = time.padStart(5, '0')
             Text(
@@ -234,8 +234,8 @@ fun MiniPlayer(
             Text("Pause", color = fg, fontSize = 20.sp, fontWeight = FontWeight.Bold)
             Spacer(Modifier.weight(1f))
             Column(horizontalAlignment = Alignment.End) {
-                Text(title, color = fg, fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                Text(time, color = fg, fontSize = 12.sp)
+                Text(title, color = fg, fontSize = 13.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Text(time, color = fg, fontSize = 13.sp)
             }
         }
     }
@@ -247,7 +247,7 @@ fun SectionHeader(text: String) {
     Text(
         text,
         modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp),
-        fontSize = 16.sp,
+        fontSize = 17.sp,
         fontWeight = FontWeight.Bold,
         color = InkBlack,
     )

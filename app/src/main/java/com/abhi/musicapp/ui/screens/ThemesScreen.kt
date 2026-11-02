@@ -58,7 +58,7 @@ fun ThemesScreen(onBack: () -> Unit) {
                 Text(
                     m.name.lowercase().replaceFirstChar { it.uppercase() },
                     color = if (active) PureWhite else MaterialTheme.colorScheme.onBackground,
-                    fontSize = 14.sp,
+                    fontSize = 15.sp,
                     fontWeight = if (active) FontWeight.Bold else FontWeight.Normal,
                     modifier = Modifier
                         .padding(end = 8.dp)
@@ -72,7 +72,7 @@ fun ThemesScreen(onBack: () -> Unit) {
 
         Spacer(Modifier.height(20.dp))
         Text("Accent", modifier = Modifier.padding(horizontal = 20.dp),
-            fontSize = 14.sp, fontWeight = FontWeight.Medium,
+            fontSize = 15.sp, fontWeight = FontWeight.Medium,
             color = MaterialTheme.colorScheme.onBackground)
         Row(
             modifier = Modifier.padding(horizontal = 20.dp, vertical = 10.dp),
@@ -99,7 +99,7 @@ fun ThemesScreen(onBack: () -> Unit) {
         }
         Text(
             "Dark variant is our proposal - the Figma file is light-only.",
-            fontSize = 11.sp, color = GrayText, modifier = Modifier.padding(horizontal = 20.dp),
+            fontSize = 12.sp, color = GrayText, modifier = Modifier.padding(horizontal = 20.dp),
         )
     }
 }

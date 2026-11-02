@@ -118,14 +118,14 @@ fun PlayerScreen(onBack: () -> Unit, fixture: PlayerUiState? = null, initialOver
                 Text("M", fontSize = 20.sp, color = InkBlack)
             }
             Box(Modifier.size(width = 104.dp, height = 1.dp).background(GrayLight))
-            Text(formatTotal(state.durationMs), fontSize = 15.51.sp, fontFamily = mono, color = InkBlack)
+            Text(formatTotal(state.durationMs), fontSize = 16.51.sp, fontFamily = mono, color = InkBlack)
         }
         Column(
             modifier = Modifier.offset(23.5.dp, (489.dp - shrink)).width(344.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            Text(sourceLabel ?: if (fixture != null) "[Playlist/Source]" else "Local music", fontSize = 16.sp, fontWeight = FontWeight.Medium, color = InkBlack)
+            Text(sourceLabel ?: if (fixture != null) "[Playlist/Source]" else "Local music", fontSize = 17.sp, fontWeight = FontWeight.Medium, color = InkBlack)
             Text(
                 if (state.hasTrack) state.title else "Nothing playing",
                 fontSize = 32.sp, fontWeight = FontWeight.Medium, color = InkBlack,
@@ -170,7 +170,7 @@ fun PlayerScreen(onBack: () -> Unit, fixture: PlayerUiState? = null, initialOver
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Icon(Icons.AutoMirrored.Filled.QueueMusic, contentDescription = null, tint = InkBlack)
-            Text("Queue", fontSize = 13.sp, fontWeight = FontWeight.Medium, color = InkBlack)
+            Text("Queue", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = InkBlack)
         }
         Box(Modifier.offset(298.dp, (726.dp - shrink)).pressScale().size(72.dp).clip(CircleShape).background(circle).clickable { overlay = if (overlay == 2) 0 else 2 }, contentAlignment = Alignment.Center) {
             Icon(Icons.Filled.SelfImprovement, contentDescription = "Focus mode (icon pending his decision)", tint = InkBlack)
@@ -187,7 +187,7 @@ fun PlayerScreen(onBack: () -> Unit, fixture: PlayerUiState? = null, initialOver
                     verticalAlignment = Alignment.CenterVertically) {
                     Box(Modifier.size(16.dp).clip(androidx.compose.foundation.shape.RoundedCornerShape(3.dp)).background(if (off) pill else com.abhi.musicapp.ui.theme.GrayText)) // glyphs not matched
                     androidx.compose.foundation.layout.Spacer(Modifier.width(10.dp))
-                    Text(t, fontSize = 12.sp, color = if (off) com.abhi.musicapp.ui.theme.GrayText.copy(alpha = 0.6f) else InkBlack)
+                    Text(t, fontSize = 13.sp, color = if (off) com.abhi.musicapp.ui.theme.GrayText.copy(alpha = 0.6f) else InkBlack)
                 }
             }
         }

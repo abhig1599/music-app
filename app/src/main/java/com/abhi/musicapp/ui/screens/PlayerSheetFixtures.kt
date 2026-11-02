@@ -72,25 +72,25 @@ fun PlayerSheetFixture(kind: PlayerSheet) {
         when (kind) {
             PlayerSheet.Menu, PlayerSheet.FocusOpen, PlayerSheet.DeviceOpen -> Unit // rendered by PlayerScreen itself (real overlay)
             PlayerSheet.NewPlaylist -> Card(338.dp, 170.dp) {
-                Text("New playlist", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = InkBlack)
+                Text("New playlist", fontSize = 15.sp, fontWeight = FontWeight.Medium, color = InkBlack)
                 Spacer(Modifier.height(10.dp))
                 Box(Modifier.fillMaxWidth().height(44.dp).clip(RoundedCornerShape(8.dp)).background(Color(0xFFF7F7F7)).border(1.dp, GrayLight, RoundedCornerShape(8.dp)).padding(horizontal = 10.dp), contentAlignment = Alignment.CenterStart) {
-                    Text("Playlist Name...", fontFamily = GeistMono, fontSize = 11.sp, color = GrayText)
+                    Text("Playlist Name...", fontFamily = GeistMono, fontSize = 12.sp, color = GrayText)
                 }
                 Spacer(Modifier.height(10.dp))
                 Box(Modifier.fillMaxWidth().height(44.dp).clip(RoundedCornerShape(8.dp)).background(GrayLight), contentAlignment = Alignment.Center) {
-                    Text("Create", fontFamily = GeistMono, fontSize = 12.sp, color = InkBlack)
+                    Text("Create", fontFamily = GeistMono, fontSize = 13.sp, color = InkBlack)
                 }
             }
             PlayerSheet.Delete -> Card(298.dp, 252.dp, centered = true) {
                 Box(Modifier.size(44.dp).clip(RoundedCornerShape(8.dp)).background(InkBlack)) // graphic mark not shipped
                 Spacer(Modifier.height(12.dp))
-                Text("Delete song ?", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = InkBlack)
+                Text("Delete song ?", fontSize = 15.sp, fontWeight = FontWeight.Medium, color = InkBlack)
                 Spacer(Modifier.height(10.dp))
-                Text("thi song will be move to \"Recently delete\"\nand will be deleted after 30 days.", fontSize = 9.sp, color = InkBlack, textAlign = androidx.compose.ui.text.style.TextAlign.Center)
+                Text("thi song will be move to \"Recently delete\"\nand will be deleted after 30 days.", fontSize = 11.sp, color = InkBlack, textAlign = androidx.compose.ui.text.style.TextAlign.Center)
                 Spacer(Modifier.height(18.dp))
                 Box(Modifier.fillMaxWidth().height(44.dp).clip(RoundedCornerShape(6.dp)).border(1.dp, Color(0xFFE5484D), RoundedCornerShape(6.dp)), contentAlignment = Alignment.Center) {
-                    Text("Deleat", fontFamily = GeistMono, fontSize = 11.sp, color = Color(0xFFE5484D))
+                    Text("Deleat", fontFamily = GeistMono, fontSize = 12.sp, color = Color(0xFFE5484D))
                 }
             }
             PlayerSheet.AddToPlaylist, PlayerSheet.Speed, PlayerSheet.LyricsEmpty, PlayerSheet.Lyrics, PlayerSheet.Queue -> {
@@ -99,7 +99,7 @@ fun PlayerSheetFixture(kind: PlayerSheet) {
                     Box(Modifier.padding(top = 8.dp).align(Alignment.CenterHorizontally).size(width = 28.dp, height = 3.dp).clip(CircleShape).background(GrayLight))
                     Spacer(Modifier.height(16.dp))
                     Text(when (kind) { PlayerSheet.AddToPlaylist -> "Add to playlist"; PlayerSheet.Speed -> "Speed"; PlayerSheet.Queue -> "Queue"; else -> "Lyrics" },
-                        fontSize = 16.sp, fontWeight = FontWeight.Medium, color = InkBlack)
+                        fontSize = 17.sp, fontWeight = FontWeight.Medium, color = InkBlack)
                     Spacer(Modifier.height(14.dp))
                     when (kind) {
                         PlayerSheet.AddToPlaylist -> Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -109,7 +109,7 @@ fun PlayerSheetFixture(kind: PlayerSheet) {
                                         Icon(if (add) Icons.Filled.AddCircleOutline else Icons.AutoMirrored.Filled.PlaylistAdd, null, tint = InkBlack, modifier = Modifier.size(16.dp))
                                     }
                                     Spacer(Modifier.width(10.dp))
-                                    Column { Text(t, fontSize = 10.sp, fontWeight = FontWeight.Medium, color = InkBlack); Text("0 songs", fontFamily = GeistMono, fontSize = 8.sp, color = GrayText) }
+                                    Column { Text(t, fontSize = 11.sp, fontWeight = FontWeight.Medium, color = InkBlack); Text("0 songs", fontFamily = GeistMono, fontSize = 11.sp, color = GrayText) }
                                 }
                             }
                         }
@@ -117,7 +117,7 @@ fun PlayerSheetFixture(kind: PlayerSheet) {
                             listOf("0.5", "0.75x", "1.0 (Default)", "1.25x", "1.5x", "2.0x").forEach { t ->
                                 val sel = t.startsWith("1.0")
                                 Row(Modifier.fillMaxWidth().height(40.dp).padding(end = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-                                    Text(t, fontFamily = GeistMono, fontSize = 10.sp, color = if (sel) Orangs else InkBlack, modifier = Modifier.weight(1f))
+                                    Text(t, fontFamily = GeistMono, fontSize = 11.sp, color = if (sel) Orangs else InkBlack, modifier = Modifier.weight(1f))
                                     if (sel) Icon(Icons.Filled.Check, null, tint = Orangs, modifier = Modifier.size(16.dp))
                                 }
                             }
@@ -126,7 +126,7 @@ fun PlayerSheetFixture(kind: PlayerSheet) {
                             Column(Modifier.align(Alignment.TopCenter).padding(top = 40.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                                 Box(Modifier.size(32.dp).clip(RoundedCornerShape(8.dp)).background(GrayLight)) // leaf illustration not shipped
                                 Spacer(Modifier.height(8.dp))
-                                Text("No lyrics", fontSize = 9.sp, color = InkBlack)
+                                Text("No lyrics", fontSize = 11.sp, color = InkBlack)
                             }
                             Row(Modifier.align(Alignment.BottomCenter).padding(bottom = 36.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                                 Box(Modifier.size(32.dp).clip(CircleShape).background(GrayLight), contentAlignment = Alignment.Center) { Icon(Icons.Filled.Search, null, tint = InkBlack, modifier = Modifier.size(16.dp)) }
@@ -136,7 +136,7 @@ fun PlayerSheetFixture(kind: PlayerSheet) {
                         PlayerSheet.Lyrics -> Column {
                             // Placeholder text: the Figma sample lines are third-party lyrics, not reproduced here.
                             repeat(7) { i ->
-                                Text("Sample lyric line number ${i + 1} goes here", fontSize = 9.sp, color = if (i == 3) Orangs else InkBlack, modifier = Modifier.padding(vertical = 3.dp))
+                                Text("Sample lyric line number ${i + 1} goes here", fontSize = 11.sp, color = if (i == 3) Orangs else InkBlack, modifier = Modifier.padding(vertical = 3.dp))
                             }
                         }
                         else -> Column(verticalArrangement = Arrangement.spacedBy(6.dp)) { // Queue
@@ -146,7 +146,7 @@ fun PlayerSheetFixture(kind: PlayerSheet) {
                                     Spacer(Modifier.width(8.dp))
                                     Box(Modifier.size(28.dp).clip(RoundedCornerShape(6.dp)).background(GrayLight)) // photo not shipped
                                     Spacer(Modifier.width(6.dp))
-                                    Text(t, fontSize = 7.sp, fontWeight = FontWeight.Medium, color = InkBlack, modifier = Modifier.weight(1f))
+                                    Text(t, fontSize = 11.sp, fontWeight = FontWeight.Medium, color = InkBlack, modifier = Modifier.weight(1f))
                                     when (i) {
                                         0 -> Box(Modifier.size(14.dp).clip(CircleShape).background(GrayLight), contentAlignment = Alignment.Center) { Icon(Icons.Filled.Check, null, tint = PureWhite, modifier = Modifier.size(9.dp)) }
                                         1 -> Box(Modifier.size(10.dp).clip(CircleShape).background(Orangs)) // glyph approximated

@@ -119,7 +119,7 @@ fun RingtoneMakerScreen(onBack: () -> Unit, onOpenSystemConsent: () -> Unit) {
         }
         Text(
             "Audio trimming is PLANNED - preview and save activate when the slicing engine lands. Setting the ringtone asks the system for write-settings consent.",
-            fontSize = 11.sp, color = GrayText, modifier = Modifier.padding(horizontal = 20.dp, vertical = 10.dp),
+            fontSize = 12.sp, color = GrayText, modifier = Modifier.padding(horizontal = 20.dp, vertical = 10.dp),
         )
     }
 }
@@ -130,7 +130,7 @@ private fun TrimSlider(label: String, value: Float, onChange: (Float) -> Unit) {
         modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(label, fontSize = 12.sp, color = GrayText, modifier = Modifier.padding(end = 12.dp))
+        Text(label, fontSize = 13.sp, color = GrayText, modifier = Modifier.padding(end = 12.dp))
         androidx.compose.material3.Slider(
             value = value,
             onValueChange = onChange,

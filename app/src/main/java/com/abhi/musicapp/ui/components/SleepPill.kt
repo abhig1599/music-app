@@ -38,9 +38,9 @@ private fun TimeChip(value: String, unit: String) {
         Modifier.clip(RoundedCornerShape(8.72.dp)).background(Chip).padding(7.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(value, fontFamily = GeistMono, fontSize = 15.51.sp, color = InkBlack)
+        Text(value, fontFamily = GeistMono, fontSize = 16.51.sp, color = InkBlack)
         Spacer(Modifier.width(2.62.dp))
-        Text(unit, fontSize = 12.21.sp, color = Color(0xFF6B6B6B)) // Figma: Inter Regular 12.21 (system sans stands in)
+        Text(unit, fontSize = 13.21.sp, color = Color(0xFF6B6B6B)) // Figma: Inter Regular 12.21 (system sans stands in)
     }
 }
 
@@ -69,7 +69,7 @@ fun SleepStrip(left: String, right: String?, timeUp: Boolean = false, orangeClus
             Ticks(Modifier.width(170.dp), if (orangeCluster) 11 else null)
             if (timeUp) {
                 Box(Modifier.clip(RoundedCornerShape(8.dp)).background(Orangs).padding(horizontal = 8.dp, vertical = 7.dp)) {
-                    Text("Time-up", fontFamily = GeistMono, fontSize = 15.sp, color = PureWhite)
+                    Text("Time-up", fontFamily = GeistMono, fontSize = 16.sp, color = PureWhite)
                 }
             } else if (right != null) TimeChip(right, "M")
         }
@@ -77,7 +77,7 @@ fun SleepStrip(left: String, right: String?, timeUp: Boolean = false, orangeClus
             Row(
                 Modifier.align(Alignment.TopCenter).offset(y = (-8).dp).clip(RoundedCornerShape(8.dp)).background(Orangs)
                     .padding(horizontal = 6.dp, vertical = 3.dp),
-            ) { Text("$topChip M", fontFamily = GeistMono, fontSize = 11.sp, color = PureWhite) }
+            ) { Text("$topChip M", fontFamily = GeistMono, fontSize = 12.sp, color = PureWhite) }
         }
     }
 }
@@ -90,7 +90,7 @@ fun AppExitPill() {
             .border(1.dp, Stroke, RoundedCornerShape(10.dp)).padding(horizontal = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text("App exit in", fontFamily = GeistMono, fontSize = 15.sp, color = InkBlack)
+        Text("App exit in", fontFamily = GeistMono, fontSize = 16.sp, color = InkBlack)
         Spacer(Modifier.width(10.dp))
         TimeChip("0:10", "S")
         Spacer(Modifier.weight(1f))

@@ -55,7 +55,7 @@ fun DownloadListFixture(onBack: () -> Unit = {}) {
                     Row(Modifier.clip(RoundedCornerShape(8.72.dp)).background(if (sel) Orangs else Bg2Fill).padding(6.97.dp),
                         horizontalArrangement = Arrangement.spacedBy(2.62.dp), verticalAlignment = Alignment.Top) {
                         Text(t, fontFamily = GeistMono, fontSize = 18.sp, lineHeight = 23.sp, color = c, softWrap = false) // Figma: Geist Mono Regular 18
-                        Text(n, fontSize = 12.21.sp, lineHeight = 15.sp, color = c, softWrap = false) // Figma: Inter Regular 12.21 (system sans stands in)
+                        Text(n, fontSize = 13.21.sp, lineHeight = 15.sp, color = c, softWrap = false) // Figma: Inter Regular 12.21 (system sans stands in)
                     }
                 }
             }
@@ -66,11 +66,11 @@ fun DownloadListFixture(onBack: () -> Unit = {}) {
                         Spacer(Modifier.width(10.dp))
                         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                             Text("Rolling in the Deep", fontSize = 18.sp, fontWeight = FontWeight.Normal, color = InkBlack)
-                            Text("Playlist Name", fontFamily = GeistMono, fontSize = 14.sp, fontWeight = FontWeight.Medium, color = InkBlack)
+                            Text("Playlist Name", fontFamily = GeistMono, fontSize = 15.sp, fontWeight = FontWeight.Medium, color = InkBlack)
                         }
                         Box(Modifier.size(32.dp), contentAlignment = Alignment.Center) {
                             when (state) {
-                                0 -> Box(Modifier.size(26.67.dp).border(2.dp, InkBlack, CircleShape), contentAlignment = Alignment.Center) { Text("!", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = InkBlack) }
+                                0 -> Box(Modifier.size(26.67.dp).border(2.dp, InkBlack, CircleShape), contentAlignment = Alignment.Center) { Text("!", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = InkBlack) }
                                 1 -> { CircularProgressIndicator(progress = { 0.6f }, color = Orangs, trackColor = GrayLight, strokeWidth = 2.dp, modifier = Modifier.size(26.dp))
                                     Row(horizontalArrangement = Arrangement.spacedBy(3.dp)) { repeat(2) { Box(Modifier.width(2.dp).height(8.dp).clip(RoundedCornerShape(1.dp)).background(InkBlack)) } } } // pause bar sizes INFERRED, not read
                                 2 -> Box(Modifier.size(24.dp).clip(CircleShape).background(InkBlack), contentAlignment = Alignment.Center) { Icon(Icons.Filled.Check, null, tint = PureWhite, modifier = Modifier.size(14.dp)) }

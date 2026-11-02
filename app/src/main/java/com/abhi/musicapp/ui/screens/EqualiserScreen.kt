@@ -70,7 +70,7 @@ fun EqualiserScreen(onBack: () -> Unit) {
                 .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Text("Enabled", fontSize = 15.sp, color = InkBlack, modifier = Modifier.weight(1f))
+            Text("Enabled", fontSize = 16.sp, color = InkBlack, modifier = Modifier.weight(1f))
             Switch(
                 checked = enabled,
                 onCheckedChange = null,
@@ -85,7 +85,7 @@ fun EqualiserScreen(onBack: () -> Unit) {
                 Text(
                     presets[i],
                     color = if (preset == i) PureWhite else InkBlack,
-                    fontSize = 13.sp,
+                    fontSize = 14.sp,
                     fontWeight = if (preset == i) FontWeight.Bold else FontWeight.Normal,
                     modifier = Modifier
                         .padding(horizontal = 4.dp)
@@ -108,7 +108,7 @@ fun EqualiserScreen(onBack: () -> Unit) {
             val labels = listOf("60Hz", "230Hz", "910Hz", "3.6kHz", "14kHz")
             labels.forEachIndexed { i, label ->
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(label, fontSize = 12.sp, color = GrayText, maxLines = 1, softWrap = false,
+                    Text(label, fontSize = 13.sp, color = GrayText, maxLines = 1, softWrap = false,
                         modifier = Modifier.width(52.dp).padding(end = 8.dp))
                     Slider(
                         value = bands[i].intValue.toFloat(),
@@ -121,7 +121,7 @@ fun EqualiserScreen(onBack: () -> Unit) {
                             activeTrackColor = Orangs,
                         ),
                     )
-                    Text("${bands[i].intValue}dB", fontSize = 12.sp, color = GrayText, maxLines = 1, softWrap = false,
+                    Text("${bands[i].intValue}dB", fontSize = 13.sp, color = GrayText, maxLines = 1, softWrap = false,
                         textAlign = androidx.compose.ui.text.style.TextAlign.End, modifier = Modifier.width(44.dp))
                 }
             }
@@ -129,7 +129,7 @@ fun EqualiserScreen(onBack: () -> Unit) {
 
         Text(
             "Equaliser is not connected to playback yet. These controls do nothing and sound is not changed.",
-            fontSize = 11.sp, color = GrayText, modifier = Modifier.padding(horizontal = 24.dp),
+            fontSize = 12.sp, color = GrayText, modifier = Modifier.padding(horizontal = 24.dp),
         )
         Spacer(Modifier.height(16.dp))
     }

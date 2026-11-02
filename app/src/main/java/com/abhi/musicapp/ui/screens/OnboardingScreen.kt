@@ -93,7 +93,7 @@ fun OnboardingScreen(onDone: () -> Unit, initialStep: Int = 1, figmaFixture: Boo
                 Spacer(Modifier.height(10.dp))
                 Text(
                     "By tapping \"Get Started\" you continue into the app. Terms and privacy documents are not published yet.",
-                    fontFamily = Mono, fontSize = 8.sp, color = GrayText,
+                    fontFamily = Mono, fontSize = 11.sp, color = GrayText,
                     textAlign = TextAlign.Center, lineHeight = 12.sp,
                 )
                 Spacer(Modifier.height(24.dp))
@@ -113,7 +113,7 @@ private fun OrangeButton(label: String, onClick: () -> Unit) {
             .clickable(onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
-        Text(label, fontFamily = Mono, fontSize = 14.sp, fontWeight = FontWeight.Bold, color = InkBlack)
+        Text(label, fontFamily = Mono, fontSize = 15.sp, fontWeight = FontWeight.Bold, color = InkBlack)
     }
 }
 
@@ -138,11 +138,11 @@ private fun LanguageStep() {
                     .padding(horizontal = 13.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Text(lang, fontFamily = Mono, fontSize = 13.sp,
+                Text(lang, fontFamily = Mono, fontSize = 14.sp,
                     color = if (selected == lang) Orangs else if (lang == "English") InkBlack else GrayText,
                     modifier = Modifier.weight(1f))
-                if (selected == lang) Text("✓", color = Orangs, fontSize = 16.sp)
-                if (lang != "English") Text("not available yet", fontFamily = Mono, fontSize = 10.sp, color = GrayText)
+                if (selected == lang) Text("✓", color = Orangs, fontSize = 17.sp)
+                if (lang != "English") Text("not available yet", fontFamily = Mono, fontSize = 11.sp, color = GrayText)
             }
         }
     }
@@ -192,8 +192,8 @@ private fun PermissionsStep() {
 private fun PermissionRow(title: String, detail: String, on: Boolean, onToggle: () -> Unit) {
     Row(verticalAlignment = Alignment.CenterVertically) {
         Column(Modifier.weight(1f)) {
-            Text(title, fontFamily = Mono, fontSize = 14.sp, fontWeight = FontWeight.Bold, color = InkBlack)
-            Text(detail, fontFamily = Mono, fontSize = 10.sp, color = GrayText, lineHeight = 13.sp)
+            Text(title, fontFamily = Mono, fontSize = 15.sp, fontWeight = FontWeight.Bold, color = InkBlack)
+            Text(detail, fontFamily = Mono, fontSize = 11.sp, color = GrayText, lineHeight = 13.sp)
         }
         Spacer(Modifier.size(8.dp))
         Box(
@@ -218,10 +218,10 @@ private fun ReaderStep(onSkip: () -> Unit, figmaFixture: Boolean) {
         Spacer(Modifier.height(14.dp))
         Text(
             "Enter your Google Gemini API key to enable the \"Read Now\" feature.\nYou can create an API key in Google AI Studio. Pricing and limits are set by Google and not verified here.",
-            fontFamily = Mono, fontSize = 10.sp, color = InkBlack, lineHeight = 13.sp,
+            fontFamily = Mono, fontSize = 11.sp, color = InkBlack, lineHeight = 13.sp,
         )
         Spacer(Modifier.height(14.dp))
-        Text("Create Google Gemini API", fontFamily = Mono, fontSize = 10.sp,
+        Text("Create Google Gemini API", fontFamily = Mono, fontSize = 11.sp,
             color = Color(0xFF0000FF), modifier = Modifier.padding(start = 4.dp))
         Spacer(Modifier.height(14.dp))
         DisabledField("API Name")
@@ -229,7 +229,7 @@ private fun ReaderStep(onSkip: () -> Unit, figmaFixture: Boolean) {
         DisabledField("API Key (....hmwg)")
         Spacer(Modifier.height(8.dp))
         Text("Reader setup is not connected yet; fields are disabled until its behaviour is decided.",
-            fontSize = 9.sp, color = GrayText, fontFamily = Mono)
+            fontSize = 11.sp, color = GrayText, fontFamily = Mono)
         Spacer(Modifier.weight(1f, fill = false).height(40.dp))
         Box(
             modifier = Modifier
@@ -238,7 +238,7 @@ private fun ReaderStep(onSkip: () -> Unit, figmaFixture: Boolean) {
                 .background(Color(0xFFE3E3E1))
                 .clickable(onClick = onSkip),
             contentAlignment = Alignment.Center,
-        ) { Text("Skip & Get Started", fontFamily = Mono, fontSize = 13.sp, color = InkBlack) }
+        ) { Text("Skip & Get Started", fontFamily = Mono, fontSize = 14.sp, color = InkBlack) }
         Spacer(Modifier.height(14.dp))
     }
 }
@@ -251,14 +251,14 @@ private fun ReaderStepShipped(onSkip: () -> Unit) {
         Spacer(Modifier.height(14.dp))
         Text(
             "Reader is not available in this version. There is nothing to set up yet.",
-            fontFamily = Mono, fontSize = 10.sp, color = InkBlack, lineHeight = 13.sp,
+            fontFamily = Mono, fontSize = 11.sp, color = InkBlack, lineHeight = 13.sp,
         )
         Spacer(Modifier.height(14.dp))
         DisabledField("API Name")
         Spacer(Modifier.height(10.dp))
         DisabledField("API Key")
         Spacer(Modifier.height(8.dp))
-        Text("These fields are disabled.", fontSize = 9.sp, color = GrayText, fontFamily = Mono)
+        Text("These fields are disabled.", fontSize = 11.sp, color = GrayText, fontFamily = Mono)
         Spacer(Modifier.weight(1f, fill = false).height(40.dp))
         Box(
             modifier = Modifier
@@ -267,7 +267,7 @@ private fun ReaderStepShipped(onSkip: () -> Unit) {
                 .background(Color(0xFFE3E3E1))
                 .clickable(onClick = onSkip),
             contentAlignment = Alignment.Center,
-        ) { Text("Skip & Get Started", fontFamily = Mono, fontSize = 13.sp, color = InkBlack) }
+        ) { Text("Skip & Get Started", fontFamily = Mono, fontSize = 14.sp, color = InkBlack) }
         Spacer(Modifier.height(14.dp))
     }
 }
@@ -281,5 +281,5 @@ private fun DisabledField(hint: String) {
             .border(1.dp, GrayLight, RoundedCornerShape(8.dp))
             .padding(horizontal = 12.dp),
         contentAlignment = Alignment.CenterStart,
-    ) { Text(hint, fontFamily = Mono, fontSize = 13.sp, color = GrayText) }
+    ) { Text(hint, fontFamily = Mono, fontSize = 14.sp, color = GrayText) }
 }

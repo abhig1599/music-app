@@ -76,7 +76,7 @@ fun RecycleBinScreen(onBack: () -> Unit, fixture: List<BinRow> = emptyList()) {
     FigmaPage("Recycle Bin", onBack, titleSize = 30.sp, chevronBack = true, trailing = {
         // "Empty Bin" pill: size/fill are estimates. Disabled: nothing can be binned yet.
         Box(Modifier.alpha(if (fixture.isEmpty()) 0.5f else 1f).clip(RoundedCornerShape(8.dp)).background(SurfaceSoft).padding(horizontal = 10.dp, vertical = 6.dp)) {
-            Text("Empty Bin", fontFamily = GeistMono, fontSize = 13.sp, color = InkBlack)
+            Text("Empty Bin", fontFamily = GeistMono, fontSize = 14.sp, color = InkBlack)
         }
     }) {
         Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -88,12 +88,12 @@ fun RecycleBinScreen(onBack: () -> Unit, fixture: List<BinRow> = emptyList()) {
                     Spacer(Modifier.width(13.dp))
                     Column(Modifier.weight(1f)) {
                         Text(row.name, fontSize = 18.sp, color = InkBlack) // Figma read: Helvetica Neue Regular 18
-                        Text("${row.daysLeft} days left", fontFamily = GeistMono, fontSize = 14.sp, /* DERIVED, not panel-verified */ color = InkBlack)
+                        Text("${row.daysLeft} days left", fontFamily = GeistMono, fontSize = 15.sp, /* DERIVED, not panel-verified */ color = InkBlack)
                     }
                     Icon(Icons.Filled.Undo, "Restore", tint = InkBlack, modifier = Modifier.size(24.dp))
                 }
             }
-            if (fixture.isEmpty()) Text("Nothing in the bin", fontFamily = GeistMono, fontSize = 12.sp, color = GrayText, modifier = Modifier.padding(top = 8.dp))
+            if (fixture.isEmpty()) Text("Nothing in the bin", fontFamily = GeistMono, fontSize = 13.sp, color = GrayText, modifier = Modifier.padding(top = 8.dp))
         }
     }
 }
@@ -110,12 +110,12 @@ fun ReadNowScreen(onBack: () -> Unit, fixtureApiName: String? = null, designComp
             if (fixtureApiName != null) {
                 Column(Modifier.fillMaxWidth().height(168.dp).clip(RoundedCornerShape(16.dp)).background(com.abhi.musicapp.ui.theme.FigmaWhite)
                     .padding(start = 14.dp, end = 14.dp, top = 16.dp, bottom = 10.dp)) {
-                    Text("API Collection", fontSize = 16.sp, fontWeight = FontWeight.Medium, color = InkBlack, modifier = Modifier.height(20.dp))
+                    Text("API Collection", fontSize = 17.sp, fontWeight = FontWeight.Medium, color = InkBlack, modifier = Modifier.height(20.dp))
                     Spacer(Modifier.height(13.dp))
                     Row(Modifier.height(46.dp), verticalAlignment = Alignment.CenterVertically) {
                         Column(Modifier.weight(1f)) {
-                            Text(fixtureApiName, fontFamily = mono, fontSize = 16.sp, fontWeight = FontWeight.Medium, color = InkBlack) // Geist Mono Medium 16 (read)
-                            Text("...hello", fontSize = 14.sp, color = GrayText) // Helvetica Neue Regular 14 Gray (read)
+                            Text(fixtureApiName, fontFamily = mono, fontSize = 17.sp, fontWeight = FontWeight.Medium, color = InkBlack) // Geist Mono Medium 16 (read)
+                            Text("...hello", fontSize = 15.sp, color = GrayText) // Helvetica Neue Regular 14 Gray (read)
                         }
                         Icon(Icons.Outlined.Delete, "Delete", tint = GrayText, modifier = Modifier.size(20.dp)) // Figma: outlined vector 18x20, stroke Gray 1.5 round; Material outlined glyph is an approximation
                     }
@@ -124,18 +124,18 @@ fun ReadNowScreen(onBack: () -> Unit, fixtureApiName: String? = null, designComp
                 }
             }
             Column(Modifier.fillMaxWidth().height(267.52.dp).clip(RoundedCornerShape(16.dp)).background(com.abhi.musicapp.ui.theme.FigmaWhite).padding(start = 14.dp, end = 14.dp, top = 16.dp, bottom = 10.dp)) {
-                Text("API Collection", fontSize = 16.sp, fontWeight = FontWeight.Medium, color = InkBlack)
+                Text("API Collection", fontSize = 17.sp, fontWeight = FontWeight.Medium, color = InkBlack)
                 Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
-                    Text("No API added yet", fontSize = 14.sp, color = InkBlack) // Helvetica Neue Regular 14 (read)
+                    Text("No API added yet", fontSize = 15.sp, color = InkBlack) // Helvetica Neue Regular 14 (read)
                 }
                 ReadButton(if (designComparison) "Add API" else "Add API (unavailable)", dark = true, enabled = false, designComparison = designComparison)
             }
             // The design carries this explanatory note under the cards; reproduced as drawn.
             if (designComparison) {
                 Text("Now I want to add a line that you can only add one API at a time, and if there are some issue with the Read Now feature, you can simply need to delete the API and add a new one to get it running.",
-                fontFamily = mono, fontSize = 12.sp, fontWeight = FontWeight.Medium, color = GrayText) // Geist Mono Medium 12 Gray (read)
+                fontFamily = mono, fontSize = 13.sp, fontWeight = FontWeight.Medium, color = GrayText) // Geist Mono Medium 12 Gray (read)
             } else {
-                Text("Read Now is not available yet. No API key is stored for this feature.", fontFamily = mono, fontSize = 12.sp, fontWeight = FontWeight.Medium, color = GrayText)
+                Text("Read Now is not available yet. No API key is stored for this feature.", fontFamily = mono, fontSize = 13.sp, fontWeight = FontWeight.Medium, color = GrayText)
             }
         }
     }
@@ -145,6 +145,6 @@ fun ReadNowScreen(onBack: () -> Unit, fixtureApiName: String? = null, designComp
 private fun ReadButton(label: String, dark: Boolean, enabled: Boolean = true, designComparison: Boolean = false) {
     Box(Modifier.alpha(if (enabled || (dark && designComparison)) 1f else 0.5f).fillMaxWidth().height(48.dp).clip(RoundedCornerShape(10.dp))
         .background(if (dark) InkBlack else com.abhi.musicapp.ui.theme.GrayLight), contentAlignment = Alignment.Center) {
-        Text(label, fontFamily = GeistMono, fontSize = 16.sp, fontWeight = FontWeight.Medium, color = if (dark) com.abhi.musicapp.ui.theme.FigmaWhite else GrayText)
+        Text(label, fontFamily = GeistMono, fontSize = 17.sp, fontWeight = FontWeight.Medium, color = if (dark) com.abhi.musicapp.ui.theme.FigmaWhite else GrayText)
     }
 }

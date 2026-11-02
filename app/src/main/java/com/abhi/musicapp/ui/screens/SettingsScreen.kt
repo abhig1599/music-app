@@ -78,7 +78,7 @@ fun SettingsScreen(onBack: () -> Unit, onRowClick: (String) -> Unit = {}, fixtur
             // Play-time stat: needs real listening statistics; no tracker exists yet, so this is a render placeholder.
             Column(verticalArrangement = Arrangement.Center, modifier = Modifier.fillMaxHeight()) {
                 Text(if (fixture) "07H 27M" else "--H --M", fontFamily = mono, fontSize = 28.sp, color = InkBlack)
-                Text("Play Time", fontFamily = mono, fontSize = 10.sp, color = InkBlack)
+                Text("Play Time", fontFamily = mono, fontSize = 11.sp, color = InkBlack)
             }
         }
         Spacer(Modifier.height(6.dp))
@@ -103,10 +103,10 @@ fun SettingsScreen(onBack: () -> Unit, onRowClick: (String) -> Unit = {}, fixtur
         Spacer(Modifier.height(6.dp))
         AccordionCard("Check for updates", startExpanded) {
             Spacer(Modifier.height(13.dp))
-            Text("Current Version", fontFamily = mono, fontSize = 12.sp, color = InkBlack)
+            Text("Current Version", fontFamily = mono, fontSize = 13.sp, color = InkBlack)
             val sctx = androidx.compose.ui.platform.LocalContext.current
             val versionName = runCatching { sctx.packageManager.getPackageInfo(sctx.packageName, 0).versionName }.getOrNull() ?: "0.1.1"
-            Text(versionName, fontFamily = mono, fontSize = 10.sp, color = GrayText)
+            Text(versionName, fontFamily = mono, fontSize = 11.sp, color = GrayText)
             Spacer(Modifier.height(13.dp))
             WideButton("Update check not available yet", dark = false, enabled = false)
             Spacer(Modifier.height(13.dp))
@@ -128,7 +128,7 @@ fun SettingsScreen(onBack: () -> Unit, onRowClick: (String) -> Unit = {}, fixtur
                     "Y-music" to ".../DCIM/Audio/Y-music")
                 if (!fixture && realFolders.isEmpty()) Text(
                     if (!com.abhi.musicapp.library.LibraryRepository.hasAudioPermission(vctx)) "Music permission is off, so folders can't be listed. Use the Permission card above."
-                    else "No music folders found on this device.", fontSize = 11.sp, color = GrayText)
+                    else "No music folders found on this device.", fontSize = 12.sp, color = GrayText)
                 val visibleFolders = if (fixture) sample else realFolders
                 val vstore = androidx.compose.runtime.remember { com.abhi.musicapp.library.VisibilityStore(vctx) }
                 var hiddenSet by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(vstore.hidden()) }
@@ -140,20 +140,21 @@ fun SettingsScreen(onBack: () -> Unit, onRowClick: (String) -> Unit = {}, fixtur
                             .then(if (fixture) Modifier else Modifier.clickable { vstore.setHidden(path, shown); hiddenSet = vstore.hidden() }),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        Box(Modifier.size(14.dp).clip(androidx.compose.foundation.shape.CircleShape)
+                        val boxShape = RoundedCornerShape(5.dp)
+                        Box(Modifier.size(20.dp).clip(boxShape)
                             .background(if (shown && !fixture) InkBlack else androidx.compose.ui.graphics.Color.Transparent)
-                            .border(1.dp, if (shown && !fixture) InkBlack else GrayLight, androidx.compose.foundation.shape.CircleShape),
+                            .border(1.5.dp, if (shown && !fixture) InkBlack else GrayText, boxShape),
                             contentAlignment = Alignment.Center) {
-                            if (shown && !fixture) Icon(Icons.Filled.Check, null, tint = com.abhi.musicapp.ui.theme.PureWhite, modifier = Modifier.size(10.dp))
+                            if (shown && !fixture) Icon(Icons.Filled.Check, null, tint = com.abhi.musicapp.ui.theme.PureWhite, modifier = Modifier.size(14.dp))
                         }
                         Spacer(Modifier.width(10.dp))
                         Column {
-                            Text(n, fontFamily = mono, fontSize = 11.sp, color = InkBlack)
-                            Text(path, fontFamily = mono, fontSize = 9.sp, color = GrayText)
+                            Text(n, fontFamily = mono, fontSize = 12.sp, color = InkBlack)
+                            Text(path, fontFamily = mono, fontSize = 11.sp, color = GrayText)
                         }
                     }
                 }
-                if (!fixture && visibleFolders.isNotEmpty()) Text("Checked folders are shown. Unchecking hides a folder's songs in this app only. No files are changed or deleted.", fontSize = 9.sp, color = GrayText, fontFamily = mono)
+                if (!fixture && visibleFolders.isNotEmpty()) Text("Checked folders are shown. Unchecking hides a folder's songs in this app only. No files are changed or deleted.", fontSize = 11.sp, color = GrayText, fontFamily = mono)
                 Spacer(Modifier.height(13.dp))
                 // Figma shows two Save buttons (first disabled-looking, second enabled-looking). Visual only, no save logic.
                 // Design fixture only: the shipped state has no hide/show logic, so it draws no Save buttons.
@@ -213,14 +214,14 @@ private fun FigmaCard(modifier: Modifier = Modifier, content: @Composable androi
 
 @Composable
 private fun CardTitle(text: String, modifier: Modifier = Modifier) =
-    Text(text, fontSize = 13.sp, fontWeight = FontWeight.Medium, color = InkBlack, modifier = modifier)
+    Text(text, fontSize = 14.sp, fontWeight = FontWeight.Medium, color = InkBlack, modifier = modifier)
 
 @Composable
 private fun ToggleRow(title: String, detail: String, on: Boolean, onClick: (() -> Unit)? = null) {
     Row(verticalAlignment = Alignment.CenterVertically, modifier = if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier) {
         Column(Modifier.weight(1f)) {
-            Text(title, fontFamily = com.abhi.musicapp.ui.theme.GeistMono, fontSize = 11.sp, fontWeight = FontWeight.Bold, color = InkBlack)
-            Text(detail, fontFamily = com.abhi.musicapp.ui.theme.GeistMono, fontSize = 9.sp, color = GrayText)
+            Text(title, fontFamily = com.abhi.musicapp.ui.theme.GeistMono, fontSize = 12.sp, fontWeight = FontWeight.Bold, color = InkBlack)
+            Text(detail, fontFamily = com.abhi.musicapp.ui.theme.GeistMono, fontSize = 11.sp, color = GrayText)
         }
         // Display-only switch (reflects OS state when onClick != null; it does not change permissions).
         Box(
@@ -237,7 +238,7 @@ private fun WideButton(label: String, dark: Boolean, enabled: Boolean = true) {
         Modifier.alpha(if (enabled) 1f else 0.6f).fillMaxWidth().height(40.dp).clip(RoundedCornerShape(10.dp))
             .background(if (dark) InkBlack else com.abhi.musicapp.ui.theme.SurfaceSoft),
         contentAlignment = Alignment.Center,
-    ) { Text(label, fontFamily = com.abhi.musicapp.ui.theme.GeistMono, fontSize = 11.sp, color = if (dark) com.abhi.musicapp.ui.theme.PureWhite else InkBlack) }
+    ) { Text(label, fontFamily = com.abhi.musicapp.ui.theme.GeistMono, fontSize = 12.sp, color = if (dark) com.abhi.musicapp.ui.theme.PureWhite else InkBlack) }
 }
 
 @Composable
@@ -257,7 +258,7 @@ private fun SettingsCategory(
     onRowClick: (String) -> Unit = {},
 ) {
     Text(title, modifier = Modifier.padding(horizontal = 20.dp, vertical = 6.dp),
-        fontSize = 13.sp, fontWeight = FontWeight.Bold, color = Orangs)
+        fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Orangs)
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -273,10 +274,10 @@ private fun SettingsCategory(
                     .padding(horizontal = 16.dp, vertical = 14.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Text(label, fontSize = 14.sp, color = InkBlack, modifier = Modifier.weight(1f))
+                Text(label, fontSize = 15.sp, color = InkBlack, modifier = Modifier.weight(1f))
                 Text(
                     value,
-                    fontSize = 12.sp,
+                    fontSize = 13.sp,
                     color = GrayText,
                     maxLines = 1,
                     overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
@@ -309,7 +310,7 @@ private fun AboutCard(startExpanded: Boolean) {
         // Labels say what they are: no real privacy policy or terms page exists yet, all rows open the portfolio.
         listOf("Privacy policy (portfolio page for now)", "Terms of service (portfolio page for now)", "About the maker (portfolio)").forEach { label ->
             Row(Modifier.fillMaxWidth().heightIn(min = 48.dp).clickable(onClick = open), verticalAlignment = Alignment.CenterVertically) {
-                Text(label, fontFamily = com.abhi.musicapp.ui.theme.GeistMono, fontSize = 11.sp, color = InkBlack, modifier = Modifier.weight(1f))
+                Text(label, fontFamily = com.abhi.musicapp.ui.theme.GeistMono, fontSize = 12.sp, color = InkBlack, modifier = Modifier.weight(1f))
                 Icon(Icons.Filled.ChevronRight, null, tint = InkBlack)
             }
         }

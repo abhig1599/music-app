@@ -66,7 +66,7 @@ fun BackupScreen(onBack: () -> Unit) {
                 Spacer(Modifier.height(4.dp))
                 Text(
                     "Sign-in and the backup target wait on your account decision. Until then nothing leaves the device.",
-                    fontSize = 12.sp, color = GrayText,
+                    fontSize = 13.sp, color = GrayText,
                 )
             }
         }
@@ -82,9 +82,9 @@ fun BackupScreen(onBack: () -> Unit) {
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Column(Modifier.weight(1f)) {
-                Text("Include audio files", fontSize = 14.sp,
+                Text("Include audio files", fontSize = 15.sp,
                     color = MaterialTheme.colorScheme.onBackground)
-                Text("Off = settings and playlists only", fontSize = 11.sp, color = GrayText)
+                Text("Off = settings and playlists only", fontSize = 12.sp, color = GrayText)
             }
             Switch(checked = audioFiles, onCheckedChange = { audioFiles = it })
         }

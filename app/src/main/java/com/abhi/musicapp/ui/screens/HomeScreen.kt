@@ -135,7 +135,7 @@ fun HomeScreen(
             Text("Playlist", fontSize = 28.sp, fontWeight = FontWeight.Bold, color = InkBlack)
             Spacer(Modifier.weight(1f))
             Text(
-                when { updateAvailableFixture -> "Update available"; fixture != null -> "Up to date"; else -> "Not checked" }, fontFamily = monoFont, fontSize = 14.sp, color = InkBlack, // shipped: no update check exists, so no "Up to date" claim (design fixtures keep Figma text)
+                when { updateAvailableFixture -> "Update available"; fixture != null -> "Up to date"; else -> "Not checked" }, fontFamily = monoFont, fontSize = 15.sp, color = InkBlack, // shipped: no update check exists, so no "Up to date" claim (design fixtures keep Figma text)
                 modifier = Modifier
                     .alpha(if (fixture == null && !updateAvailableFixture) 0.5f else 1f)
                     .clip(androidx.compose.foundation.shape.RoundedCornerShape(8.dp))
@@ -218,7 +218,7 @@ fun HomeScreen(
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Spacer(Modifier.height(32.dp))
-                Text("Read Doc.", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = InkBlack)
+                Text("Read Doc.", fontSize = 17.sp, fontWeight = FontWeight.Bold, color = InkBlack)
                 Spacer(Modifier.weight(1f))
                 Box(
                     modifier = Modifier.size(64.dp)
@@ -325,7 +325,7 @@ fun HomeScreen(
                         else -> if (!audioGranted) "Music permission is off, so your songs can't be read. Tap here to open system settings."
                             else if (chip == 1) "No folders found on this device." else "No songs found on this device."
                     },
-                    color = GrayText, fontSize = 13.sp,
+                    color = GrayText, fontSize = 14.sp,
                     modifier = Modifier.padding(horizontal = 26.dp).then(
                         if (chip != 2 && !audioGranted) Modifier.clickable { LibraryRepository.openAppSettings(context) } else Modifier),
                 )
@@ -375,7 +375,7 @@ fun HomeScreen(
                 .clip(androidx.compose.foundation.shape.RoundedCornerShape(14.dp)).background(InkBlack)
                 .padding(horizontal = 18.dp, vertical = 12.dp)
                 .semantics { liveRegion = androidx.compose.ui.semantics.LiveRegionMode.Polite }.testTag("scanNotice"),
-        ) { Text(msg, color = androidx.compose.ui.graphics.Color.White, fontSize = 14.sp, fontFamily = com.abhi.musicapp.ui.theme.GeistMono) }
+        ) { Text(msg, color = androidx.compose.ui.graphics.Color.White, fontSize = 15.sp, fontFamily = com.abhi.musicapp.ui.theme.GeistMono) }
     }
     }
 
@@ -479,7 +479,7 @@ fun SortSheetContent(onDone: () -> Unit) {
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
-                    opt, fontFamily = com.abhi.musicapp.ui.theme.GeistMono, fontSize = 12.sp,
+                    opt, fontFamily = com.abhi.musicapp.ui.theme.GeistMono, fontSize = 13.sp,
                     color = if (selected == i) Orangs else InkBlack.copy(alpha = 0.7f),
                     modifier = Modifier.weight(1f),
                 )

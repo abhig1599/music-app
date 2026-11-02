@@ -34,7 +34,7 @@ fun FoldersScreen(onBack: () -> Unit, onOpenPlayer: () -> Unit = {}) {
         }
         if (folders.isEmpty()) {
             Text(if (!com.abhi.musicapp.library.LibraryRepository.hasAudioPermission(context)) "Music permission is off, so folders can't be read. Enable it in system settings." else "No folders found on this device.",
-                color = GrayText, fontSize = 13.sp, modifier = Modifier.padding(horizontal = 24.dp))
+                color = GrayText, fontSize = 14.sp, modifier = Modifier.padding(horizontal = 24.dp))
         }
         folders.forEach { (name, list) ->
             SongRow(name, "${list.size} songs", trailing = {
@@ -57,7 +57,7 @@ fun PlaylistDetailScreen(name: String, onBack: () -> Unit, onOpenPlayer: () -> U
         Header(name, onBack)
         if (songs.isEmpty()) {
             Text("No playable songs in this playlist. Add songs from the player menu (Add to playlist).",
-                color = GrayText, fontSize = 13.sp, modifier = Modifier.padding(horizontal = 24.dp))
+                color = GrayText, fontSize = 14.sp, modifier = Modifier.padding(horizontal = 24.dp))
         }
         songs.forEachIndexed { i, song ->
             SongRow(song.title, song.artist, trailing = {
