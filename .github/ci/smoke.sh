@@ -5,6 +5,7 @@ set -u
 OUT=smoke-out; mkdir -p $OUT; R=$OUT/report.txt; : > $R
 PKG=com.abhi.musicapp
 say(){ echo "$(date +%H:%M:%S) $*" | tee -a $R; }
+mq(){ say "MEDIASTORE[$1] t=$(date +%H:%M:%S)"; adb shell content query --uri content://media/external/audio/media --projection _id:_display_name:is_music:relative_path:duration:volume_name:date_added > $OUT/mq_$1.txt 2>&1; rc=$?; say "  query exit=$rc rows=$(grep -c '^Row:' $OUT/mq_$1.txt) smoke_tone_rows=$(grep -c smoke_tone $OUT/mq_$1.txt)"; grep -m3 smoke_tone $OUT/mq_$1.txt | cut -c1-300 | tee -a $R; [ "$rc" != "0" ] || [ "$(grep -c '^Row:' $OUT/mq_$1.txt)" = "0" ] && head -3 $OUT/mq_$1.txt | cut -c1-200 | tee -a $R; }
 adb wait-for-device; adb shell input keyevent 82
 for i in $(seq 1 40); do [ "$(adb shell getprop sys.boot_completed | tr -d '\r')" = "1" ] && adb shell ls /sdcard >/dev/null 2>&1 && break; sleep 2; done
 say "device sdk: $(adb shell getprop ro.build.version.sdk | tr -d '\r')"
@@ -19,8 +20,9 @@ PY
 adb shell mkdir -p /sdcard/Music
 TONE_OK=0
 if adb push /tmp/smoke_tone.wav /sdcard/Music/smoke_tone.wav >$OUT/push1.txt 2>&1; then TONE_OK=1; say "tone push (90s) ok"; else say "tone push FAILED: $(head -2 $OUT/push1.txt)"; fi
-adb shell content call --uri content://media/ --method scan_file --arg /sdcard/Music/smoke_tone.wav >/dev/null 2>&1
+say "scan_file result: $(adb shell content call --uri content://media/ --method scan_file --arg /sdcard/Music/smoke_tone.wav 2>&1 | head -2 | tr '\n' ' ')"
 sleep 3
+mq pre_install
 adb install -r app/build/outputs/apk/debug/app-debug.apk >/dev/null && say "install: ok" || { say "install: FAILED"; say "SMOKE VERDICT: INCOMPLETE (install failed)"; exit 1; }
 adb logcat -c
 shot(){ adb exec-out screencap -p > $OUT/$1.png; }
@@ -98,16 +100,18 @@ for n in r.iter('node'):
 PY
 ); [ -n "$c" ] && { set -- $c; adb shell input tap $1 $2; say "tapped system Allow"; sleep 3; }
 fi
-GR=$(adb shell dumpsys package $PKG | grep -c 'READ_MEDIA_AUDIO: granted=true'); say "audio permission granted via in-app flow: $GR"
+GR=$(adb shell dumpsys package $PKG | grep -c 'READ_MEDIA_AUDIO: granted=true'); say "audio permission granted via in-app flow: $GR"; mq post_allow
 if [ "$GR" = "0" ]; then say "FALLBACK: pm grant (in-app dialog path NOT verified)"; adb shell pm grant $PKG android.permission.READ_MEDIA_AUDIO; fi
 tap_exact "Next" s2; sleep 2; shot 04_reader; refresh 04_reader; labels reader_page; focus reader_page
 tap_exact "Get Started" s3; sleep 4; shot 05_home; refresh 05_home; labels home
 say "home shows smoke_tone: $(grep -c 'smoke_tone' /tmp/ui.xml)"
+mq home_loaded
 if [ "$(grep -c 'smoke_tone' /tmp/ui.xml)" = "0" ]; then
-  say "smoke_tone not listed (run 6: 'No songs found'); re-index via adb scan then tap in-app 'Scan device'"
-  adb shell content call --uri content://media/ --method scan_file --arg /sdcard/Music/smoke_tone.wav >/dev/null 2>&1; sleep 3
-  tap_exact "Scan device" s3b || true; sleep 5; refresh 05b_after_scan; labels home_after_scan
-  say "home shows smoke_tone after scan: $(grep -c 'smoke_tone' /tmp/ui.xml)"
+  say "smoke_tone not listed on Home. Forcing ON_RESUME via HOME key + relaunch (Scan device is a no-op handler in source)"
+  adb shell input keyevent 3; sleep 2; adb shell am start -n $PKG/.MainActivity >/dev/null; sleep 5
+  shot 05b_after_relaunch; refresh 05b_after_relaunch; labels home_after_relaunch; focus after_relaunch
+  say "home shows smoke_tone after relaunch: $(grep -c 'smoke_tone' /tmp/ui.xml)"; mq after_relaunch
+  say "MediaProvider logcat tail:"; adb logcat -d -s MediaProvider:* MediaScanner:* 2>/dev/null | tail -25 | cut -c1-220 | tee -a $R
 fi
 SEEN_PLAY=0; SEEN_PAUSE=0; SEEN_RESUME=0
 if tap_exact "smoke_tone" s4; then
