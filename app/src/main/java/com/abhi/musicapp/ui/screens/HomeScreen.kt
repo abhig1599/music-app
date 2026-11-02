@@ -16,6 +16,9 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.ui.platform.testTag
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -229,9 +232,15 @@ fun HomeScreen(
         )
         // Figma Frame 4: one white 475x46 pill (r10, 1px D3D3D1 stroke, pad 6, gap 12) holding the
         // chips; it overflows the 390 frame, so "Artists" is clipped there too (kept as reference).
-        Box(Modifier.fillMaxWidth().clipToBounds()) {
+        // User confirmed (2026-11-03): this bar slides horizontally to reveal further categories.
+        Row(
+            Modifier.fillMaxWidth().testTag("categoryBar")
+                .horizontalScroll(rememberScrollState()),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Spacer(Modifier.width(20.dp))
             Row(
-                modifier = Modifier.wrapContentWidth(Alignment.Start, unbounded = true).padding(start = 20.dp).requiredWidth(475.dp).height(46.dp)
+                modifier = Modifier.requiredWidth(475.dp).height(46.dp)
                     .clip(androidx.compose.foundation.shape.RoundedCornerShape(10.dp))
                     .background(androidx.compose.ui.graphics.Color.White)
                     .border(1.dp, androidx.compose.ui.graphics.Color(0xFFD3D3D1), androidx.compose.foundation.shape.RoundedCornerShape(10.dp))
@@ -241,6 +250,7 @@ fun HomeScreen(
             ) {
                 chips.forEachIndexed { i, c -> FilterChip(c.first, c.second, active = chip == i) { chip = i } }
             }
+            Spacer(Modifier.width(20.dp))
         }
 
         Spacer(Modifier.height(16.dp))
