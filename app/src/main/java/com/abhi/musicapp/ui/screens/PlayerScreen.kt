@@ -1,5 +1,6 @@
 package com.abhi.musicapp.ui.screens
 
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.material.icons.filled.VolumeUp
 import androidx.compose.ui.semantics.setProgress
 import androidx.compose.ui.semantics.progressBarRangeInfo
@@ -228,12 +229,12 @@ fun PlayerScreen(onBack: () -> Unit, fixture: PlayerUiState? = null, initialOver
             Icon(outIcon, contentDescription = outLabel, tint = InkBlack)
         }
         Row(
-            modifier = Modifier.offset(154.5.dp, (757.dp - shrink)).size(79.dp, 24.dp),
-            horizontalArrangement = Arrangement.spacedBy(6.dp),
+            modifier = Modifier.offset(139.dp, (757.dp - shrink)).width(112.dp).heightIn(min = 24.dp),
+            horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Icon(Icons.AutoMirrored.Filled.QueueMusic, contentDescription = null, tint = InkBlack)
-            Text("Queue", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = InkBlack)
+            Text("Queue", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = InkBlack, maxLines = 1, softWrap = false)
         }
         Box(Modifier.offset(298.dp, (726.dp - shrink)).pressScale().size(72.dp).clip(CircleShape).background(circle).clickable { overlay = if (overlay == 2) 0 else 2 }, contentAlignment = Alignment.Center) {
             Icon(Icons.Filled.SelfImprovement, contentDescription = "Focus mode (icon pending his decision)", tint = InkBlack)
