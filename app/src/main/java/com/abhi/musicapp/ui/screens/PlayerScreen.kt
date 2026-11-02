@@ -76,7 +76,7 @@ private fun formatTotal(ms: Long): String {
  * pixel-exact. Focus glyph provisional (his pending decision).
  */
 @Composable
-fun PlayerScreen(onBack: () -> Unit, fixture: PlayerUiState? = null, initialOverlay: Int = 0) {
+fun PlayerScreen(onBack: () -> Unit, fixture: PlayerUiState? = null, initialOverlay: Int = 0, sourceLabel: String? = null) {
     // 0 none, 1 three-dots menu, 2 focus-mode popup, 3 output-device popup (Figma 'Song Page - menu', 'Song focus mode', 'Song Focus connected device').
     var overlay by androidx.compose.runtime.remember { androidx.compose.runtime.mutableIntStateOf(initialOverlay) }
     val live by PlayerManager.state.collectAsState()
@@ -120,7 +120,7 @@ fun PlayerScreen(onBack: () -> Unit, fixture: PlayerUiState? = null, initialOver
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            Text(if (fixture != null) "[Playlist/Source]" else "Local music", fontSize = 16.sp, fontWeight = FontWeight.Medium, color = InkBlack)
+            Text(sourceLabel ?: if (fixture != null) "[Playlist/Source]" else "Local music", fontSize = 16.sp, fontWeight = FontWeight.Medium, color = InkBlack)
             Text(
                 if (state.hasTrack) state.title else "Nothing playing",
                 fontSize = 32.sp, fontWeight = FontWeight.Medium, color = InkBlack,
