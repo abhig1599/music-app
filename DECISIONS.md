@@ -325,3 +325,9 @@ Figma Search frames also contain an Android keyboard instance and "File or folde
 - Run 6 (27d15fc, 41436333255) and run 7 (65e47cc, 41437262136): INCOMPLETE. Home said "No songs found on this device"; smoke_tone not listed, so no playback. Run 7 also tapped in-app "Scan device" after an adb re-scan: still no songs. FATAL count 0 in both.
 - Unknown cause: either the adb scan_file did not index the tone on those emulators (harness) or the app's library load/Scan device does not pick it up (app). Not distinguished; needs a MediaStore query dump in the next smoke. Runs 4 and 5 listed the tone with the same app code.
 - Stopped dispatching after 7 runs. Nothing here proves UI pause, device, background or real-music behaviour.
+
+## 2026-11-02 17:15 IST - Diagnostic smoke run 8 (2f4fc76, run 41438406283): cause of "No songs found" grounded
+- At 11:41:14 the harness `adb push` of the tone FAILED: "remote couldn't create file: Operation not permitted". The emulator's external storage was only mounted at 11:41:58 (MediaProvider "Scanned external_primary due to REASON_MOUNTED"). So the file never existed.
+- MediaStore content query returned exit 0 with 0 audio rows at pre-install, post-allow, home-loaded and after-relaunch. Query succeeded, so true absence, not a query failure. App permission was granted via the real dialog before post-allow. The app's empty list was correct for an empty MediaStore.
+- Conclusion: runs 6, 7, 8 were harness-invalid (storage not writable at push time), not an app library bug. Runs 6/7 also logged a push failure that the old script only printed, never gated on. The in-app "Scan device" no-op is a separate, confirmed functional gap.
+- Fix (harness only): retry the push up to 30 times (4 s apart) until storage is writable. Not yet re-run.

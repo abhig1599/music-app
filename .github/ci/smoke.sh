@@ -19,7 +19,12 @@ w.close()
 PY
 adb shell mkdir -p /sdcard/Music
 TONE_OK=0
-if adb push /tmp/smoke_tone.wav /sdcard/Music/smoke_tone.wav >$OUT/push1.txt 2>&1; then TONE_OK=1; say "tone push (90s) ok"; else say "tone push FAILED: $(head -2 $OUT/push1.txt)"; fi
+for i in $(seq 1 30); do
+  adb shell mkdir -p /sdcard/Music >/dev/null 2>&1
+  if adb push /tmp/smoke_tone.wav /sdcard/Music/smoke_tone.wav >$OUT/push1.txt 2>&1; then TONE_OK=1; say "tone push (90s) ok on attempt $i"; break; fi
+  say "tone push attempt $i FAILED: $(head -2 $OUT/push1.txt | tr '\n' ' ')"; sleep 4
+done
+[ "$TONE_OK" = "1" ] || say "tone push never succeeded (storage not writable): run is INVALID for playback"
 say "scan_file result: $(adb shell content call --uri content://media/ --method scan_file --arg /sdcard/Music/smoke_tone.wav 2>&1 | head -2 | tr '\n' ' ')"
 sleep 3
 mq pre_install
