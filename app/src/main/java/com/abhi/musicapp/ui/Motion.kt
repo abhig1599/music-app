@@ -3,6 +3,7 @@ package com.abhi.musicapp.ui
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.waitForUpOrCancellation
@@ -64,7 +65,7 @@ fun Modifier.tapOrHold(onTap: () -> Unit, onHoldStart: () -> Unit, onHoldEnd: ()
     val end = androidx.compose.runtime.rememberUpdatedState(onHoldEnd)
     androidx.compose.runtime.DisposableEffect(Unit) { onDispose { end.value() } }
     pointerInput(Unit) {
-        androidx.compose.foundation.gestures.detectTapGestures(onPress = {
+        detectTapGestures(onPress = {
             var holding = false
             val job = scope.launch { kotlinx.coroutines.delay(350); holding = true; start.value() }
             val released = tryAwaitRelease()
