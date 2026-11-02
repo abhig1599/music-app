@@ -1,15 +1,9 @@
-> Task :app:compileDebugKotlin FAILED
-e: file:///home/runner/work/music-app/music-app/app/src/main/java/com/abhi/musicapp/ui/Motion.kt:67:46 Unresolved reference 'detectTapGestures'.
-e: file:///home/runner/work/music-app/music-app/app/src/main/java/com/abhi/musicapp/ui/Motion.kt:70:28 Unresolved reference 'tryAwaitRelease'.
-e: file:///home/runner/work/music-app/music-app/app/src/main/java/com/abhi/musicapp/ui/screens/HomeScreen.kt:414:20 Unresolved reference 'animateFloat'.
-e: file:///home/runner/work/music-app/music-app/app/src/main/java/com/abhi/musicapp/ui/screens/HomeScreen.kt:414:75 Cannot infer type for this parameter. Please specify it explicitly.
-e: file:///home/runner/work/music-app/music-app/app/src/main/java/com/abhi/musicapp/ui/screens/HomeScreen.kt:414:126 Cannot infer type for this parameter. Please specify it explicitly.
+ScrubFractionTest > crossingAtan2SeamIsContinuous FAILED
+> Task :app:testDebugUnitTest FAILED
 * What went wrong:
 * Exception is:
-org.gradle.api.tasks.TaskExecutionException: Execution failed for task ':app:compileDebugKotlin'.
+org.gradle.api.tasks.TaskExecutionException: Execution failed for task ':app:testDebugUnitTest'.
 	at org.gradle.api.internal.tasks.execution.CatchExceptionTaskExecuter.execute(CatchExceptionTaskExecuter.java:36)
-Caused by: org.gradle.workers.internal.DefaultWorkerExecutor$WorkExecutionException: A failure occurred while executing org.jetbrains.kotlin.compilerRunner.GradleCompilerRunnerWithWorkers$GradleKotlinCompilerWorkAction
+Caused by: org.gradle.api.internal.exceptions.MarkedVerificationException: There were failing tests. See the report at: file:///home/runner/work/music-app/music-app/app/build/reports/tests/testDebugUnitTest/index.html
 	at org.gradle.api.internal.tasks.execution.CatchExceptionTaskExecuter.execute(CatchExceptionTaskExecuter.java:36)
-Caused by: org.jetbrains.kotlin.gradle.tasks.CompilationErrorException: Compilation error. See log for more details
-	at org.jetbrains.kotlin.gradle.tasks.TasksUtilsKt.throwExceptionIfCompilationFailed(tasksUtils.kt:21)
-BUILD FAILED in 31s
+BUILD FAILED in 48s
