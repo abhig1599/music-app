@@ -95,7 +95,7 @@ internal fun scrubFraction(start: Float, prevAngleDeg: Float, curAngleDeg: Float
 }
 
 @Composable
-fun PlayerScreen(onBack: () -> Unit, fixture: PlayerUiState? = null, initialOverlay: Int = 0, sourceLabel: String? = null) {
+fun PlayerScreen(onBack: () -> Unit, fixture: PlayerUiState? = null, initialOverlay: Int = 0, sourceLabel: String? = null, progressInFixture: Boolean = false) {
     // 0 none, 1 three-dots menu, 2 focus-mode popup, 3 output-device popup (Figma 'Song Page - menu', 'Song focus mode', 'Song Focus connected device').
     var overlay by androidx.compose.runtime.remember { androidx.compose.runtime.mutableIntStateOf(initialOverlay) }
     val live by PlayerManager.state.collectAsState()
@@ -169,7 +169,7 @@ fun PlayerScreen(onBack: () -> Unit, fixture: PlayerUiState? = null, initialOver
                     onDragCancel = { scrub = null },
                 )
             }
-            .semantics { if (state.durationMs > 0) { progressBarRangeInfo = androidx.compose.ui.semantics.ProgressBarRangeInfo(rawProgress, 0f..1f); setProgress("Seek") { v -> PlayerManager.seekTo((v.coerceIn(0f, 1f) * state.durationMs).toLong()); true } } }.graphicsLayer { scaleX = dialScale; scaleY = dialScale; transformOrigin = androidx.compose.ui.graphics.TransformOrigin(0.5f, 0f) }, ticks = 48, pointer = true, showProgress = fixture == null) {}
+            .semantics { if (state.durationMs > 0) { progressBarRangeInfo = androidx.compose.ui.semantics.ProgressBarRangeInfo(rawProgress, 0f..1f); setProgress("Seek") { v -> PlayerManager.seekTo((v.coerceIn(0f, 1f) * state.durationMs).toLong()); true } } }.graphicsLayer { scaleX = dialScale; scaleY = dialScale; transformOrigin = androidx.compose.ui.graphics.TransformOrigin(0.5f, 0f) }, ticks = 48, pointer = true, showProgress = fixture == null || progressInFixture) {}
         Column(
             modifier = Modifier.offset(147.dp, 135.dp + (252.dp - 135.dp) * dialScale).width(104.dp).wrapContentHeight(unbounded = true, align = Alignment.Top).graphicsLayer { scaleX = dialScale; scaleY = dialScale },
             horizontalAlignment = Alignment.CenterHorizontally,
