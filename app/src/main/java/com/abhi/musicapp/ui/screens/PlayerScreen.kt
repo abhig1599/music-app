@@ -1,5 +1,6 @@
 package com.abhi.musicapp.ui.screens
 
+import androidx.compose.material.icons.filled.VolumeUp
 import androidx.compose.ui.semantics.setProgress
 import androidx.compose.ui.semantics.progressBarRangeInfo
 import androidx.compose.ui.input.pointer.pointerInput
@@ -113,12 +114,15 @@ fun PlayerScreen(onBack: () -> Unit, fixture: PlayerUiState? = null, initialOver
             onDispose { un() }
         }
         androidx.compose.runtime.LaunchedEffect(state.isPlaying, state.mediaId) { outKind = com.abhi.musicapp.playback.AudioOutput.current(ctx) }
+        // Bounded re-read every 2 s while this screen is shown: a route can change with no connect event.
+        androidx.compose.runtime.LaunchedEffect(Unit) { while (true) { kotlinx.coroutines.delay(2000); outKind = com.abhi.musicapp.playback.AudioOutput.current(ctx) } }
     }
     val outIcon = when (outKind) {
         com.abhi.musicapp.playback.OutputKind.SPEAKER -> Icons.Filled.Speaker
         com.abhi.musicapp.playback.OutputKind.PHONE -> Icons.Filled.PhoneAndroid
         com.abhi.musicapp.playback.OutputKind.BLUETOOTH -> Icons.Filled.Bluetooth
-        else -> Icons.Filled.Headset
+        com.abhi.musicapp.playback.OutputKind.WIRED_HEADPHONES, com.abhi.musicapp.playback.OutputKind.USB -> Icons.Filled.Headset
+        else -> Icons.Filled.VolumeUp
     }
     val outLabel = when (outKind) {
         com.abhi.musicapp.playback.OutputKind.SPEAKER -> "Audio output: phone speaker"
@@ -253,16 +257,19 @@ fun PlayerScreen(onBack: () -> Unit, fixture: PlayerUiState? = null, initialOver
         if (overlay == 4) AddToPlaylistSheet(state.mediaId) { overlay = 0 } // shipped path only (menu sets 4 only when fixture == null)
         if (overlay == 2 || overlay == 3) {
             val left = overlay == 3
-            val icons = if (left) listOf(Icons.Filled.Bluetooth, Icons.Filled.PhoneAndroid, Icons.Filled.Speaker) else listOf(Icons.Filled.VolumeOff, Icons.Filled.DarkMode)
+            val icons = if (left) listOf(outIcon) else listOf(Icons.Filled.VolumeOff, Icons.Filled.DarkMode)
             val n = icons.size
             val x = if (left) 19.dp else 298.dp
             Box(Modifier.offset(x, 726.dp - shrink - (70.dp * n) - 16.dp).size(72.dp, 70.dp * n + 88.dp).clip(CircleShape).background(sheet))
             icons.forEachIndexed { i, ic ->
                 // Buttons are visual only: no device list or audio-route capability exists in the app yet.
-                Box(Modifier.offset(x + 4.dp, 726.dp - shrink - (70.dp * (n - i)) + 4.dp - 6.dp).size(64.dp).clip(CircleShape).background(pill).then(if (left && fixture == null) Modifier.clickable(onClickLabel = "Choose audio output") { outNote = com.abhi.musicapp.playback.AudioOutput.openPicker(ctx) } else Modifier), contentAlignment = Alignment.Center) {
+                Box(Modifier.offset(x + 4.dp, 726.dp - shrink - (70.dp * (n - i)) + 4.dp - 6.dp).size(64.dp).clip(CircleShape).background(pill).then(if (left && fixture == null) Modifier.clickable(onClickLabel = "Choose output") { outNote = com.abhi.musicapp.playback.AudioOutput.openPicker(ctx) } else Modifier), contentAlignment = Alignment.Center) {
                     Icon(ic, contentDescription = null, tint = InkBlack, modifier = Modifier.size(22.dp))
                 }
             }
+            if (left) androidx.compose.material3.Text(
+                (outLabel.removePrefix("Audio output: ").replaceFirstChar { it.uppercase() }) + " - tap to choose output" + (outNote?.let { "\n$it" } ?: if (outKind == com.abhi.musicapp.playback.OutputKind.UNKNOWN) "\nCurrent output unknown on this Android version" else ""),
+                fontSize = 12.sp, color = InkBlack, modifier = Modifier.offset(x + 80.dp, 726.dp - shrink - 70.dp - 6.dp).width(200.dp))
             Box(Modifier.offset(x, 726.dp - shrink).size(72.dp).clip(CircleShape).background(InkBlack).clickable { overlay = 0 }, contentAlignment = Alignment.Center) {
                 Icon(if (left) outIcon else Icons.Filled.Close, contentDescription = "Close", tint = androidx.compose.ui.graphics.Color.White)
             }
