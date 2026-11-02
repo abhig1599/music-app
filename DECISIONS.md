@@ -341,3 +341,10 @@ Figma Search frames also contain an Android keyboard instance and "File or folde
 
 ## 2026-11-02 21:00 IST - Narrow phones (real-device feedback)
 His phone screenshots (719px wide, 2.0 density = about 360dp) showed the Player title and menu icon clipped on the right and Home widgets overlapping. Cause: screens use absolute positions on the 390dp Figma frame, wider than his phone. Fix: FitDesignWidth shrinks the whole design uniformly (dp and sp) when the window is narrower than 390dp; wider windows unchanged. No layout or design change. Added narrow360 fixture renders. Not yet verified on the phone; font-scale above 1.0 and very small windows untested. Audio playback on the phone is confirmed by his screenshot (0:09 elapsed, pause button shown), but not background playback or notification.
+
+## 2026-11-02 21:10 IST - Batched repair after real-phone feedback
+- Player title: ellipsis instead of hard clip. Source label: shipped state shows "Local music" (true for the library list) instead of the Figma placeholder "[Playlist/Source]"; fixtures keep the design text.
+- Mini-player: 8dp gap between title and big time. Not shown to him yet.
+- Settings > About card (his explicit addition): three link rows, all open https://abhicreative.world (his portfolio) until he supplies real pages. Labels say "portfolio page for now". No policy text was written; no compliance claim; Play Store / App Store required pages not yet verified.
+- Not built: Sleep timer behaviour (semantics unanswered), in-app update check (needs a public version file or credential decision), bottom navigation (his meaning unconfirmed).
+- Added narrow360 renders for Settings and Player at font scale 1.3.

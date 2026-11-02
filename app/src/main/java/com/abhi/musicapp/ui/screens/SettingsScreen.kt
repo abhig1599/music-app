@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
@@ -154,6 +155,8 @@ fun SettingsScreen(onBack: () -> Unit, onRowClick: (String) -> Unit = {}, fixtur
         NavCard("Read Now") { onRowClick("Read Now") }
         Spacer(Modifier.height(6.dp))
         NavCard("Recycle Bin") { onRowClick("Recycle bin") }
+        Spacer(Modifier.height(6.dp))
+        AboutCard()
 
         Spacer(Modifier.height(24.dp))
     }
@@ -248,4 +251,28 @@ private fun SettingsCategory(
         }
     }
     Spacer(Modifier.height(8.dp))
+}
+
+/** Temporary target for every About / policy link until real pages exist: his portfolio (his instruction, 2026-11-02). */
+private const val ABOUT_LINK = "https://abhicreative.world"
+
+@Composable
+private fun AboutCard() {
+    val ctx = androidx.compose.ui.platform.LocalContext.current
+    val open = {
+        runCatching {
+            ctx.startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(ABOUT_LINK)).addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK))
+        }
+        Unit
+    }
+    FigmaCard {
+        CardTitle("About")
+        // Labels say what they are: no real privacy policy or terms page exists yet, all rows open the portfolio.
+        listOf("Privacy policy (portfolio page for now)", "Terms of service (portfolio page for now)", "About the maker (portfolio)").forEach { label ->
+            Row(Modifier.fillMaxWidth().heightIn(min = 48.dp).clickable(onClick = open), verticalAlignment = Alignment.CenterVertically) {
+                Text(label, fontFamily = com.abhi.musicapp.ui.theme.GeistMono, fontSize = 11.sp, color = InkBlack, modifier = Modifier.weight(1f))
+                Icon(Icons.Filled.ChevronRight, null, tint = InkBlack)
+            }
+        }
+    }
 }

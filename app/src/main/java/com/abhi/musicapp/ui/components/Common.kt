@@ -211,7 +211,7 @@ fun MiniPlayer(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         if (darkVariant) {
-            Column(Modifier.weight(1f)) {
+            Column(Modifier.weight(1f).padding(end = 8.dp)) {
                 Text(title, color = fg, fontSize = 13.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 Text(time.padStart(5, '0'), color = GrayText, fontSize = 10.sp)
             }

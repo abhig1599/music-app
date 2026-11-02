@@ -38,4 +38,21 @@ class NarrowPhoneShotTest {
         composeRule.waitForIdle()
         composeRule.onRoot().captureRoboImage("build/outputs/roborazzi/narrow360_home.png")
     }
+
+    private fun bg(c: @androidx.compose.runtime.Composable () -> Unit): @androidx.compose.runtime.Composable () -> Unit = {
+        androidx.compose.foundation.layout.Box(androidx.compose.ui.Modifier.fillMaxSize().background(androidx.compose.material3.MaterialTheme.colorScheme.background)) { c() }
+    }
+
+    @Test fun settingsNarrow() {
+        composeRule.setContent { FitDesignWidth { MusicAppTheme { bg { com.abhi.musicapp.ui.screens.SettingsScreen(onBack = {}) }() } } }
+        composeRule.waitForIdle()
+        composeRule.onRoot().captureRoboImage("build/outputs/roborazzi/narrow360_settings.png")
+    }
+
+    @Test fun playerFontScale130() {
+        org.robolectric.RuntimeEnvironment.setFontScale(1.3f)
+        composeRule.setContent { FitDesignWidth { MusicAppTheme { bg { PlayerScreen(onBack = {}, fixture = track) }() } } }
+        composeRule.waitForIdle()
+        composeRule.onRoot().captureRoboImage("build/outputs/roborazzi/narrow360_player_font130.png")
+    }
 }
