@@ -101,6 +101,33 @@ fun PlayerScreen(onBack: () -> Unit, fixture: PlayerUiState? = null, initialOver
     val rawProgress = if (state.durationMs > 0)
         state.positionMs.toFloat() / state.durationMs.toFloat() else 0f
     // Position arrives every 500ms; ease between ticks so the dial glides (instant when motion is reduced or on a fixture).
+    val ctx = androidx.compose.ui.platform.LocalContext.current
+    var outKind by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(com.abhi.musicapp.playback.OutputKind.UNKNOWN) }
+    var outNote by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf<String?>(null) }
+    if (fixture == null) {
+        // Re-read the routed device on connect/disconnect, when playback starts or stops, and when the track changes
+        // (a route can change without a connect event, so the callback alone is not trusted).
+        androidx.compose.runtime.DisposableEffect(Unit) {
+            outKind = com.abhi.musicapp.playback.AudioOutput.current(ctx)
+            val un = com.abhi.musicapp.playback.AudioOutput.register(ctx) { outKind = com.abhi.musicapp.playback.AudioOutput.current(ctx) }
+            onDispose { un() }
+        }
+        androidx.compose.runtime.LaunchedEffect(state.isPlaying, state.mediaId) { outKind = com.abhi.musicapp.playback.AudioOutput.current(ctx) }
+    }
+    val outIcon = when (outKind) {
+        com.abhi.musicapp.playback.OutputKind.SPEAKER -> Icons.Filled.Speaker
+        com.abhi.musicapp.playback.OutputKind.PHONE -> Icons.Filled.PhoneAndroid
+        com.abhi.musicapp.playback.OutputKind.BLUETOOTH -> Icons.Filled.Bluetooth
+        else -> Icons.Filled.Headset
+    }
+    val outLabel = when (outKind) {
+        com.abhi.musicapp.playback.OutputKind.SPEAKER -> "Audio output: phone speaker"
+        com.abhi.musicapp.playback.OutputKind.PHONE -> "Audio output: phone earpiece"
+        com.abhi.musicapp.playback.OutputKind.WIRED_HEADPHONES -> "Audio output: wired headphones"
+        com.abhi.musicapp.playback.OutputKind.BLUETOOTH -> "Audio output: Bluetooth"
+        com.abhi.musicapp.playback.OutputKind.USB -> "Audio output: USB audio"
+        else -> "Audio output: unknown"
+    }
     var lastAng by androidx.compose.runtime.remember { androidx.compose.runtime.mutableFloatStateOf(0f) }
     var scrub by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf<Float?>(null) }
     val progress = if (scrub != null) scrub!! else if (fixture != null || reducedMotion()) rawProgress else
@@ -194,7 +221,7 @@ fun PlayerScreen(onBack: () -> Unit, fixture: PlayerUiState? = null, initialOver
             ) { Icon(Icons.Filled.SkipNext, contentDescription = "Next", tint = InkBlack) }
         }
         Box(Modifier.offset(19.dp, (726.dp - shrink)).pressScale().size(72.dp).clip(CircleShape).background(circle).clickable { overlay = if (overlay == 3) 0 else 3 }, contentAlignment = Alignment.Center) {
-            Icon(Icons.Filled.Headset, contentDescription = "Audio output", tint = InkBlack)
+            Icon(outIcon, contentDescription = outLabel, tint = InkBlack)
         }
         Row(
             modifier = Modifier.offset(154.5.dp, (757.dp - shrink)).size(79.dp, 24.dp),
@@ -232,12 +259,12 @@ fun PlayerScreen(onBack: () -> Unit, fixture: PlayerUiState? = null, initialOver
             Box(Modifier.offset(x, 726.dp - shrink - (70.dp * n) - 16.dp).size(72.dp, 70.dp * n + 88.dp).clip(CircleShape).background(sheet))
             icons.forEachIndexed { i, ic ->
                 // Buttons are visual only: no device list or audio-route capability exists in the app yet.
-                Box(Modifier.offset(x + 4.dp, 726.dp - shrink - (70.dp * (n - i)) + 4.dp - 6.dp).size(64.dp).clip(CircleShape).background(pill), contentAlignment = Alignment.Center) {
+                Box(Modifier.offset(x + 4.dp, 726.dp - shrink - (70.dp * (n - i)) + 4.dp - 6.dp).size(64.dp).clip(CircleShape).background(pill).then(if (left && fixture == null) Modifier.clickable(onClickLabel = "Choose audio output") { outNote = com.abhi.musicapp.playback.AudioOutput.openPicker(ctx) } else Modifier), contentAlignment = Alignment.Center) {
                     Icon(ic, contentDescription = null, tint = InkBlack, modifier = Modifier.size(22.dp))
                 }
             }
             Box(Modifier.offset(x, 726.dp - shrink).size(72.dp).clip(CircleShape).background(InkBlack).clickable { overlay = 0 }, contentAlignment = Alignment.Center) {
-                Icon(if (left) Icons.Filled.Headset else Icons.Filled.Close, contentDescription = "Close", tint = androidx.compose.ui.graphics.Color.White)
+                Icon(if (left) outIcon else Icons.Filled.Close, contentDescription = "Close", tint = androidx.compose.ui.graphics.Color.White)
             }
         }
     }
