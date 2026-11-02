@@ -95,6 +95,23 @@ object PlayerManager {
         c.play()
     }
 
+    /**
+     * Visibility: drops UPCOMING queue items whose folder is now hidden. The track playing right now is not
+     * touched (it finishes), and nothing is deleted from playlists or the phone. Returns how many were removed.
+     */
+    fun pruneUpcomingHidden(hiddenFolders: Set<String>): Int {
+        val c = controller ?: return 0
+        if (hiddenFolders.isEmpty()) return 0
+        val folderById = queue.associate { it.id.toString() to it.folder }
+        var removed = 0
+        for (i in c.mediaItemCount - 1 downTo c.currentMediaItemIndex + 1) {
+            val f = folderById[c.getMediaItemAt(i).mediaId]
+            if (f != null && f.isNotEmpty() && f in hiddenFolders) { c.removeMediaItem(i); removed++ }
+        }
+        if (removed > 0) queue = queue.filterIndexed { idx, sg -> !(idx > c.currentMediaItemIndex && sg.folder in hiddenFolders) }
+        return removed
+    }
+
     fun togglePlayPause() {
         val c = controller ?: return
         if (c.isPlaying) c.pause() else c.play()

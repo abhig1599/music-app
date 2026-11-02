@@ -137,7 +137,7 @@ fun SettingsScreen(onBack: () -> Unit, onRowClick: (String) -> Unit = {}, fixtur
                     Row(
                         Modifier.padding(vertical = 4.dp).fillMaxWidth().testTag("visibility:$path")
                             .semantics { stateDescription = if (shown) "Shown" else "Hidden" }
-                            .then(if (fixture) Modifier else Modifier.clickable { vstore.setHidden(path, shown); hiddenSet = vstore.hidden() }),
+                            .then(if (fixture) Modifier else Modifier.clickable { vstore.setHidden(path, shown); hiddenSet = vstore.hidden(); if (shown) com.abhi.musicapp.playback.PlayerManager.pruneUpcomingHidden(hiddenSet) }),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         val boxShape = RoundedCornerShape(5.dp)
