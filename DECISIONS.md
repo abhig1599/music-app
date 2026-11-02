@@ -319,3 +319,9 @@ Figma Search frames also contain an Android keyboard instance and "File or folde
 ## Onboarding Reader step (shipped vs fixture)
 - Shipped: title "Reader (unavailable)", copy says Reader is not available and nothing can be set up, fields "API Name" / "API Key" disabled, no link, no Figma sample hint. Fixture (figmaFixture=true, screenshot onboarding_reader) keeps the Figma original incl. "API Key (....hmwg)". No real key is stored, requested or exposed anywhere.
 - Media-key pause/resume in the smoke is service validation only, not UI proof.
+
+## 2026-11-02 17:06 IST - Smoke runs 5-7 (emulator API 34, synthetic tone, standard Linux)
+- Run 5 (ec363e9, run 41434916226): green job; tapping a song opens the player screen directly. First in-app "Pause" tap was made and the UI then showed "Play", but the session state after the UI tap was not captured (script mis-sequenced). UI pause is therefore NOT yet proven by session state.
+- Run 6 (27d15fc, 41436333255) and run 7 (65e47cc, 41437262136): INCOMPLETE. Home said "No songs found on this device"; smoke_tone not listed, so no playback. Run 7 also tapped in-app "Scan device" after an adb re-scan: still no songs. FATAL count 0 in both.
+- Unknown cause: either the adb scan_file did not index the tone on those emulators (harness) or the app's library load/Scan device does not pick it up (app). Not distinguished; needs a MediaStore query dump in the next smoke. Runs 4 and 5 listed the tone with the same app code.
+- Stopped dispatching after 7 runs. Nothing here proves UI pause, device, background or real-music behaviour.
