@@ -331,3 +331,10 @@ Figma Search frames also contain an Android keyboard instance and "File or folde
 - MediaStore content query returned exit 0 with 0 audio rows at pre-install, post-allow, home-loaded and after-relaunch. Query succeeded, so true absence, not a query failure. App permission was granted via the real dialog before post-allow. The app's empty list was correct for an empty MediaStore.
 - Conclusion: runs 6, 7, 8 were harness-invalid (storage not writable at push time), not an app library bug. Runs 6/7 also logged a push failure that the old script only printed, never gated on. The in-app "Scan device" no-op is a separate, confirmed functional gap.
 - Fix (harness only): retry the push up to 30 times (4 s apart) until storage is writable. Not yet re-run.
+
+## 2026-11-02 17:31 IST - Smoke run 9 (a92865a, run 41440369031): UI pause/play + rescan, emulator API 34, synthetic tone
+- Guards worked: tone push ok on attempt 1; indexed in MediaStore before install (row: smoke_tone.wav, Music/, volume external_primary; is_music/duration NULL until scanned, 1 / 90000 by Home load). Permission granted through the real dialog.
+- Own-session state (dumpsys media_session, owner com.abhi.musicapp): PLAYING pos0 -> PLAYING pos6240 -> after IN-APP Pause tap PAUSED pos16295 (UI then shows "Play") -> after IN-APP Play tap PLAYING pos19384. Media keys also PAUSED/PLAYING. FATAL 0. This is the UI pause/resume proof (emulator only).
+- Rescan: Home showed "All 01" with smoke_tone; a second file (rescan_tone.wav) was pushed and indexed while the app stayed on Home (MediaStore rows=2); after tapping Scan device Home showed "All 02". My smoke's text check for the title "rescan_tone" printed FAIL because the lazy list's off-screen row is not in the UI dump, so the check itself is flawed; the count change 01 -> 02 is the evidence. Not a pixel/screenshot proof.
+- Notifications: the app posted 2 notifications (count only; content not inspected).
+- Not proven: physical device, background playback, real music files, notification content, seek, swipe, playlist rename/delete. Artifact smoke-out (808 KB, screenshots) is not retrievable through the browser download route.
