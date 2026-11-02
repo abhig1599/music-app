@@ -147,6 +147,8 @@ fun TickDial(
     modifier: Modifier = Modifier,
     ticks: Int = 48,
     pointer: Boolean = false,
+    /** Player dial: ticks up to the played fraction are solid orange, the next two fade to light orange, the rest grey. false keeps the fixed Figma cluster. */
+    showProgress: Boolean = false,
     center: @Composable () -> Unit = {},
 ) {
     // Capture theme colors outside the non-composable draw lambda.
@@ -164,7 +166,10 @@ fun TickDial(
                 // pointer = his player dial: thin grey ticks, orange cluster fixed at the top
                 // (centre tick full, neighbours fading). Cluster behaviour vs progress is unverified.
                 val d = minOf(i, ticks - i)
-                val color = if (pointer) {
+                val ahead = i - lit
+                val color = if (pointer && showProgress) {
+                    when { i < lit -> litTick; ahead == 0 -> litTick.copy(alpha = 0.6f); ahead == 1 -> litTick.copy(alpha = 0.35f); else -> dimTick }
+                } else if (pointer) {
                     when (d) {
                         0 -> litTick
                         1 -> litTick.copy(alpha = 0.6f)
@@ -180,7 +185,7 @@ fun TickDial(
                     (cx + outer * cos(angle)).toFloat(),
                     (cy + outer * sin(angle)).toFloat(),
                 )
-                val s2 = if (pointer && d == 0) Offset(
+                val s2 = if (pointer && !showProgress && d == 0) Offset(
                     (cx + (inner - outer * 0.08f) * cos(angle)).toFloat(),
                     (cy + (inner - outer * 0.08f) * sin(angle)).toFloat(),
                 ) else start

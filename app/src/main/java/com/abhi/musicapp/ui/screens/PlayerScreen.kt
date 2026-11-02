@@ -90,7 +90,7 @@ fun PlayerScreen(onBack: () -> Unit, fixture: PlayerUiState? = null, initialOver
         state.positionMs.toFloat() / state.durationMs.toFloat() else 0f
     // Position arrives every 500ms; ease between ticks so the dial glides (instant when motion is reduced or on a fixture).
     val progress = if (fixture != null || reducedMotion()) rawProgress else
-        androidx.compose.animation.core.animateFloatAsState(rawProgress, androidx.compose.animation.core.tween(520, easing = androidx.compose.animation.core.LinearEasing), label = "dial").value
+        androidx.compose.animation.core.animateFloatAsState(rawProgress, androidx.compose.animation.core.tween(260, easing = androidx.compose.animation.core.LinearEasing), label = "dial").value
     val circle = com.abhi.musicapp.ui.theme.SurfaceSoft
 
     val mono = com.abhi.musicapp.ui.theme.GeistMono // Figma: Geist Mono (not bundled until licence check)
@@ -110,7 +110,7 @@ fun PlayerScreen(onBack: () -> Unit, fixture: PlayerUiState? = null, initialOver
             Icon(Icons.Filled.MoreVert, contentDescription = "Menu", tint = InkBlack,
                 modifier = Modifier.clickable { overlay = if (overlay == 1) 0 else 1 })
         }
-        TickDial(progress = progress, modifier = Modifier.offset(48.dp, 135.dp).size(301.dp).graphicsLayer { scaleX = dialScale; scaleY = dialScale; transformOrigin = androidx.compose.ui.graphics.TransformOrigin(0.5f, 0f) }, ticks = 48, pointer = true) {}
+        TickDial(progress = progress, modifier = Modifier.offset(48.dp, 135.dp).size(301.dp).graphicsLayer { scaleX = dialScale; scaleY = dialScale; transformOrigin = androidx.compose.ui.graphics.TransformOrigin(0.5f, 0f) }, ticks = 48, pointer = true, showProgress = fixture == null) {}
         Column(
             modifier = Modifier.offset(147.dp, 135.dp + (252.dp - 135.dp) * dialScale).width(104.dp).wrapContentHeight(unbounded = true, align = Alignment.Top).graphicsLayer { scaleX = dialScale; scaleY = dialScale },
             horizontalAlignment = Alignment.CenterHorizontally,
