@@ -41,39 +41,60 @@ object LibraryRepository {
      * see; anything it cannot list is not scanned here (the MediaStore re-query still picks up whatever the
      * OS has already indexed). Returns the number of files handed to the scanner.
      */
-    fun rescan(context: Context, onDone: () -> Unit): Int {
+    /** How a rescan ended. [folderRoots] is how many of the listed public folders could be opened at all. */
+    enum class ScanStatus { COMPLETE, NO_PERMISSION, FOLDERS_UNREADABLE, SCANNER_FAILED, TIMED_OUT }
+    data class ScanResult(val status: ScanStatus, val filesHandedOver: Int = 0, val folderRoots: Int = 0)
+
+    fun rescan(context: Context, onDone: (ScanResult) -> Unit) {
         val main = android.os.Handler(android.os.Looper.getMainLooper())
-        if (!hasAudioPermission(context)) { main.post(onDone); return 0 }
-        val exts = setOf("mp3", "m4a", "aac", "wav", "flac", "ogg", "opus", "wma", "amr", "mid")
-        val found = mutableListOf<String>()
-        fun walk(f: java.io.File, depth: Int) {
-            val kids = try { f.listFiles() } catch (_: Exception) { null } ?: return
-            for (k in kids) {
-                if (k.isDirectory) { if (depth < 4 && !k.name.startsWith(".")) walk(k, depth + 1) }
-                else if (k.extension.lowercase() in exts) found.add(k.absolutePath)
+        if (!hasAudioPermission(context)) { main.post { onDone(ScanResult(ScanStatus.NO_PERMISSION)) }; return }
+        Thread {
+            val exts = setOf("mp3", "m4a", "aac", "wav", "flac", "ogg", "opus", "wma", "amr", "mid")
+            val found = mutableListOf<String>()
+            var rootsOpened = 0
+            fun walk(f: java.io.File, depth: Int, root: Boolean) {
+                val kids = try { f.listFiles() } catch (_: Exception) { null }
+                if (kids == null) return
+                if (root) rootsOpened++
+                for (k in kids) {
+                    if (k.isDirectory) { if (depth < 4 && !k.name.startsWith(".")) walk(k, depth + 1, false) }
+                    else if (k.extension.lowercase() in exts) found.add(k.absolutePath)
+                }
             }
-        }
-        listOf(android.os.Environment.DIRECTORY_MUSIC, android.os.Environment.DIRECTORY_DOWNLOADS,
-            android.os.Environment.DIRECTORY_PODCASTS, android.os.Environment.DIRECTORY_AUDIOBOOKS,
-            android.os.Environment.DIRECTORY_DOCUMENTS).forEach {
-            try { walk(android.os.Environment.getExternalStoragePublicDirectory(it), 0) } catch (_: Exception) {}
-        }
-        if (found.isEmpty()) { main.post(onDone); return 0 }
-        var left = found.size
-        android.media.MediaScannerConnection.scanFile(context.applicationContext, found.toTypedArray(), null) { _, _ ->
-            main.post { left--; if (left <= 0) onDone() }
-        }
-        return found.size
+            val roots = listOf(android.os.Environment.DIRECTORY_MUSIC, android.os.Environment.DIRECTORY_DOWNLOADS,
+                android.os.Environment.DIRECTORY_PODCASTS, android.os.Environment.DIRECTORY_AUDIOBOOKS,
+                android.os.Environment.DIRECTORY_DOCUMENTS)
+            roots.forEach { try { walk(android.os.Environment.getExternalStoragePublicDirectory(it), 0, true) } catch (_: Exception) {} }
+            if (rootsOpened == 0) { main.post { onDone(ScanResult(ScanStatus.FOLDERS_UNREADABLE, 0, 0)) }; return@Thread }
+            if (found.isEmpty()) { main.post { onDone(ScanResult(ScanStatus.COMPLETE, 0, rootsOpened)) }; return@Thread }
+            var left = found.size
+            var failed = 0
+            try {
+                android.media.MediaScannerConnection.scanFile(context.applicationContext, found.toTypedArray(), null) { _, uri ->
+                    main.post {
+                        if (uri == null) failed++
+                        left--
+                        if (left <= 0) onDone(ScanResult(if (failed == found.size) ScanStatus.SCANNER_FAILED else ScanStatus.COMPLETE, found.size, rootsOpened))
+                    }
+                }
+            } catch (_: Exception) { main.post { onDone(ScanResult(ScanStatus.SCANNER_FAILED, found.size, rootsOpened)) } }
+        }.start()
     }
 
     /** Truthful result text for a scan: counts come from the before/after MediaStore song ids, never from files handed to the scanner. */
-    fun scanSummary(hadPermission: Boolean, before: Set<Long>, after: Set<Long>): String {
-        if (!hadPermission) return "Music permission is off, can't scan"
+    fun scanSummary(status: ScanStatus, before: Set<Long>, after: Set<Long>): String {
+        when (status) {
+            ScanStatus.NO_PERMISSION -> return "Music permission is off, can't scan"
+            ScanStatus.FOLDERS_UNREADABLE -> return "Couldn't open the music folders. Showing what Android already indexed"
+            ScanStatus.SCANNER_FAILED -> return "Scan failed. Showing what Android already indexed"
+            ScanStatus.TIMED_OUT -> return "Scan didn't finish. Showing what Android has indexed so far"
+            ScanStatus.COMPLETE -> {}
+        }
         val added = (after - before).size
         val removed = (before - after).size
         fun songs(n: Int) = if (n == 1) "1 song" else "$n songs"
         return when {
-            added > 0 && removed > 0 -> "${songs(added)} added, ${removed} no longer found"
+            added > 0 && removed > 0 -> "${songs(added)} added, $removed no longer found"
             added > 0 -> "${songs(added)} added"
             removed > 0 -> "${songs(removed)} no longer found"
             else -> "No new songs found"

@@ -186,19 +186,19 @@ fun HomeScreen(
                             val before = songs.map { it.id }.toSet()
                             val hadPermission = LibraryRepository.hasAudioPermission(context)
                             var finished = false
-                            fun finish() {
+                            fun finish(res: LibraryRepository.ScanResult) {
                                 if (finished) return
                                 finished = true
                                 scope.launch {
                                     val after = if (hadPermission) withContext(kotlinx.coroutines.Dispatchers.IO) { LibraryRepository.querySongs(context) } else songs
                                     songs = after
-                                    scanNotice = LibraryRepository.scanSummary(hadPermission, before, after.map { it.id }.toSet())
+                                    scanNotice = LibraryRepository.scanSummary(res.status, before, after.map { it.id }.toSet())
                                     scanning = false
                                     reload++
                                 }
                             }
-                            LibraryRepository.rescan(context) { finish() }
-                            scope.launch { kotlinx.coroutines.delay(20000); finish() }
+                            LibraryRepository.rescan(context) { finish(it) }
+                            scope.launch { kotlinx.coroutines.delay(20000); finish(LibraryRepository.ScanResult(LibraryRepository.ScanStatus.TIMED_OUT)) }
                         },
                     contentAlignment = Alignment.Center,
                 ) {
