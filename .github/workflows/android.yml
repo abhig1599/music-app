@@ -45,6 +45,7 @@ jobs:
           retention-days: 14
 
       - name: Commit screenshots back to repo
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         run: |
           mkdir -p docs/screenshots
           cp app/build/outputs/roborazzi/*.png docs/screenshots/ || exit 0
@@ -56,7 +57,7 @@ jobs:
           git push
 
       - name: Commit compile/test errors back to repo on failure
-        if: failure()
+        if: ${{ failure() && !startsWith(github.ref, 'refs/tags/') }}
         run: |
           mkdir -p docs
           grep -E "^e: |error:|FAILED|What went wrong|Caused by|Exception" /tmp/build.log | head -60 > docs/ci-last-failure.txt || true
@@ -65,3 +66,13 @@ jobs:
           git add docs/ci-last-failure.txt
           git commit -m "CI failure log [skip ci]" || exit 0
           git push
+
+      - name: Publish private pre-release with the APK (cand-* tags only)
+        if: startsWith(github.ref, 'refs/tags/cand-')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cp app/build/outputs/apk/debug/app-debug.apk "music-app-${GITHUB_REF_NAME}-debug.apk"
+          gh release create "$GITHUB_REF_NAME" --prerelease --title "$GITHUB_REF_NAME (debug build, emulator-tested only)" \
+            --notes "Debug APK built by CI from commit ${GITHUB_SHA}. Private repo release. Not tested on a physical device. Known limits are in DECISIONS.md." \
+            "music-app-${GITHUB_REF_NAME}-debug.apk"

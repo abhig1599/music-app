@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -45,7 +46,8 @@ import com.abhi.musicapp.ui.theme.SurfaceSoft
  */
 @Composable
 fun EqualiserScreen(onBack: () -> Unit) {
-    var enabled by remember { mutableStateOf(true) }
+    // Not connected to playback: all controls are shown disabled so they are not mistaken for working EQ.
+    var enabled by remember { mutableStateOf(false) }
     var preset by remember { mutableIntStateOf(0) }
     val bands = remember { List(5) { mutableIntStateOf(0) } }
 
@@ -71,7 +73,8 @@ fun EqualiserScreen(onBack: () -> Unit) {
             Text("Enabled", fontSize = 15.sp, color = InkBlack, modifier = Modifier.weight(1f))
             Switch(
                 checked = enabled,
-                onCheckedChange = { enabled = it },
+                onCheckedChange = null,
+                enabled = false,
                 colors = SwitchDefaults.colors(checkedTrackColor = Orangs),
             )
         }
@@ -88,7 +91,7 @@ fun EqualiserScreen(onBack: () -> Unit) {
                         .padding(horizontal = 4.dp)
                         .clip(RoundedCornerShape(10.dp))
                         .background(if (preset == i) Orangs else SurfaceSoft)
-                        .clickable { preset = i }
+                        
                         .padding(horizontal = 14.dp, vertical = 8.dp),
                 )
             }
@@ -105,25 +108,27 @@ fun EqualiserScreen(onBack: () -> Unit) {
             val labels = listOf("60Hz", "230Hz", "910Hz", "3.6kHz", "14kHz")
             labels.forEachIndexed { i, label ->
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(label, fontSize = 12.sp, color = GrayText,
-                        modifier = Modifier.padding(end = 8.dp))
+                    Text(label, fontSize = 12.sp, color = GrayText, maxLines = 1, softWrap = false,
+                        modifier = Modifier.width(52.dp).padding(end = 8.dp))
                     Slider(
                         value = bands[i].intValue.toFloat(),
                         onValueChange = { bands[i].intValue = it.toInt() },
                         valueRange = -15f..15f,
-                        enabled = enabled,
+                        enabled = false,
+                        modifier = Modifier.weight(1f),
                         colors = SliderDefaults.colors(
                             thumbColor = Orangs,
                             activeTrackColor = Orangs,
                         ),
                     )
-                    Text("${bands[i].intValue}dB", fontSize = 12.sp, color = GrayText)
+                    Text("${bands[i].intValue}dB", fontSize = 12.sp, color = GrayText, maxLines = 1, softWrap = false,
+                        textAlign = androidx.compose.ui.text.style.TextAlign.End, modifier = Modifier.width(44.dp))
                 }
             }
         }
 
         Text(
-            "Band support depends on the device; unavailable outputs show a notice here.",
+            "Equaliser is not connected to playback yet. These controls do nothing and sound is not changed.",
             fontSize = 11.sp, color = GrayText, modifier = Modifier.padding(horizontal = 24.dp),
         )
         Spacer(Modifier.height(16.dp))
