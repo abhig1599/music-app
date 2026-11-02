@@ -112,6 +112,34 @@ object PlayerManager {
         return removed
     }
 
+    private var seekHoldJob: kotlinx.coroutines.Job? = null
+
+    /**
+     * Press-and-hold seek: moves the position at about 2x speed (forward) or 2x rewind (backward) in 100 ms steps.
+     * This is seeking, not an audio-rate change, so pitch and speed settings are untouched, and play/pause state
+     * is left as it was. It stops at 1 s before the end / at 0 so a hold never skips to another track.
+     */
+    fun startSeekHold(direction: Int) {
+        val c = controller ?: return
+        seekHoldJob?.cancel()
+        seekHoldJob = scope.launch {
+            while (isActive) {
+                val dur = c.duration
+                val playing = c.isPlaying
+                // playing already advances 100 ms per step: forward adds +100 more (net 2x); backward needs -300 (net -2x)
+                val step = if (direction > 0) (if (playing) 100L else 200L) else (if (playing) -300L else -200L)
+                val maxPos = if (dur > 1000) dur - 1000 else 0L
+                val target = (c.currentPosition + step).coerceIn(0L, maxPos)
+                if (direction > 0 && c.currentPosition >= maxPos) break
+                c.seekTo(target)
+                if (direction < 0 && target == 0L) break
+                delay(100)
+            }
+        }
+    }
+
+    fun stopSeekHold() { seekHoldJob?.cancel(); seekHoldJob = null }
+
     fun togglePlayPause() {
         val c = controller ?: return
         if (c.isPlaying) c.pause() else c.play()

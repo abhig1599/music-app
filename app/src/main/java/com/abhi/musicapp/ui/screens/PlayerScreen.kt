@@ -1,5 +1,8 @@
 package com.abhi.musicapp.ui.screens
 
+import androidx.compose.ui.semantics.onClick
+import androidx.compose.ui.semantics.semantics
+import com.abhi.musicapp.ui.tapOrHold
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -140,7 +143,8 @@ fun PlayerScreen(onBack: () -> Unit, fixture: PlayerUiState? = null, initialOver
         ) {
             Box(
                 modifier = Modifier.pressScale().size(63.dp).clip(CircleShape).background(PureWhite)
-                    .clickable { PlayerManager.previous() },
+                    .tapOrHold({ PlayerManager.previous() }, { PlayerManager.startSeekHold(-1) }, { PlayerManager.stopSeekHold() })
+                    .semantics { onClick("Previous track") { PlayerManager.previous(); true } },
                 contentAlignment = Alignment.Center,
             ) { Icon(Icons.Filled.SkipPrevious, contentDescription = "Previous", tint = InkBlack) }
             Box(
@@ -157,7 +161,8 @@ fun PlayerScreen(onBack: () -> Unit, fixture: PlayerUiState? = null, initialOver
             }
             Box(
                 modifier = Modifier.pressScale().size(63.dp).clip(CircleShape).background(PureWhite)
-                    .clickable { PlayerManager.next() },
+                    .tapOrHold({ PlayerManager.next() }, { PlayerManager.startSeekHold(1) }, { PlayerManager.stopSeekHold() })
+                    .semantics { onClick("Next track") { PlayerManager.next(); true } },
                 contentAlignment = Alignment.Center,
             ) { Icon(Icons.Filled.SkipNext, contentDescription = "Next", tint = InkBlack) }
         }

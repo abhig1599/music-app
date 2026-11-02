@@ -16,6 +16,7 @@ import androidx.compose.ui.composed
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
+import kotlinx.coroutines.launch
 
 /**
  * Motion helpers (native Compose, no extra library). Motion is fluid and interruptible (springs, not fixed
@@ -50,4 +51,25 @@ fun Modifier.pressScale(pressedScale: Float = 0.93f): Modifier = composed {
                 pressed = false
             }
         }
+}
+
+/**
+ * Tap runs [onTap]; holding for 350 ms starts [onHoldStart] and releasing (or the touch being cancelled, or the
+ * view leaving the screen) runs [onHoldEnd]. A hold never also counts as a tap.
+ */
+fun Modifier.tapOrHold(onTap: () -> Unit, onHoldStart: () -> Unit, onHoldEnd: () -> Unit): Modifier = composed {
+    val scope = androidx.compose.runtime.rememberCoroutineScope()
+    val tap = androidx.compose.runtime.rememberUpdatedState(onTap)
+    val start = androidx.compose.runtime.rememberUpdatedState(onHoldStart)
+    val end = androidx.compose.runtime.rememberUpdatedState(onHoldEnd)
+    androidx.compose.runtime.DisposableEffect(Unit) { onDispose { end.value() } }
+    pointerInput(Unit) {
+        androidx.compose.foundation.gestures.detectTapGestures(onPress = {
+            var holding = false
+            val job = scope.launch { kotlinx.coroutines.delay(350); holding = true; start.value() }
+            val released = tryAwaitRelease()
+            job.cancel()
+            if (holding) end.value() else if (released) tap.value()
+        })
+    }
 }
