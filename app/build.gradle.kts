@@ -13,8 +13,19 @@ android {
         applicationId = "com.abhi.musicapp"
         minSdk = 26
         targetSdk = 34
-        versionCode = 1
-        versionName = "0.1.0"
+        versionCode = 2
+        versionName = "0.1.1"
+    }
+
+    // Fixed debug key (private repo, debug build only) so later debug APKs install over earlier ones.
+    // cand-0.1.0 was signed with a throwaway per-run key: that one build must be uninstalled once first.
+    signingConfigs {
+        getByName("debug") {
+            storeFile = file("debug.keystore")
+            storePassword = "android"
+            keyAlias = "androiddebugkey"
+            keyPassword = "android"
+        }
     }
 
     buildTypes {

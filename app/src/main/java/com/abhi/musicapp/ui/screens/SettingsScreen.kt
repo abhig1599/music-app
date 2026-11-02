@@ -101,7 +101,9 @@ fun SettingsScreen(onBack: () -> Unit, onRowClick: (String) -> Unit = {}, fixtur
             CardTitle("Check for updates")
             Spacer(Modifier.height(13.dp))
             Text("Current Version", fontFamily = mono, fontSize = 12.sp, color = InkBlack)
-            Text("0.1.0", fontFamily = mono, fontSize = 10.sp, color = GrayText)
+            val sctx = androidx.compose.ui.platform.LocalContext.current
+            val versionName = runCatching { sctx.packageManager.getPackageInfo(sctx.packageName, 0).versionName }.getOrNull() ?: "0.1.1"
+            Text(versionName, fontFamily = mono, fontSize = 10.sp, color = GrayText)
             Spacer(Modifier.height(13.dp))
             WideButton("Update check not available yet", dark = false, enabled = false)
             Spacer(Modifier.height(13.dp))
