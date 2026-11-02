@@ -103,11 +103,10 @@ object PlayerManager {
         val c = controller ?: return 0
         if (hiddenFolders.isEmpty()) return 0
         val folderById = queue.associate { it.id.toString() to it.folder }
-        var removed = 0
-        for (i in c.mediaItemCount - 1 downTo c.currentMediaItemIndex + 1) {
-            val f = folderById[c.getMediaItemAt(i).mediaId]
-            if (f != null && f.isNotEmpty() && f in hiddenFolders) { c.removeMediaItem(i); removed++ }
-        }
+        val ids = (0 until c.mediaItemCount).map { c.getMediaItemAt(it).mediaId }
+        val toRemove = upcomingIndicesToRemove(ids, c.currentMediaItemIndex, folderById, hiddenFolders)
+        for (i in toRemove) c.removeMediaItem(i)
+        val removed = toRemove.size
         if (removed > 0) queue = queue.filterIndexed { idx, sg -> !(idx > c.currentMediaItemIndex && sg.folder in hiddenFolders) }
         return removed
     }
@@ -124,13 +123,7 @@ object PlayerManager {
         seekHoldJob?.cancel()
         seekHoldJob = scope.launch {
             while (isActive) {
-                val dur = c.duration
-                val playing = c.isPlaying
-                // playing already advances 100 ms per step: forward adds +100 more (net 2x); backward needs -300 (net -2x)
-                val step = if (direction > 0) (if (playing) 100L else 200L) else (if (playing) -300L else -200L)
-                val maxPos = if (dur > 1000) dur - 1000 else 0L
-                val target = (c.currentPosition + step).coerceIn(0L, maxPos)
-                if (direction > 0 && c.currentPosition >= maxPos) break
+                val target = seekHoldTarget(direction, c.isPlaying, c.currentPosition, c.duration) ?: break
                 c.seekTo(target)
                 if (direction < 0 && target == 0L) break
                 delay(100)
@@ -164,3 +157,23 @@ object PlayerManager {
         )
     }
 }
+
+
+/**
+ * One 100 ms step of a hold-seek. Playing already advances 100 ms per step: forward adds +100 more (net 2x),
+ * backward needs -300 (net -2x). Paused: +-200. Returns null when the hold must stop (end reached or duration unknown),
+ * so a hold never skips to another track: the target stays 1 s before the end and at 0.
+ */
+internal fun seekHoldTarget(direction: Int, playing: Boolean, position: Long, duration: Long): Long? {
+    val step = if (direction > 0) (if (playing) 100L else 200L) else (if (playing) -300L else -200L)
+    val maxPos = if (duration > 1000) duration - 1000 else 0L
+    if (direction > 0 && position >= maxPos) return null
+    return (position + step).coerceIn(0L, maxPos)
+}
+
+/** Queue indices (descending, safe to remove in order) after the current item whose folder is hidden. The current item is never listed. */
+internal fun upcomingIndicesToRemove(mediaIds: List<String>, currentIndex: Int, folderById: Map<String, String>, hidden: Set<String>): List<Int> =
+    (mediaIds.size - 1 downTo currentIndex + 1).filter { i ->
+        val f = folderById[mediaIds[i]]
+        f != null && f.isNotEmpty() && f in hidden
+    }
