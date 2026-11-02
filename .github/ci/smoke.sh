@@ -109,10 +109,9 @@ if tap_exact "smoke_tone" s4; then
   sleep 5; say "session +5s: $(pbs)"
   UI_PAUSE=0; UI_RESUME=0
   refresh 06b_home_playing; labels home_playing
-  if tap_exact "Pause" 06c_miniplayer; then sleep 3; shot 06d_player_open; refresh 06d_player_open; labels player_screen; focus player_screen
-    if tap_exact "Pause" 06e_player_pause; then sleep 2; r=$(pbs); say "after UI tap on player Pause: $r"; case "$r" in *"/PAUSED/"*) UI_PAUSE=1;; esac; shot 06f_ui_paused
-      if tap_exact "Play" 06g_player_play; then sleep 3; r=$(pbs); say "after UI tap on player Play: $r"; case "$r" in *"/PLAYING/"*) UI_RESUME=1;; esac; shot 06h_ui_resumed; fi
-    fi
+  # Tapping a song opens the player screen directly (run 5 evidence), so tap the player's Pause, then Play.
+  if tap_exact "Pause" 06e_player_pause; then sleep 2; r=$(pbs); say "after UI tap on player Pause: $r"; case "$r" in *"/PAUSED/"*) UI_PAUSE=1;; esac; shot 06f_ui_paused; refresh 06f_ui_paused; labels after_ui_pause
+    if tap_exact "Play" 06g_player_play; then sleep 3; r=$(pbs); say "after UI tap on player Play: $r"; case "$r" in *"/PLAYING/"*) UI_RESUME=1;; esac; shot 06h_ui_resumed; fi
   fi
   say "UI pause observed: $UI_PAUSE; UI resume observed: $UI_RESUME (taps on in-app controls, emulator, synthetic tone)"
   adb shell input keyevent 127; sleep 2; r=$(pbs); say "after MEDIA_PAUSE key (not a UI tap): $r"; case "$r" in *"/PAUSED/"*) SEEN_PAUSE=1;; esac
