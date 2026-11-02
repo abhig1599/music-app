@@ -1,12 +1,13 @@
-> Task :app:compileDebugUnitTestKotlin FAILED
-e: file:///home/runner/work/music-app/music-app/app/src/test/java/com/abhi/musicapp/OnboardingReaderTest.kt:3:33 Unresolved reference 'assertDoesNotExist'.
-e: file:///home/runner/work/music-app/music-app/app/src/test/java/com/abhi/musicapp/OnboardingReaderTest.kt:4:33 Unresolved reference 'assertExists'.
+e: file:///home/runner/work/music-app/music-app/app/src/main/java/com/abhi/musicapp/ui/screens/HomeScreen.kt:414:20 Unresolved reference 'animateFloat'.
+e: file:///home/runner/work/music-app/music-app/app/src/main/java/com/abhi/musicapp/ui/screens/HomeScreen.kt:414:75 Cannot infer type for this parameter. Please specify it explicitly.
+e: file:///home/runner/work/music-app/music-app/app/src/main/java/com/abhi/musicapp/ui/screens/HomeScreen.kt:414:126 Cannot infer type for this parameter. Please specify it explicitly.
+> Task :app:compileDebugKotlin FAILED
 * What went wrong:
 * Exception is:
-org.gradle.api.tasks.TaskExecutionException: Execution failed for task ':app:compileDebugUnitTestKotlin'.
+org.gradle.api.tasks.TaskExecutionException: Execution failed for task ':app:compileDebugKotlin'.
 	at org.gradle.api.internal.tasks.execution.CatchExceptionTaskExecuter.execute(CatchExceptionTaskExecuter.java:36)
 Caused by: org.gradle.workers.internal.DefaultWorkerExecutor$WorkExecutionException: A failure occurred while executing org.jetbrains.kotlin.compilerRunner.GradleCompilerRunnerWithWorkers$GradleKotlinCompilerWorkAction
 	at org.gradle.api.internal.tasks.execution.CatchExceptionTaskExecuter.execute(CatchExceptionTaskExecuter.java:36)
 Caused by: org.jetbrains.kotlin.gradle.tasks.CompilationErrorException: Compilation error. See log for more details
 	at org.jetbrains.kotlin.gradle.tasks.TasksUtilsKt.throwExceptionIfCompilationFailed(tasksUtils.kt:21)
-BUILD FAILED in 4s
+BUILD FAILED in 22s
