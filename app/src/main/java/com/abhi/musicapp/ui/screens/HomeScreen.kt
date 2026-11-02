@@ -168,7 +168,7 @@ fun HomeScreen(
                 ScanRays(modifier = Modifier.size(147.dp))
                 Box(
                     modifier = Modifier.size(60.dp).clip(CircleShape).background(com.abhi.musicapp.ui.theme.GrayLight)
-                        .clickable { },
+                        .clickable { LibraryRepository.rescan(context) { reload++ }; reload++ },
                     contentAlignment = Alignment.Center,
                 ) {
                     Icon(Icons.Filled.Folder, contentDescription = "Scan device",

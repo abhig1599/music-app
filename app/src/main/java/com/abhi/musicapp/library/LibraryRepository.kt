@@ -34,6 +34,38 @@ object LibraryRepository {
         context.startActivity(i)
     }
 
+    /**
+     * Rescan: asks Android's media scanner to index audio files found in the standard public folders
+     * (Music, Download, Podcasts, Audiobooks, Documents; depth 4), then calls [onDone] on the main thread
+     * so the caller can re-query MediaStore. Under scoped storage the app can only list what the OS lets it
+     * see; anything it cannot list is not scanned here (the MediaStore re-query still picks up whatever the
+     * OS has already indexed). Returns the number of files handed to the scanner.
+     */
+    fun rescan(context: Context, onDone: () -> Unit): Int {
+        val main = android.os.Handler(android.os.Looper.getMainLooper())
+        if (!hasAudioPermission(context)) { main.post(onDone); return 0 }
+        val exts = setOf("mp3", "m4a", "aac", "wav", "flac", "ogg", "opus", "wma", "amr", "mid")
+        val found = mutableListOf<String>()
+        fun walk(f: java.io.File, depth: Int) {
+            val kids = try { f.listFiles() } catch (_: Exception) { null } ?: return
+            for (k in kids) {
+                if (k.isDirectory) { if (depth < 4 && !k.name.startsWith(".")) walk(k, depth + 1) }
+                else if (k.extension.lowercase() in exts) found.add(k.absolutePath)
+            }
+        }
+        listOf(android.os.Environment.DIRECTORY_MUSIC, android.os.Environment.DIRECTORY_DOWNLOADS,
+            android.os.Environment.DIRECTORY_PODCASTS, android.os.Environment.DIRECTORY_AUDIOBOOKS,
+            android.os.Environment.DIRECTORY_DOCUMENTS).forEach {
+            try { walk(android.os.Environment.getExternalStoragePublicDirectory(it), 0) } catch (_: Exception) {}
+        }
+        if (found.isEmpty()) { main.post(onDone); return 0 }
+        var left = found.size
+        android.media.MediaScannerConnection.scanFile(context.applicationContext, found.toTypedArray(), null) { _, _ ->
+            main.post { left--; if (left <= 0) onDone() }
+        }
+        return found.size
+    }
+
     fun querySongs(context: Context): List<Song> {
         if (!hasAudioPermission(context)) return emptyList()
         val collection = MediaStore.Audio.Media.getContentUri(MediaStore.VOLUME_EXTERNAL)

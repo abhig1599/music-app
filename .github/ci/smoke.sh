@@ -24,10 +24,12 @@ for i in $(seq 1 30); do
   if adb push /tmp/smoke_tone.wav /sdcard/Music/smoke_tone.wav >$OUT/push1.txt 2>&1; then TONE_OK=1; say "tone push (90s) ok on attempt $i"; break; fi
   say "tone push attempt $i FAILED: $(head -2 $OUT/push1.txt | tr '\n' ' ')"; sleep 4
 done
-[ "$TONE_OK" = "1" ] || say "tone push never succeeded (storage not writable): run is INVALID for playback"
+[ "$TONE_OK" = "1" ] || { say "tone push never succeeded (storage not writable)"; say "SMOKE VERDICT: INVALID (no tone file; no playback claim possible)"; exit 1; }
 say "scan_file result: $(adb shell content call --uri content://media/ --method scan_file --arg /sdcard/Music/smoke_tone.wav 2>&1 | head -2 | tr '\n' ' ')"
-sleep 3
+IDX=0; for i in $(seq 1 20); do adb shell content query --uri content://media/external/audio/media --projection _display_name 2>/dev/null | grep -q smoke_tone && { IDX=1; break; }; adb shell content call --uri content://media/ --method scan_file --arg /sdcard/Music/smoke_tone.wav >/dev/null 2>&1; sleep 2; done
+say "tone indexed in MediaStore before install: $IDX (after $i polls)"
 mq pre_install
+[ "$IDX" = "1" ] || { say "SMOKE VERDICT: INVALID (tone file exists but is not indexed in MediaStore; no playback claim possible)"; exit 1; }
 adb install -r app/build/outputs/apk/debug/app-debug.apk >/dev/null && say "install: ok" || { say "install: FAILED"; say "SMOKE VERDICT: INCOMPLETE (install failed)"; exit 1; }
 adb logcat -c
 shot(){ adb exec-out screencap -p > $OUT/$1.png; }
@@ -133,6 +135,26 @@ if tap_exact "smoke_tone" s4; then
   adb shell input keyevent 126; sleep 3; r=$(pbs); say "after MEDIA_PLAY key (not a UI tap): $r"; case "$r" in *"/PLAYING/"*) SEEN_RESUME=1;; esac
   shot 07_after_resume
 fi
+# --- Rescan test: add a NEW file while the app sits on Home (no ON_RESUME), then tap "Scan device" ---
+adb shell input keyevent 4; sleep 2; refresh 08_home_again; labels home_again; focus home_again
+python3 - <<'PY3'
+import wave,struct,math
+w=wave.open('/tmp/rescan_tone.wav','wb'); w.setnchannels(2); w.setsampwidth(2); w.setframerate(16000)
+w.writeframes(b''.join(struct.pack('<hh',int(6000*math.sin(2*math.pi*660*i/16000)),int(6000*math.sin(2*math.pi*660*i/16000))) for i in range(16000*20)))
+w.close()
+PY3
+RPUSH=0; for i in $(seq 1 5); do adb push /tmp/rescan_tone.wav /sdcard/Music/rescan_tone.wav >$OUT/push2.txt 2>&1 && { RPUSH=1; break; }; sleep 3; done
+say "rescan_tone push ok: $RPUSH"
+RESCAN="not run"
+if [ "$RPUSH" = "1" ] && [ -n "$(center 'Scan device' sub)" ]; then
+  RIDX=0; for i in $(seq 1 10); do adb shell content query --uri content://media/external/audio/media --projection _display_name 2>/dev/null | grep -q rescan_tone && { RIDX=1; break; }; adb shell content call --uri content://media/ --method scan_file --arg /sdcard/Music/rescan_tone.wav >/dev/null 2>&1; sleep 2; done
+  say "rescan_tone indexed in MediaStore: $RIDX"; mq before_scan_tap
+  refresh 09_before_scan; BEFORE=$(grep -c 'rescan_tone' /tmp/ui.xml); say "Home lists rescan_tone BEFORE tapping Scan device: $BEFORE"; shot 09_before_scan
+  tap_exact "Scan device" 09b_scan_tap; sleep 5; refresh 10_after_scan; shot 10_after_scan; labels home_after_scan_tap
+  AFTER=$(grep -c 'rescan_tone' /tmp/ui.xml); say "Home lists rescan_tone AFTER tapping Scan device: $AFTER"
+  if [ "$RIDX" != "1" ]; then RESCAN="INVALID (file not indexed)"; elif [ "$BEFORE" != "0" ]; then RESCAN="inconclusive (listed before tap)"; elif [ "$AFTER" -ge 1 ]; then RESCAN="PASS (listed only after tap)"; else RESCAN="FAIL (not listed after tap)"; fi
+fi
+say "RESCAN RESULT: $RESCAN"
 say "notifications from app: $(adb shell dumpsys notification --noredact 2>/dev/null | grep -c "pkg=$PKG") ; POST_NOTIFICATIONS: $(adb shell dumpsys package $PKG | grep -m1 'POST_NOTIFICATIONS')"
 adb shell input keyevent 4; sleep 1
 adb logcat -d > $OUT/logcat.txt
@@ -143,5 +165,5 @@ if [ "$NF" != "0" ]; then
   say "--- FATAL block ---"; grep -A14 'FATAL EXCEPTION' $OUT/logcat.txt | cut -c1-220 | head -60 | tee -a $R
 fi
 say "(synthetic tone only; UI pause/resume result is in the lines above; media keys also used; no real music files; emulator only)"
-if [ "$TONE_OK" = "1" ] && [ "$SEEN_PLAY" = "1" ] && [ "$SEEN_PAUSE" = "1" ] && [ "$SEEN_RESUME" = "1" ] && [ "$NF" = "0" ]; then say "SMOKE VERDICT: our MediaSession PLAYING, PAUSED, PLAYING observed; no FATAL (emulator evidence only)"; exit 0
+if [ "$TONE_OK" = "1" ] && [ "$SEEN_PLAY" = "1" ] && [ "$SEEN_PAUSE" = "1" ] && [ "$SEEN_RESUME" = "1" ] && [ "$NF" = "0" ]; then say "UI PAUSE (own session PAUSED after in-app Pause tap): ${UI_PAUSE:-0}; UI RESUME (PLAYING after in-app Play tap): ${UI_RESUME:-0}"; say "SMOKE VERDICT: our MediaSession PLAYING, PAUSED, PLAYING observed; no FATAL (emulator evidence only)"; exit 0
 else say "SMOKE VERDICT: INCOMPLETE play=$SEEN_PLAY pause=$SEEN_PAUSE resume=$SEEN_RESUME fatal=$NF - NOT a pass"; exit 1; fi
