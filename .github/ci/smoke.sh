@@ -150,9 +150,26 @@ if [ "$RPUSH" = "1" ] && [ -n "$(center 'Scan device' sub)" ]; then
   RIDX=0; for i in $(seq 1 10); do adb shell content query --uri content://media/external/audio/media --projection _display_name 2>/dev/null | grep -q rescan_tone && { RIDX=1; break; }; adb shell content call --uri content://media/ --method scan_file --arg /sdcard/Music/rescan_tone.wav >/dev/null 2>&1; sleep 2; done
   say "rescan_tone indexed in MediaStore: $RIDX"; mq before_scan_tap
   refresh 09_before_scan; BEFORE=$(grep -c 'rescan_tone' /tmp/ui.xml); say "Home lists rescan_tone BEFORE tapping Scan device: $BEFORE"; shot 09_before_scan
+  CBEFORE=$(python3 - <<'PY5'
+import xml.etree.ElementTree as ET
+try:
+    t=[(n.get('text') or n.get('content-desc') or '').strip() for n in ET.parse('/tmp/ui.xml').getroot().iter('node')]
+    t=[x for x in t if x]; i=t.index('All'); print(int(t[i+1]))
+except Exception: print(-1)
+PY5
+)
   tap_exact "Scan device" 09b_scan_tap; sleep 5; refresh 10_after_scan; shot 10_after_scan; labels home_after_scan_tap
   AFTER=$(grep -c 'rescan_tone' /tmp/ui.xml); say "Home lists rescan_tone AFTER tapping Scan device: $AFTER"
-  if [ "$RIDX" != "1" ]; then RESCAN="INVALID (file not indexed)"; elif [ "$BEFORE" != "0" ]; then RESCAN="inconclusive (listed before tap)"; elif [ "$AFTER" -ge 1 ]; then RESCAN="PASS (listed only after tap)"; else RESCAN="FAIL (not listed after tap)"; fi
+  allcount(){ python3 - <<'PY4'
+import xml.etree.ElementTree as ET
+try:
+    t=[(n.get('text') or n.get('content-desc') or '').strip() for n in ET.parse('/tmp/ui.xml').getroot().iter('node')]
+    t=[x for x in t if x]; i=t.index('All'); print(int(t[i+1]))
+except Exception: print(-1)
+PY4
+  }
+  CAFTER=$(allcount); say "Home 'All' count AFTER tap: $CAFTER (before tap: $CBEFORE); title text in dump is not used as the check: off-screen lazy rows are absent from a dump"
+  if [ "$RIDX" != "1" ]; then RESCAN="INVALID (file not indexed)"; elif [ "$CBEFORE" -lt 0 ] || [ "$CAFTER" -lt 0 ]; then RESCAN="INCONCLUSIVE (All count unreadable)"; elif [ "$CAFTER" -eq $((CBEFORE+1)) ]; then RESCAN="PASS (All count $CBEFORE -> $CAFTER after tap, no ON_RESUME between)"; else RESCAN="FAIL (All count $CBEFORE -> $CAFTER)"; fi
 fi
 say "RESCAN RESULT: $RESCAN"
 say "notifications from app: $(adb shell dumpsys notification --noredact 2>/dev/null | grep -c "pkg=$PKG") ; POST_NOTIFICATIONS: $(adb shell dumpsys package $PKG | grep -m1 'POST_NOTIFICATIONS')"
