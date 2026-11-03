@@ -98,6 +98,7 @@ internal fun scrubFraction(start: Float, prevAngleDeg: Float, curAngleDeg: Float
 fun PlayerScreen(onBack: () -> Unit, fixture: PlayerUiState? = null, initialOverlay: Int = 0, sourceLabel: String? = null, progressInFixture: Boolean = false) {
     // 0 none, 1 three-dots menu, 2 focus-mode popup, 3 output-device popup (Figma 'Song Page - menu', 'Song focus mode', 'Song Focus connected device').
     var overlay by androidx.compose.runtime.remember { androidx.compose.runtime.mutableIntStateOf(initialOverlay) }
+    var menuNote by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf("") }
     val live by PlayerManager.state.collectAsState()
     val state = fixture ?: live
     val rawProgress = if (state.durationMs > 0)
@@ -147,8 +148,23 @@ fun PlayerScreen(onBack: () -> Unit, fixture: PlayerUiState? = null, initialOver
         // down only if the two would collide. At 844dp this is identical to the Figma positions.
         val shrink = (844.dp - maxHeight).coerceAtLeast(0.dp)
         val dialScale = ((338f - shrink.value) / 301f).coerceIn(0.5f, 1f)
+        val sleep by com.abhi.musicapp.playback.SleepTimer.state.collectAsState()
+        val sleepNow by com.abhi.musicapp.playback.SleepTimer.nowMs.collectAsState()
+        val sleepOn = fixture == null && sleep != com.abhi.musicapp.playback.SleepState.Off
+        if (sleepOn) Box(Modifier.offset(23.dp, 46.dp)) {
+            when (val sl = sleep) {
+                is com.abhi.musicapp.playback.SleepState.Counting -> {
+                    val remain = sl.endAtMs - sleepNow
+                    val frac = com.abhi.musicapp.playback.sleepFraction(sl.totalMs, sl.endAtMs, sleepNow)
+                    com.abhi.musicapp.ui.components.SleepStrip(clockText(sl.totalMs - remain), clockText(sl.totalMs), orangeCluster = true, orangeIndex = (frac * 23).toInt())
+                }
+                is com.abhi.musicapp.playback.SleepState.FinishingSong -> com.abhi.musicapp.ui.components.SleepStrip(clockText(sl.totalMs), null, timeUp = true)
+                is com.abhi.musicapp.playback.SleepState.Exiting -> com.abhi.musicapp.ui.components.AppExitPill(com.abhi.musicapp.playback.exitSecondsLeft(sl.deadlineMs, sleepNow)) { com.abhi.musicapp.playback.SleepTimer.cancel() }
+                else -> {}
+            }
+        }
         Row(
-            modifier = Modifier.offset(26.dp, 46.dp).size(344.dp, 37.dp),
+            modifier = Modifier.offset(26.dp, if (sleepOn) 96.dp else 46.dp).size(344.dp, 37.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text("Playlist", fontSize = 28.sp, fontWeight = FontWeight.Bold, color = InkBlack,
@@ -247,13 +263,28 @@ fun PlayerScreen(onBack: () -> Unit, fixture: PlayerUiState? = null, initialOver
             // Equaliser is drawn greyed out in the Figma menu: kept disabled (no EQ exists). Add to playlist is wired (shipped path, PlaylistStore); other entries only close the menu until wired.
             listOf("Sleep Time", "Add to playlist", "Share", "Speed", "Delete", "Equaliser", "Lyrics").forEach { t ->
                 val off = t == "Equaliser"
-                Row(Modifier.fillMaxWidth().height(51.dp).then(if (off) Modifier else Modifier.clickable { overlay = if (t == "Add to playlist" && fixture == null) 4 else 0 }).padding(horizontal = 12.dp),
+                Row(Modifier.fillMaxWidth().height(51.dp).then(if (off) Modifier else Modifier.clickable {
+                    overlay = if (fixture != null) 0 else when (t) {
+                        "Sleep Time" -> 5
+                        "Add to playlist" -> 4
+                        "Speed" -> 6
+                        "Share" -> { shareCurrent(ctx, state.mediaId, state.title); 0 }
+                        "Delete" -> { menuNote = "Delete is not built yet. It stays off so no song is removed by accident."; 7 }
+                        "Lyrics" -> { menuNote = "Lyrics are not built yet: no lyrics source has been chosen."; 7 }
+                        else -> 0
+                    }
+                }).padding(horizontal = 12.dp),
                     verticalAlignment = Alignment.CenterVertically) {
                     Box(Modifier.size(16.dp).clip(androidx.compose.foundation.shape.RoundedCornerShape(3.dp)).background(if (off) pill else com.abhi.musicapp.ui.theme.GrayText)) // glyphs not matched
                     androidx.compose.foundation.layout.Spacer(Modifier.width(10.dp))
                     Text(t, fontSize = 13.sp, color = if (off) com.abhi.musicapp.ui.theme.GrayText.copy(alpha = 0.6f) else InkBlack)
                 }
             }
+        }
+        if (overlay == 5) SleepTimerSheet { overlay = 0 }
+        if (overlay == 6) SpeedSheet { overlay = 0 }
+        if (overlay == 7) Box(Modifier.align(Alignment.Center).padding(horizontal = 40.dp).clip(androidx.compose.foundation.shape.RoundedCornerShape(12.dp)).background(sheet).padding(20.dp)) {
+            Text(menuNote, fontSize = 14.sp, color = InkBlack)
         }
         if (overlay == 4) AddToPlaylistSheet(state.mediaId) { overlay = 0 } // shipped path only (menu sets 4 only when fixture == null)
         if (overlay == 2 || overlay == 3) {
@@ -276,4 +307,15 @@ fun PlayerScreen(onBack: () -> Unit, fixture: PlayerUiState? = null, initialOver
             }
         }
     }
+}
+
+/** Share the current audio file through the Android share sheet. Sends only the file reference he picks a target for. */
+internal fun shareCurrent(ctx: android.content.Context, mediaId: Long, title: String) {
+    if (mediaId < 0) return
+    val uri = android.content.ContentUris.withAppendedId(android.provider.MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, mediaId)
+    val send = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
+        type = "audio/*"; putExtra(android.content.Intent.EXTRA_STREAM, uri); putExtra(android.content.Intent.EXTRA_TITLE, title)
+        addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
+    }
+    ctx.startActivity(android.content.Intent.createChooser(send, "Share song").addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK))
 }

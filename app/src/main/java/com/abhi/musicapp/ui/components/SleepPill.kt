@@ -2,6 +2,7 @@ package com.abhi.musicapp.ui.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -57,7 +58,7 @@ private fun Ticks(modifier: Modifier, orangeAt: Int?) {
 
 /** Strip: 344 x 46, r10, white, 1px D3D3D1 stroke (read). Variants follow Frame 45. */
 @Composable
-fun SleepStrip(left: String, right: String?, timeUp: Boolean = false, orangeCluster: Boolean = false, topChip: String? = null) {
+fun SleepStrip(left: String, right: String?, timeUp: Boolean = false, orangeCluster: Boolean = false, topChip: String? = null, orangeIndex: Int = 11) {
     Box(Modifier.width(344.dp)) {
         Row(
             Modifier.fillMaxWidth().height(46.dp).clip(RoundedCornerShape(10.dp)).background(PureWhite)
@@ -66,7 +67,7 @@ fun SleepStrip(left: String, right: String?, timeUp: Boolean = false, orangeClus
             verticalAlignment = Alignment.CenterVertically,
         ) {
             TimeChip(left, "M")
-            Ticks(Modifier.width(170.dp), if (orangeCluster) 11 else null)
+            Ticks(Modifier.width(170.dp), if (orangeCluster) orangeIndex.coerceIn(0, 23) else null)
             if (timeUp) {
                 Box(Modifier.clip(RoundedCornerShape(8.dp)).background(Orangs).padding(horizontal = 8.dp, vertical = 7.dp)) {
                     Text("Time-up", fontFamily = GeistMono, fontSize = 16.sp, color = PureWhite)
@@ -84,7 +85,7 @@ fun SleepStrip(left: String, right: String?, timeUp: Boolean = false, orangeClus
 
 /** "App exit in 0:10 S x" pill: 239.5 x 46, r10 (read). */
 @Composable
-fun AppExitPill() {
+fun AppExitPill(seconds: Int = 10, onCancel: (() -> Unit)? = null) {
     Row(
         Modifier.width(240.dp).height(46.dp).clip(RoundedCornerShape(10.dp)).background(PureWhite)
             .border(1.dp, Stroke, RoundedCornerShape(10.dp)).padding(horizontal = 12.dp),
@@ -92,9 +93,10 @@ fun AppExitPill() {
     ) {
         Text("App exit in", fontFamily = GeistMono, fontSize = 16.sp, color = InkBlack)
         Spacer(Modifier.width(10.dp))
-        TimeChip("0:10", "S")
+        TimeChip("0:" + seconds.coerceIn(0, 59).toString().padStart(2, '0'), "S")
         Spacer(Modifier.weight(1f))
-        Icon(Icons.Filled.Close, null, tint = InkBlack)
+        Icon(Icons.Filled.Close, if (onCancel != null) "Cancel app exit" else null, tint = InkBlack,
+            modifier = if (onCancel != null) Modifier.clickable(onClick = onCancel) else Modifier)
     }
 }
 

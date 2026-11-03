@@ -26,6 +26,7 @@ data class PlayerUiState(
     val durationMs: Long = 0L,
     val hasTrack: Boolean = false,
     val mediaId: Long = -1L,
+    val speed: Float = 1f,
 )
 
 /**
@@ -61,6 +62,13 @@ object PlayerManager {
             c.addListener(object : Player.Listener {
                 override fun onEvents(player: Player, events: Player.Events) {
                     pushState()
+                }
+                override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
+                    // Sleep timer "play last one to end": the song finished on its own, stop before the next one is heard.
+                    if (reason == Player.MEDIA_ITEM_TRANSITION_REASON_AUTO && SleepTimer.isFinishingSong) { player().pause(); SleepTimer.onSongEnded() }
+                }
+                override fun onPlaybackStateChanged(playbackState: Int) {
+                    if (playbackState == Player.STATE_ENDED) SleepTimer.onSongEnded()
                 }
             })
             scope.launch {
@@ -143,6 +151,12 @@ object PlayerManager {
 
     fun seekTo(positionMs: Long) = controller?.seekTo(positionMs)
 
+    private fun player(): MediaController = controller!!
+    fun pauseNow() { controller?.pause() }
+
+    /** Playback speed (0.5x..2.0x). Media3 keeps pitch by default. */
+    fun setSpeed(speed: Float) { controller?.setPlaybackSpeed(speed.coerceIn(0.5f, 2.0f)); pushState() }
+
     private fun pushState() {
         val c = controller ?: return
         val md = c.currentMediaItem?.mediaMetadata
@@ -154,6 +168,7 @@ object PlayerManager {
             durationMs = c.duration.coerceAtLeast(0L),
             hasTrack = c.currentMediaItem != null,
             mediaId = c.currentMediaItem?.mediaId?.toLongOrNull() ?: -1L,
+            speed = c.playbackParameters.speed,
         )
     }
 }
