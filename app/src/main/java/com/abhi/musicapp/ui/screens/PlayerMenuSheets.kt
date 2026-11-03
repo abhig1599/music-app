@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -68,7 +69,7 @@ internal fun customSleepMs(h: String, m: String): Long? {
 private fun BottomSheet(heightDp: Int, onDismiss: () -> Unit, content: @Composable androidx.compose.foundation.layout.ColumnScope.() -> Unit) {
     Box(Modifier.fillMaxSize().clickable(indication = null, interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }) { onDismiss() }) {
         Column(
-            Modifier.align(Alignment.BottomCenter).fillMaxWidth().height(heightDp.dp).clip(RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)).background(SheetFill)
+            Modifier.align(Alignment.BottomCenter).imePadding().fillMaxWidth().height(heightDp.dp).clip(RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)).background(SheetFill)
                 .clickable(indication = null, interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }) {}
                 .padding(horizontal = 24.dp),
         ) {
