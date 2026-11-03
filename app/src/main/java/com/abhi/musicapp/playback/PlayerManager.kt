@@ -131,7 +131,7 @@ object PlayerManager {
         seekHoldJob?.cancel()
         seekHoldJob = scope.launch {
             while (isActive) {
-                val target = seekHoldTarget(direction, c.isPlaying, c.currentPosition, c.duration) ?: break
+                val target = seekHoldTarget(direction, c.isPlaying, c.currentPosition, c.duration, c.playbackParameters.speed) ?: break
                 c.seekTo(target)
                 if (direction < 0 && target == 0L) break
                 delay(100)
@@ -175,12 +175,14 @@ object PlayerManager {
 
 
 /**
- * One 100 ms step of a hold-seek. Playing already advances 100 ms per step: forward adds +100 more (net 2x),
+ * One 100 ms step of a hold-seek (examples below are at 1.0x; they scale with the playback speed). Playing already advances 100 ms per step: forward adds +100 more (net 2x),
  * backward needs -300 (net -2x). Paused: +-200. Returns null when the hold must stop (end reached or duration unknown),
  * so a hold never skips to another track: the target stays 1 s before the end and at 0.
  */
-internal fun seekHoldTarget(direction: Int, playing: Boolean, position: Long, duration: Long): Long? {
-    val step = if (direction > 0) (if (playing) 100L else 200L) else (if (playing) -300L else -200L)
+internal fun seekHoldTarget(direction: Int, playing: Boolean, position: Long, duration: Long, speed: Float = 1f): Long? {
+    // Net rate is 2x the current playback speed (identical to before at 1.0x): playing already moves 100*speed per step.
+    val s = speed.coerceIn(0.5f, 2.0f)
+    val step = Math.round(if (direction > 0) (if (playing) 100f * s else 200f * s) else (if (playing) -300f * s else -200f * s)).toLong()
     val maxPos = if (duration > 1000) duration - 1000 else 0L
     if (direction > 0 && position >= maxPos) return null
     return (position + step).coerceIn(0L, maxPos)

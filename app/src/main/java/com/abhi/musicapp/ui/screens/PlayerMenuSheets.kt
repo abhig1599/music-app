@@ -121,9 +121,9 @@ fun SleepTimerSheet(onDismiss: () -> Unit) {
 
 /** Figma "Sleep concept - custom no.": hours and minutes boxes and Continue. */
 @Composable
-private fun CustomSleepSheet(onDismiss: () -> Unit, onBack: () -> Unit) {
-    var h by remember { mutableStateOf("") }
-    var m by remember { mutableStateOf("") }
+internal fun CustomSleepSheet(onDismiss: () -> Unit, onBack: () -> Unit, initialH: String = "", initialM: String = "") {
+    var h by remember { mutableStateOf(initialH) }
+    var m by remember { mutableStateOf(initialM) }
     val ms = customSleepMs(h, m)
     BottomSheet(heightDp = 360, onDismiss = onDismiss) {
         Text("Custom time", fontSize = 17.sp, fontWeight = FontWeight.Medium, color = InkBlack)

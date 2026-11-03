@@ -38,6 +38,19 @@ class SleepMenuRenderTest {
 
     @Test fun sleepSheet() = shot("sleep_sheet") { SleepTimerSheet {} }
     @Test fun speedSheet() = shot("speed_sheet") { SpeedSheet {} }
+    private val track = com.abhi.musicapp.playback.PlayerUiState(title = "Test track", artist = "Artist", isPlaying = true, positionMs = 47_000, durationMs = 190_000, hasTrack = true, mediaId = 1L)
+
+    @Test fun playerCounting() = shot("player_sleep_counting") {
+        val now = android.os.SystemClock.elapsedRealtime()
+        com.abhi.musicapp.ui.FitDesignWidth { com.abhi.musicapp.ui.screens.PlayerScreen(onBack = {}, fixture = track, progressInFixture = true, sleepPreview = com.abhi.musicapp.playback.SleepState.Counting(600_000, now + 540_000)) }
+    }
+    @Test fun playerExiting() = shot("player_sleep_exiting") {
+        val now = android.os.SystemClock.elapsedRealtime()
+        com.abhi.musicapp.ui.FitDesignWidth { com.abhi.musicapp.ui.screens.PlayerScreen(onBack = {}, fixture = track, progressInFixture = true, sleepPreview = com.abhi.musicapp.playback.SleepState.Exiting(600_000, now + 7_000)) }
+    }
+    @Test fun customSheet() = shot("sleep_custom_sheet") { com.abhi.musicapp.ui.screens.CustomSleepSheet(onDismiss = {}, onBack = {}, initialH = "1", initialM = "30") }
+    @Test fun customSheetInvalid() = shot("sleep_custom_sheet_invalid") { com.abhi.musicapp.ui.screens.CustomSleepSheet(onDismiss = {}, onBack = {}, initialH = "0", initialM = "75") }
+
     @Test fun strips() = shot("sleep_strips") {
         Column(Modifier.padding(23.dp, 46.dp)) {
             SleepStrip("1:01", "10:01", orangeCluster = true, orangeIndex = 11)

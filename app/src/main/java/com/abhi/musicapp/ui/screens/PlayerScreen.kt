@@ -95,7 +95,7 @@ internal fun scrubFraction(start: Float, prevAngleDeg: Float, curAngleDeg: Float
 }
 
 @Composable
-fun PlayerScreen(onBack: () -> Unit, fixture: PlayerUiState? = null, initialOverlay: Int = 0, sourceLabel: String? = null, progressInFixture: Boolean = false) {
+fun PlayerScreen(onBack: () -> Unit, fixture: PlayerUiState? = null, initialOverlay: Int = 0, sourceLabel: String? = null, progressInFixture: Boolean = false, sleepPreview: com.abhi.musicapp.playback.SleepState? = null) {
     // 0 none, 1 three-dots menu, 2 focus-mode popup, 3 output-device popup (Figma 'Song Page - menu', 'Song focus mode', 'Song Focus connected device').
     var overlay by androidx.compose.runtime.remember { androidx.compose.runtime.mutableIntStateOf(initialOverlay) }
     var menuNote by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf("") }
@@ -150,9 +150,10 @@ fun PlayerScreen(onBack: () -> Unit, fixture: PlayerUiState? = null, initialOver
         val dialScale = ((338f - shrink.value) / 301f).coerceIn(0.5f, 1f)
         val sleep by com.abhi.musicapp.playback.SleepTimer.state.collectAsState()
         val sleepNow by com.abhi.musicapp.playback.SleepTimer.nowMs.collectAsState()
-        val sleepOn = fixture == null && sleep != com.abhi.musicapp.playback.SleepState.Off
+        val sleepShown = sleepPreview ?: if (fixture == null) sleep else com.abhi.musicapp.playback.SleepState.Off
+        val sleepOn = sleepShown != com.abhi.musicapp.playback.SleepState.Off
         if (sleepOn) Box(Modifier.offset(23.dp, 46.dp)) {
-            when (val sl = sleep) {
+            when (val sl = sleepShown) {
                 is com.abhi.musicapp.playback.SleepState.Counting -> {
                     val remain = sl.endAtMs - sleepNow
                     val frac = com.abhi.musicapp.playback.sleepFraction(sl.totalMs, sl.endAtMs, sleepNow)
