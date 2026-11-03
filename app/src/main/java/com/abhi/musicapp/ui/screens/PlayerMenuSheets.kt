@@ -86,7 +86,7 @@ fun SleepTimerSheet(onDismiss: () -> Unit) {
     val lastToEnd by SleepTimer.playLastToEnd.collectAsState()
     var custom by remember { mutableStateOf(false) }
     if (custom) { CustomSleepSheet(onDismiss = onDismiss, onBack = { custom = false }); return }
-    BottomSheet(heightDp = 470, onDismiss = onDismiss) {
+    BottomSheet(heightDp = 540, onDismiss = onDismiss) {
         Text("Sleep timer", fontSize = 17.sp, fontWeight = FontWeight.Medium, color = InkBlack)
         Spacer(Modifier.height(4.dp))
         Text("When time is up: the music pauses, then this app closes after a 10 second countdown (tap x to cancel). The timer is lost if Android closes the app.", fontSize = 11.sp, color = Orangs)
