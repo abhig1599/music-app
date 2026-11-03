@@ -86,9 +86,11 @@ fun SleepTimerSheet(onDismiss: () -> Unit) {
     val lastToEnd by SleepTimer.playLastToEnd.collectAsState()
     var custom by remember { mutableStateOf(false) }
     if (custom) { CustomSleepSheet(onDismiss = onDismiss, onBack = { custom = false }); return }
-    BottomSheet(heightDp = 420, onDismiss = onDismiss) {
+    BottomSheet(heightDp = 470, onDismiss = onDismiss) {
         Text("Sleep timer", fontSize = 17.sp, fontWeight = FontWeight.Medium, color = InkBlack)
-        Spacer(Modifier.height(12.dp))
+        Spacer(Modifier.height(4.dp))
+        Text("When time is up: the music pauses, then this app closes after a 10 second countdown (tap x to cancel). The timer is lost if Android closes the app.", fontSize = 11.sp, color = Orangs)
+        Spacer(Modifier.height(8.dp))
         @Composable fun row(label: String, selected: Boolean, onClick: () -> Unit) {
             Row(Modifier.fillMaxWidth().height(40.dp).clickable(onClick = onClick), verticalAlignment = Alignment.CenterVertically) {
                 Text(label, fontFamily = GeistMono, fontSize = 13.sp, color = if (selected) Orangs else InkBlack, modifier = Modifier.weight(1f))
@@ -114,8 +116,6 @@ fun SleepTimerSheet(onDismiss: () -> Unit) {
             Switch(checked = lastToEnd, onCheckedChange = { SleepTimer.playLastToEnd.value = it },
                 colors = SwitchDefaults.colors(checkedTrackColor = Orangs, checkedThumbColor = Color.White))
         }
-        Spacer(Modifier.height(6.dp))
-        Text("When the timer ends, playback pauses, then the app closes after a 10 second countdown you can cancel.", fontSize = 11.sp, color = GrayText)
     }
 }
 
@@ -125,9 +125,11 @@ private fun CustomSleepSheet(onDismiss: () -> Unit, onBack: () -> Unit) {
     var h by remember { mutableStateOf("") }
     var m by remember { mutableStateOf("") }
     val ms = customSleepMs(h, m)
-    BottomSheet(heightDp = 330, onDismiss = onDismiss) {
+    BottomSheet(heightDp = 360, onDismiss = onDismiss) {
         Text("Custom time", fontSize = 17.sp, fontWeight = FontWeight.Medium, color = InkBlack)
-        Spacer(Modifier.height(20.dp))
+        Spacer(Modifier.height(4.dp))
+        Text("When time is up the music pauses, then this app closes after 10 seconds (tap x to cancel).", fontSize = 11.sp, color = Orangs)
+        Spacer(Modifier.height(14.dp))
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             @Composable fun box(v: String, unit: String, set: (String) -> Unit, modifier: Modifier) {
                 Row(modifier.height(56.dp).clip(RoundedCornerShape(10.dp)).background(GrayLight.copy(alpha = 0.5f)).padding(horizontal = 14.dp), verticalAlignment = Alignment.CenterVertically) {
