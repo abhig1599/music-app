@@ -141,6 +141,17 @@ fun SongRow(
  * in Orangs, the rest Gray-light. Used for the home scan dial and, larger,
  * as the player progress ring.
  */
+/**
+ * Figma Player dial: 48 strokes at irregular angles (degrees clockwise from the top), measured from the
+ * design at 145% zoom (centre fitted, +-0.4 deg). Anchors sit on multiples of 15; the stroke after each
+ * anchor sits 5.6..7.6 deg later, so gaps alternate between about 5.6 and 9.4 deg (mean 7.5).
+ */
+internal val FIGMA_DIAL_ANGLES: DoubleArray = run {
+    val mid = doubleArrayOf(6.0, 22.6, 36.4, 52.4, 66.8, 80.6, 97.2, 111.2, 127.6, 141.4, 157.2, 172.0,
+        185.8, 202.6, 216.2, 232.4, 246.8, 260.6, 277.4, 291.2, 307.6, 321.6, 337.4, 352.2)
+    DoubleArray(48) { if (it % 2 == 0) (it / 2) * 15.0 else mid[it / 2] }
+}
+
 @Composable
 fun TickDial(
     progress: Float,
@@ -160,9 +171,10 @@ fun TickDial(
             val cy = size.height / 2f
             val outer = size.minDimension / 2f
             val inner = if (pointer) outer * (108.5f / 150.5f) else outer * 0.72f
-            val lit = (ticks * progress.coerceIn(0f, 1f)).toInt()
+            val lit = if (pointer && ticks == FIGMA_DIAL_ANGLES.size) FIGMA_DIAL_ANGLES.count { it < progress.coerceIn(0f, 1f) * 360.0 - 1e-6 } else (ticks * progress.coerceIn(0f, 1f)).toInt()
             for (i in 0 until ticks) {
-                val angle = Math.toRadians((i * 360.0 / ticks) - 90.0)
+                val deg = if (pointer && ticks == FIGMA_DIAL_ANGLES.size) FIGMA_DIAL_ANGLES[i] else i * 360.0 / ticks
+                val angle = Math.toRadians(deg - 90.0)
                 // pointer = his player dial: thin grey ticks, orange cluster fixed at the top
                 // (centre tick full, neighbours fading). Cluster behaviour vs progress is unverified.
                 val d = minOf(i, ticks - i)
@@ -185,9 +197,18 @@ fun TickDial(
                     (cx + outer * cos(angle)).toFloat(),
                     (cy + outer * sin(angle)).toFloat(),
                 )
-                val s2 = if (pointer && !showProgress && d == 0) Offset(
-                    (cx + (inner - outer * 0.08f) * cos(angle)).toFloat(),
-                    (cy + (inner - outer * 0.08f) * sin(angle)).toFloat(),
+                // Figma: head tick inner r~92 (vs 108.5), its two neighbours ~102.
+                val grow = when {
+                    !pointer -> 0f
+                    showProgress && progress > 0f -> when { i == lit - 1 -> 0.11f; i == lit - 2 || ahead == 0 -> 0.043f; else -> 0f }
+                    showProgress -> 0f
+                    d == 0 -> 0.11f
+                    d == 1 -> 0.043f
+                    else -> 0f
+                }
+                val s2 = if (grow > 0f) Offset(
+                    (cx + (inner - outer * grow) * cos(angle)).toFloat(),
+                    (cy + (inner - outer * grow) * sin(angle)).toFloat(),
                 ) else start
                 drawLine(color = color, start = s2, end = end, strokeWidth = if (pointer) outer * (5f / 150.5f) else outer * 0.06f, cap = androidx.compose.ui.graphics.StrokeCap.Round)
             }
