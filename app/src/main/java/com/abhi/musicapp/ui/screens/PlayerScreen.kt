@@ -6,6 +6,7 @@ import androidx.compose.ui.semantics.setProgress
 import androidx.compose.ui.semantics.progressBarRangeInfo
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.semantics.semantics
 import com.abhi.musicapp.ui.tapOrHold
@@ -208,7 +209,7 @@ fun PlayerScreen(onBack: () -> Unit, fixture: PlayerUiState? = null, initialOver
             .pointerInput(fixture == null) {
                 if (fixture != null) return@pointerInput
                 // Tap the centre of the dial = play/pause (taps on the ticks do nothing; dragging still scrubs).
-                androidx.compose.foundation.gestures.detectTapGestures { o ->
+                detectTapGestures { o ->
                     val dx = o.x - size.width / 2f; val dy = o.y - size.height / 2f
                     if (kotlin.math.sqrt(dx * dx + dy * dy) < size.width * 0.33f) PlayerManager.togglePlayPause()
                 }
