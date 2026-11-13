@@ -146,6 +146,29 @@ object PlayerManager {
         if (c.isPlaying) c.pause() else c.play()
     }
 
+    /** Current play queue as (mediaId, title, artist) plus the index being played; empty when nothing is loaded. */
+    fun queueSnapshot(): Pair<List<Triple<String, String, String>>, Int> {
+        val c = controller ?: return emptyList<Triple<String, String, String>>() to -1
+        val items = (0 until c.mediaItemCount).map { val m = c.getMediaItemAt(it); Triple(m.mediaId, m.mediaMetadata.title?.toString() ?: "", m.mediaMetadata.artist?.toString() ?: "") }
+        return items to c.currentMediaItemIndex
+    }
+
+    /** Moves a queue item; the playing song keeps playing (Media3 moveMediaItem). Only the queue changes, no playlist or file. */
+    fun moveQueueItem(from: Int, to: Int) {
+        val c = controller ?: return
+        if (from !in 0 until c.mediaItemCount || to !in 0 until c.mediaItemCount || from == to) return
+        c.moveMediaItem(from, to)
+        if (queue.size == c.mediaItemCount) queue = com.abhi.musicapp.ui.components.moveItem(queue, from, to)
+        pushState()
+    }
+
+    /** Jump to a queue entry and play it. */
+    fun playQueueIndex(index: Int) {
+        val c = controller ?: return
+        if (index !in 0 until c.mediaItemCount) return
+        c.seekTo(index, 0L); c.play()
+    }
+
     fun next() = controller?.seekToNextMediaItem()
     fun previous() = controller?.seekToPreviousMediaItem()
 

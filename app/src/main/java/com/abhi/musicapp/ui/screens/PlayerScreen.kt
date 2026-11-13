@@ -268,7 +268,7 @@ fun PlayerScreen(onBack: () -> Unit, fixture: PlayerUiState? = null, initialOver
             Icon(outIcon, contentDescription = outLabel, tint = InkBlack)
         }
         Row(
-            modifier = Modifier.offset(139.dp, (757.dp - shrink)).width(112.dp).heightIn(min = 24.dp),
+            modifier = Modifier.offset(139.dp, (757.dp - shrink)).width(112.dp).heightIn(min = 24.dp).clip(androidx.compose.foundation.shape.RoundedCornerShape(8.dp)).clickable { if (fixture == null) overlay = 8 },
             horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally),
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -306,6 +306,7 @@ fun PlayerScreen(onBack: () -> Unit, fixture: PlayerUiState? = null, initialOver
         }
         if (overlay == 5) SleepTimerSheet { overlay = 0 }
         if (overlay == 6) SpeedSheet { overlay = 0 }
+        if (overlay == 8) QueueSheet { overlay = 0 }
         if (overlay == 7) Box(Modifier.align(Alignment.Center).padding(horizontal = 40.dp).clip(androidx.compose.foundation.shape.RoundedCornerShape(12.dp)).background(sheet).padding(20.dp)) {
             Text(menuNote, fontSize = 14.sp, color = InkBlack)
         }

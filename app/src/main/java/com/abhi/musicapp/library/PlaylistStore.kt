@@ -51,6 +51,17 @@ class PlaylistStore(private val file: File) {
         return true
     }
 
+    /** Re-orders a playlist. [ids] is the new order of the songs shown; ids not listed (songs missing from the phone) are kept, after them. Never changes membership otherwise. */
+    fun setOrder(name: String, ids: List<Long>) {
+        save(load().map { p ->
+            if (p.name != name) p else {
+                val known = p.songIds.toSet()
+                val first = ids.filter { it in known }.distinct()
+                p.copy(songIds = first + p.songIds.filter { it !in first })
+            }
+        })
+    }
+
     fun removeSong(name: String, songId: Long) {
         save(load().map { if (it.name == name) it.copy(songIds = it.songIds - songId) else it })
     }

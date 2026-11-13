@@ -6,6 +6,10 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.filled.DragHandle
+import androidx.compose.ui.platform.testTag
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ChevronRight
@@ -59,10 +63,28 @@ fun PlaylistDetailScreen(name: String, onBack: () -> Unit, onOpenPlayer: () -> U
             Text("No playable songs in this playlist. Add songs from the player menu (Add to playlist).",
                 color = GrayText, fontSize = 14.sp, modifier = Modifier.padding(horizontal = 24.dp))
         }
-        songs.forEachIndexed { i, song ->
+        PlaylistSongList(
+            songs = songs,
+            onPlay = { i -> com.abhi.musicapp.playback.PlayerManager.playAll(songs, i); onOpenPlayer() },
+            onMove = { from, to ->
+                val moved = com.abhi.musicapp.ui.components.moveItem(songs, from, to)
+                songs = moved
+                com.abhi.musicapp.library.PlaylistStore(context).setOrder(name, moved.map { it.id })
+            },
+        )
+    }
+}
+
+/** Songs in the playlist's own order, opened as a list first (nothing plays until a song is tapped). The right-hand three-line handle drags a song up or down. */
+@Composable
+fun PlaylistSongList(songs: List<com.abhi.musicapp.library.Song>, onPlay: (Int) -> Unit, onMove: (Int, Int) -> Unit) {
+    androidx.compose.foundation.layout.Box(Modifier.fillMaxWidth().verticalScroll(androidx.compose.foundation.rememberScrollState())) {
+        com.abhi.musicapp.ui.components.ReorderColumn(songs, rowHeight = 76.dp, onMove = onMove) { song, i, handle, dragging ->
             SongRow(song.title, song.artist, trailing = {
-                Icon(Icons.Filled.ChevronRight, contentDescription = null, tint = GrayText)
-            }, onClick = { com.abhi.musicapp.playback.PlayerManager.playAll(songs, i); onOpenPlayer() })
+                Icon(androidx.compose.material.icons.Icons.Filled.DragHandle, contentDescription = "Drag to reorder ${song.title}",
+                    tint = if (dragging) com.abhi.musicapp.ui.theme.Orangs else GrayText,
+                    modifier = Modifier.size(40.dp).then(handle).padding(8.dp).testTag("handle_$i"))
+            }, onClick = { onPlay(i) })
         }
     }
 }
