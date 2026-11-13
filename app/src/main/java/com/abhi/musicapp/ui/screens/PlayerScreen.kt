@@ -95,7 +95,7 @@ internal fun scrubFraction(start: Float, prevAngleDeg: Float, curAngleDeg: Float
 }
 
 @Composable
-fun PlayerScreen(onBack: () -> Unit, fixture: PlayerUiState? = null, initialOverlay: Int = 0, sourceLabel: String? = null, progressInFixture: Boolean = false, sleepPreview: com.abhi.musicapp.playback.SleepState? = null) {
+fun PlayerScreen(onBack: () -> Unit, fixture: PlayerUiState? = null, initialOverlay: Int = 0, sourceLabel: String? = null, progressInFixture: Boolean = false, sleepPreview: com.abhi.musicapp.playback.SleepState? = null, fixtureLevels: FloatArray? = null) {
     // 0 none, 1 three-dots menu, 2 focus-mode popup, 3 output-device popup (Figma 'Song Page - menu', 'Song focus mode', 'Song Focus connected device').
     var overlay by androidx.compose.runtime.remember { androidx.compose.runtime.mutableIntStateOf(initialOverlay) }
     var menuNote by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf("") }
@@ -139,6 +139,25 @@ fun PlayerScreen(onBack: () -> Unit, fixture: PlayerUiState? = null, initialOver
     val progress = if (scrub != null) scrub!! else if (fixture != null || reducedMotion()) rawProgress else
         androidx.compose.animation.core.animateFloatAsState(rawProgress, androidx.compose.animation.core.tween(260, easing = androidx.compose.animation.core.LinearEasing), label = "dial").value
     val circle = com.abhi.musicapp.ui.theme.SurfaceSoft
+    // Audio-reactive ticks: analysis runs only while this screen is shown and a song plays; eased so ticks rise fast and fall slowly. Reduced motion keeps ticks fixed.
+    val reduced = reducedMotion()
+    val frame = androidx.compose.runtime.remember { androidx.compose.runtime.mutableLongStateOf(0L) }
+    val shown = androidx.compose.runtime.remember { FloatArray(com.abhi.musicapp.playback.LEVEL_BANDS) }
+    val live2 = fixture == null && state.isPlaying && !reduced
+    androidx.compose.runtime.DisposableEffect(live2) {
+        com.abhi.musicapp.playback.AudioLevels.setEnabled(live2)
+        onDispose { com.abhi.musicapp.playback.AudioLevels.setEnabled(false) }
+    }
+    androidx.compose.runtime.LaunchedEffect(live2) {
+        if (!live2) { shown.fill(0f); frame.longValue++; return@LaunchedEffect }
+        while (true) {
+            androidx.compose.runtime.withFrameNanos { }
+            val t = com.abhi.musicapp.playback.AudioLevels.bands
+            for (i in shown.indices) { val v = t[i]; shown[i] = if (v > shown[i]) shown[i] + (v - shown[i]) * 0.6f else shown[i] * 0.88f }
+            frame.longValue++
+        }
+    }
+    val levelsFn: (() -> FloatArray?)? = if (fixtureLevels != null) ({ fixtureLevels }) else if (fixture == null && !reduced) ({ frame.longValue; shown }) else null
 
     val mono = com.abhi.musicapp.ui.theme.GeistMono // Figma: Geist Mono (not bundled until licence check)
     // Absolute layout from exact Design-panel reads (390x844 frame, see DECISIONS.md 02:40).
@@ -186,7 +205,16 @@ fun PlayerScreen(onBack: () -> Unit, fixture: PlayerUiState? = null, initialOver
                     onDragCancel = { scrub = null },
                 )
             }
-            .semantics { if (state.durationMs > 0) { progressBarRangeInfo = androidx.compose.ui.semantics.ProgressBarRangeInfo(rawProgress, 0f..1f); setProgress("Seek") { v -> PlayerManager.seekTo((v.coerceIn(0f, 1f) * state.durationMs).toLong()); true } } }.graphicsLayer { scaleX = dialScale; scaleY = dialScale; transformOrigin = androidx.compose.ui.graphics.TransformOrigin(0.5f, 0f) }, ticks = 48, pointer = true, showProgress = fixture == null || progressInFixture) {}
+            .pointerInput(fixture == null) {
+                if (fixture != null) return@pointerInput
+                // Tap the centre of the dial = play/pause (taps on the ticks do nothing; dragging still scrubs).
+                androidx.compose.foundation.gestures.detectTapGestures { o ->
+                    val dx = o.x - size.width / 2f; val dy = o.y - size.height / 2f
+                    if (kotlin.math.sqrt(dx * dx + dy * dy) < size.width * 0.33f) PlayerManager.togglePlayPause()
+                }
+            }
+            .semantics { onClick(if (state.isPlaying) "Pause" else "Play") { PlayerManager.togglePlayPause(); true } }
+            .semantics { if (state.durationMs > 0) { progressBarRangeInfo = androidx.compose.ui.semantics.ProgressBarRangeInfo(rawProgress, 0f..1f); setProgress("Seek") { v -> PlayerManager.seekTo((v.coerceIn(0f, 1f) * state.durationMs).toLong()); true } } }.graphicsLayer { scaleX = dialScale; scaleY = dialScale; transformOrigin = androidx.compose.ui.graphics.TransformOrigin(0.5f, 0f) }, ticks = 48, pointer = true, showProgress = fixture == null || progressInFixture, levels = levelsFn) {}
         Column(
             modifier = Modifier.offset(147.dp, 135.dp + (252.dp - 135.dp) * dialScale).width(104.dp).wrapContentHeight(unbounded = true, align = Alignment.Top).graphicsLayer { scaleX = dialScale; scaleY = dialScale },
             horizontalAlignment = Alignment.CenterHorizontally,

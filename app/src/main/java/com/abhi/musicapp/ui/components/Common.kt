@@ -160,6 +160,8 @@ fun TickDial(
     pointer: Boolean = false,
     /** Player dial: ticks up to the played fraction are solid orange, the next two fade to light orange, the rest grey. false keeps the fixed Figma cluster. */
     showProgress: Boolean = false,
+    /** Audio-reactive ticks: per-band levels 0..1 (low to high frequency). A tick grows inward from its Figma start by its band's level; null = fixed ticks. Read at draw time so only the Canvas redraws. */
+    levels: (() -> FloatArray?)? = null,
     center: @Composable () -> Unit = {},
 ) {
     // Capture theme colors outside the non-composable draw lambda.
@@ -171,6 +173,7 @@ fun TickDial(
             val cy = size.height / 2f
             val outer = size.minDimension / 2f
             val inner = if (pointer) outer * (108.5f / 150.5f) else outer * 0.72f
+            val lv = levels?.invoke()
             val lit = if (pointer && ticks == FIGMA_DIAL_ANGLES.size) FIGMA_DIAL_ANGLES.count { it < progress.coerceIn(0f, 1f) * 360.0 - 1e-6 } else (ticks * progress.coerceIn(0f, 1f)).toInt()
             for (i in 0 until ticks) {
                 val deg = if (pointer && ticks == FIGMA_DIAL_ANGLES.size) FIGMA_DIAL_ANGLES[i] else i * 360.0 / ticks
@@ -206,9 +209,15 @@ fun TickDial(
                     d == 1 -> 0.043f
                     else -> 0f
                 }
-                val s2 = if (grow > 0f) Offset(
-                    (cx + (inner - outer * grow) * cos(angle)).toFloat(),
-                    (cy + (inner - outer * grow) * sin(angle)).toFloat(),
+                // Audio: low frequencies at the top of the ring, mirrored left/right, highs at the bottom.
+                val react = if (lv != null && pointer) {
+                    val f = (deg / 360.0).toFloat(); val pos = 1f - kotlin.math.abs(2f * f - 1f)
+                    lv[(pos * (lv.size - 1)).toInt().coerceIn(0, lv.size - 1)] * 0.15f
+                } else 0f
+                val g = maxOf(grow, react)
+                val s2 = if (g > 0f) Offset(
+                    (cx + (inner - outer * g) * cos(angle)).toFloat(),
+                    (cy + (inner - outer * g) * sin(angle)).toFloat(),
                 ) else start
                 drawLine(color = color, start = s2, end = end, strokeWidth = if (pointer) outer * (5f / 150.5f) else outer * 0.06f, cap = androidx.compose.ui.graphics.StrokeCap.Round)
             }

@@ -101,6 +101,14 @@ class ScreenShotTest {
     @Test fun playerSheetFocusOpen() = shot("player_sheet_focusopen") { com.abhi.musicapp.ui.screens.PlayerSheetFixture(com.abhi.musicapp.ui.screens.PlayerSheet.FocusOpen) }
     @Test fun playerSheetDeviceOpen() = shot("player_sheet_deviceopen") { com.abhi.musicapp.ui.screens.PlayerSheetFixture(com.abhi.musicapp.ui.screens.PlayerSheet.DeviceOpen) }
 
+    @Test fun playerReactiveFixture() = shot("player_reactive_fixture") {
+        // TEST RENDER: synthetic bass-heavy levels, not real audio. Shows the ticks grown inward by band level.
+        val lv = FloatArray(48) { i -> (0.95f * (1f - i / 60f) * (0.55f + 0.45f * kotlin.math.abs(kotlin.math.sin(i * 1.7f)))).coerceIn(0f, 1f) }
+        PlayerScreen(onBack = {}, fixture = com.abhi.musicapp.playback.PlayerUiState(
+            title = "Malcolm Todd - Earrings", artist = "", isPlaying = true,
+            positionMs = 61_000L, durationMs = 192_000L, hasTrack = true), progressInFixture = true, fixtureLevels = lv)
+    }
+
     @Test fun player() = shot("player") {
         // same sample state as the Figma frame: playing, 1:01 of 03:12
         PlayerScreen(onBack = {}, fixture = com.abhi.musicapp.playback.PlayerUiState(
