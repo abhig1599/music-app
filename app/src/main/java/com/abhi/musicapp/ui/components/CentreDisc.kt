@@ -129,7 +129,7 @@ fun ClayBlob(levels: (() -> FloatArray?)?, tick: State<Long>?, beat: (() -> Floa
         val c = Offset(size.width / 2f, size.height / 2f)
         val r = size.minDimension / 2f
         val n = FERRO_SPIKES
-        val base = r * (0.40f + 0.05f * b)
+        val base = r * (0.52f + 0.05f * b)
         // Spike height per band (low frequencies at the top, mirrored); fixed per-spike variation makes heights uneven like a real cluster, not a time loop.
         fun lvl(i: Int): Float {
             if (lv == null || lv.isEmpty()) return 0f
@@ -143,7 +143,7 @@ fun ClayBlob(levels: (() -> FloatArray?)?, tick: State<Long>?, beat: (() -> Floa
         val w = 2.0 * PI / n
         val hs = FloatArray(n) { k ->
             val l = lvl(k)
-            if (l < 0.03f) 0f else r * (0.55f * l * (1f + 0.45f * b) * (0.7f + 0.3f * FERRO_JITTER[k % FERRO_JITTER.size])).coerceAtMost(0.50f)
+            if (l < 0.03f) 0f else r * (0.34f * l * (1f + 0.4f * b) * (0.7f + 0.3f * FERRO_JITTER[k % FERRO_JITTER.size])).coerceAtMost(0.30f)
         }
         val tips = ArrayList<Offset>(); val bases = ArrayList<Offset>()
         for (j in 0 until steps) {
@@ -155,11 +155,11 @@ fun ClayBlob(levels: (() -> FloatArray?)?, tick: State<Long>?, beat: (() -> Floa
                 var d = th - ak
                 while (d > PI) d -= 2 * PI
                 while (d < -PI) d += 2 * PI
-                val sigma = w * (0.55 - 0.25 * (hs[k] / (r * 0.5f)).coerceIn(0f, 1f))
+                val sigma = w * (0.95 - 0.2 * (hs[k] / (r * 0.5f)).coerceIn(0f, 1f))
                 val x = d / sigma
                 if (kotlin.math.abs(x) < 3.0) add += hs[k] * exp(-x * x).toFloat()
             }
-            val rad = base + add.coerceAtMost(r * 0.52f)
+            val rad = base + add.coerceAtMost(r * 0.32f)
             val pt = Offset((c.x + rad * cos(th)).toFloat(), (c.y + rad * sin(th)).toFloat())
             if (j == 0) path.moveTo(pt.x, pt.y) else path.lineTo(pt.x, pt.y)
         }
@@ -169,16 +169,11 @@ fun ClayBlob(levels: (() -> FloatArray?)?, tick: State<Long>?, beat: (() -> Floa
             tips.add(Offset((c.x + (base + hs[k]) * cos(ak)).toFloat(), (c.y + (base + hs[k]) * sin(ak)).toFloat()))
             bases.add(Offset((c.x + base * 0.9f * cos(ak)).toFloat(), (c.y + base * 0.9f * sin(ak)).toFloat()))
         }
-        val ink = Brush.radialGradient(0f to Color(0xFF2E2E33), 0.5f to Color(0xFF0E0E10), 1f to Color(0xFF000000), center = Offset(c.x - r * 0.10f, c.y - r * 0.14f), radius = r * 0.9f)
-        drawPath(path, ink)
-        drawPath(path, Color(0xFF000000), style = Stroke(width = r * 0.03f, join = androidx.compose.ui.graphics.StrokeJoin.Round))
-        // wet sheen along each spike, and a highlight on the pool
-        for (i in tips.indices) drawLine(Color(0x44FFFFFF), bases[i], Offset(bases[i].x + (tips[i].x - bases[i].x) * 0.9f, bases[i].y + (tips[i].y - bases[i].y) * 0.9f), strokeWidth = r * 0.012f, cap = androidx.compose.ui.graphics.StrokeCap.Round)
-        drawCircle(Color(0x55FFFFFF), radius = base * 0.16f, center = Offset(c.x - base * 0.34f, c.y - base * 0.38f))
-        drawArc(Color(0x33FFFFFF), startAngle = 200f, sweepAngle = 70f, useCenter = false,
-            topLeft = Offset(c.x - base * 0.78f, c.y - base * 0.78f), size = androidx.compose.ui.geometry.Size(base * 1.56f, base * 1.56f), style = Stroke(width = base * 0.05f, cap = androidx.compose.ui.graphics.StrokeCap.Round))
+        // Natural clay: one matte tone, only a faint top-light falloff, no gloss, sheen or hard outline.
+        val clay = Brush.radialGradient(0f to Color(0xFF4A4A4E), 1f to Color(0xFF38383C), center = Offset(c.x - r * 0.10f, c.y - r * 0.14f), radius = r * 1.1f)
+        drawPath(path, clay)
     }
 }
 
-private const val FERRO_SPIKES = 22
+private const val FERRO_SPIKES = 14
 private val FERRO_JITTER = floatArrayOf(0.2f, 0.9f, 0.5f, 1f, 0.1f, 0.7f, 0.4f, 0.85f, 0.3f, 0.6f, 0.95f, 0.15f, 0.55f)
