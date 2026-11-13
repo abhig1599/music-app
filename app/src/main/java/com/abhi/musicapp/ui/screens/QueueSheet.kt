@@ -75,9 +75,9 @@ fun QueueSheetContent(items: List<QueueEntry>, current: Int, onMove: (Int, Int) 
             Spacer(Modifier.height(14.dp))
             if (items.isEmpty()) Text("Nothing is queued. Play a song or open a playlist first.", fontSize = 14.sp, color = GrayText)
             Column(Modifier.weight(1f).verticalScroll(rememberScrollState())) {
-                ReorderColumn(items, rowHeight = 48.dp, onMove = onMove) { e, i, handle, dragging ->
+                ReorderColumn(items, rowHeight = 54.dp, onMove = onMove) { e, i, handle, dragging ->
                     Row(
-                        Modifier.fillMaxWidth().padding(vertical = 3.dp).height(42.dp).clip(RoundedCornerShape(8.dp))
+                        Modifier.fillMaxWidth().padding(vertical = 3.dp).height(48.dp).clip(RoundedCornerShape(8.dp))
                             .background(if (dragging) Color(0xFFFFFFFF) else Color.Transparent)
                             .border(1.dp, if (dragging) Orangs else GrayLight, RoundedCornerShape(8.dp))
                             .clickable { onPlay(i) }.padding(start = 10.dp),

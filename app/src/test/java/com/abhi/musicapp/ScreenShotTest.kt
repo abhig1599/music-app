@@ -57,6 +57,40 @@ class ScreenShotTest {
         composeRule.onRoot().captureRoboImage("build/outputs/roborazzi/$name.png")
     }
 
+    private fun shotWide(name: String, content: @androidx.compose.runtime.Composable () -> Unit) {
+        org.robolectric.RuntimeEnvironment.setQualifiers("w844dp-h390dp")
+        composeRule.setContent {
+            MusicAppTheme {
+                Box(Modifier.size(844.dp, 390.dp).background(androidx.compose.material3.MaterialTheme.colorScheme.background)) { content() }
+            }
+        }
+        composeRule.waitForIdle()
+        composeRule.onRoot().captureRoboImage("build/outputs/roborazzi/$name.png")
+    }
+
+    private fun landscapeState() = com.abhi.musicapp.playback.PlayerUiState(title = "Malcolm Todd - Earrings", artist = "", isPlaying = true, positionMs = 61_000L, durationMs = 192_000L, hasTrack = true)
+
+    // TEST RENDERS (software, synthetic levels): landscape 844x390 split, timer face and ferrofluid face.
+    @Test fun landscapeTimer() = shotWide("landscape_timer") { PlayerScreen(onBack = {}, fixture = landscapeState(), progressInFixture = true) }
+    @Test fun landscapeFerro() = shotWide("landscape_ferrofluid") {
+        val lv = FloatArray(48) { i -> (0.9f * (1f - i / 60f) * (0.55f + 0.45f * kotlin.math.abs(kotlin.math.sin(i * 1.7f)))).coerceIn(0f, 1f) }
+        PlayerScreen(onBack = {}, fixture = landscapeState(), progressInFixture = true, fixtureLevels = lv, fixtureFlipped = true, fixtureRotation = 180f, fixtureBeat = 0.8f)
+    }
+
+    // TEST RENDER: ferrofluid states side by side with synthetic stimulus. Top: silent/paused, quiet, loud, loud+beat peak. Bottom: synthetic beat decay 1.0 -> 0 over 6 steps.
+    @Test fun ferrofluidStates() = shot("ferrofluid_states", heightDp = 420) {
+        fun lv(a: Float) = FloatArray(48) { i -> (a * (1f - i / 60f) * (0.55f + 0.45f * kotlin.math.abs(kotlin.math.sin(i * 1.7f)))).coerceIn(0f, 1f) }
+        val top = listOf(Triple(FloatArray(48), 0f, "silent"), Triple(lv(0.35f), 0f, "quiet"), Triple(lv(0.9f), 0f, "loud"), Triple(lv(0.9f), 1f, "loud+beat"))
+        androidx.compose.foundation.layout.Column {
+            androidx.compose.foundation.layout.Row {
+                top.forEach { (l, b, _) -> Box(Modifier.size(97.dp, 120.dp).padding(2.dp)) { com.abhi.musicapp.ui.components.ClayBlob({ l }, null, { b }) } }
+            }
+            androidx.compose.foundation.layout.Row {
+                listOf(1f, 0.8f, 0.55f, 0.3f, 0.12f, 0f).forEach { b -> Box(Modifier.size(65.dp, 90.dp).padding(2.dp)) { com.abhi.musicapp.ui.components.ClayBlob({ lv(0.9f * (0.5f + 0.5f * b)) }, null, { b }) } }
+            }
+        }
+    }
+
     @Test fun onboarding() = shot("onboarding") { OnboardingScreen(onDone = {}) }
 
     @Test fun onboardingPermissions() = shot("onboarding_permissions") { OnboardingScreen(onDone = {}, initialStep = 2) }

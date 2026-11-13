@@ -1,6 +1,7 @@
 package com.abhi.musicapp.ui.screens
 
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.material.icons.filled.VolumeUp
 import androidx.compose.ui.semantics.setProgress
 import androidx.compose.ui.semantics.progressBarRangeInfo
@@ -182,7 +183,7 @@ fun PlayerScreen(onBack: () -> Unit, fixture: PlayerUiState? = null, initialOver
         val sleepNow by com.abhi.musicapp.playback.SleepTimer.nowMs.collectAsState()
         val sleepShown = sleepPreview ?: if (fixture == null) sleep else com.abhi.musicapp.playback.SleepState.Off
         val sleepOn = sleepShown != com.abhi.musicapp.playback.SleepState.Off
-        if (sleepOn) Box(Modifier.offset(23.dp, 46.dp)) {
+        val sleepStrip: @Composable () -> Unit = {
             when (val sl = sleepShown) {
                 is com.abhi.musicapp.playback.SleepState.Counting -> {
                     val remain = sl.endAtMs - sleepNow
@@ -193,18 +194,9 @@ fun PlayerScreen(onBack: () -> Unit, fixture: PlayerUiState? = null, initialOver
                 is com.abhi.musicapp.playback.SleepState.Exiting -> com.abhi.musicapp.ui.components.AppExitPill(com.abhi.musicapp.playback.exitSecondsLeft(sl.deadlineMs, sleepNow)) { com.abhi.musicapp.playback.SleepTimer.cancel() }
                 else -> {}
             }
-        }
-        Row(
-            modifier = Modifier.offset(26.dp, if (sleepOn) 96.dp else 46.dp).size(344.dp, 37.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Text("Playlist", fontSize = 28.sp, fontWeight = FontWeight.Bold, color = InkBlack,
-                modifier = Modifier.weight(1f).clickable(onClick = onBack))
-            Icon(Icons.Filled.MoreVert, contentDescription = "Menu", tint = InkBlack,
-                modifier = Modifier.clickable { overlay = if (overlay == 1) 0 else 1 })
-        }
-        TickDial(progress = progress, modifier = Modifier.offset(48.dp, 135.dp).size(301.dp)
-            .pointerInput(fixture == null && state.durationMs > 0) {
+                }
+        val landscape = maxWidth > maxHeight
+        val seekMod: Modifier = Modifier            .pointerInput(fixture == null && state.durationMs > 0) {
                 if (fixture != null || state.durationMs <= 0) return@pointerInput
                 // DJ-style scrub: drag around the dial; time and ticks follow the finger, the seek is applied on release.
                 // Relative to where the finger lands (no jump), clamped at start/end (no wrap).
@@ -216,7 +208,20 @@ fun PlayerScreen(onBack: () -> Unit, fixture: PlayerUiState? = null, initialOver
                     onDragCancel = { scrub = null },
                 )
             }
-            .semantics { if (state.durationMs > 0) { progressBarRangeInfo = androidx.compose.ui.semantics.ProgressBarRangeInfo(rawProgress, 0f..1f); setProgress("Seek") { v -> PlayerManager.seekTo((v.coerceIn(0f, 1f) * state.durationMs).toLong()); true } } }.graphicsLayer { scaleX = dialScale; scaleY = dialScale; transformOrigin = androidx.compose.ui.graphics.TransformOrigin(0.5f, 0f) }, ticks = 48, pointer = true, showProgress = fixture == null || progressInFixture, levels = levelsFn) {}
+            .semantics { if (state.durationMs > 0) { progressBarRangeInfo = androidx.compose.ui.semantics.ProgressBarRangeInfo(rawProgress, 0f..1f); setProgress("Seek") { v -> PlayerManager.seekTo((v.coerceIn(0f, 1f) * state.durationMs).toLong()); true } } }
+        if (!landscape) {
+        if (sleepOn) Box(Modifier.offset(23.dp, 46.dp)) { sleepStrip() }
+        Row(
+            modifier = Modifier.offset(26.dp, if (sleepOn) 96.dp else 46.dp).size(344.dp, 37.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text("Playlist", fontSize = 28.sp, fontWeight = FontWeight.Bold, color = InkBlack,
+                modifier = Modifier.weight(1f).clickable(onClick = onBack))
+            Icon(Icons.Filled.MoreVert, contentDescription = "Menu", tint = InkBlack,
+                modifier = Modifier.clickable { overlay = if (overlay == 1) 0 else 1 })
+        }
+        TickDial(progress = progress, modifier = Modifier.offset(48.dp, 135.dp).size(301.dp).then(seekMod)
+            .graphicsLayer { scaleX = dialScale; scaleY = dialScale; transformOrigin = androidx.compose.ui.graphics.TransformOrigin(0.5f, 0f) }, ticks = 48, pointer = true, showProgress = fixture == null || progressInFixture, levels = levelsFn) {}
         com.abhi.musicapp.ui.components.CentreDisc(
             flipped = fixtureFlipped ?: flipped, onFlip = { if (fixture == null) flipped = !flipped }, onTap = { if (fixture == null) PlayerManager.togglePlayPause() },
             time = formatMs(if (scrub != null) (scrub!! * state.durationMs).toLong() else state.positionMs), total = formatTotal(state.durationMs),
@@ -282,10 +287,12 @@ fun PlayerScreen(onBack: () -> Unit, fixture: PlayerUiState? = null, initialOver
             Icon(Icons.Filled.SelfImprovement, contentDescription = "Focus mode (icon pending his decision)", tint = InkBlack)
         }
 
+        }
+        if (landscape) LandscapeBody(state, progress, seekMod, levelsFn, fixture, fixtureFlipped, flipped, { flipped = !flipped }, scrub, mono, beatBox, fixtureBeat, frame, fixtureLevels, reduced, fixtureRotation, sourceLabel, sleepOn, sleepStrip, outIcon, outLabel, outKind, outNote, overlay, { overlay = it }, onBack, progressInFixture, ctx, { outNote = it })
         val sheet = androidx.compose.ui.graphics.Color(0xFFF6F6F4) // estimated popup fill
         val pill = com.abhi.musicapp.ui.theme.GrayLight
         if (overlay != 0) Box(Modifier.fillMaxSize().clickable(indication = null, interactionSource = androidx.compose.runtime.remember { androidx.compose.foundation.interaction.MutableInteractionSource() }) { overlay = 0 })
-        if (overlay == 1) Column(Modifier.offset(134.dp, 94.dp).width(232.dp).clip(androidx.compose.foundation.shape.RoundedCornerShape(8.dp)).background(sheet)) {
+        if (overlay == 1) Column((if (landscape) Modifier.align(Alignment.TopEnd).padding(top = 64.dp, end = 24.dp).heightIn(max = maxHeight - 80.dp).verticalScroll(rememberScrollState()) else Modifier.offset(134.dp, 94.dp)).width(232.dp).clip(androidx.compose.foundation.shape.RoundedCornerShape(8.dp)).background(sheet)) {
             // Equaliser is drawn greyed out in the Figma menu: kept disabled (no EQ exists). Add to playlist is wired (shipped path, PlaylistStore); other entries only close the menu until wired.
             listOf("Sleep Time", "Add to playlist", "Share", "Speed", "Delete", "Equaliser", "Lyrics").forEach { t ->
                 val off = t == "Equaliser"
@@ -314,7 +321,7 @@ fun PlayerScreen(onBack: () -> Unit, fixture: PlayerUiState? = null, initialOver
             Text(menuNote, fontSize = 14.sp, color = InkBlack)
         }
         if (overlay == 4) AddToPlaylistSheet(state.mediaId) { overlay = 0 } // shipped path only (menu sets 4 only when fixture == null)
-        if (overlay == 2 || overlay == 3) {
+        if (!landscape && (overlay == 2 || overlay == 3)) {
             val left = overlay == 3
             val icons = if (left) listOf(outIcon) else listOf(Icons.Filled.VolumeOff, Icons.Filled.DarkMode)
             val n = icons.size
@@ -345,4 +352,85 @@ internal fun shareCurrent(ctx: android.content.Context, mediaId: Long, title: St
         addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
     }
     ctx.startActivity(android.content.Intent.createChooser(send, "Share song").addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK))
+}
+
+@Composable
+private fun LandscapeBody(
+    state: PlayerUiState, progress: Float, seekMod: Modifier, levelsFn: (() -> FloatArray?)?, fixture: PlayerUiState?,
+    fixtureFlipped: Boolean?, flipped: Boolean, onFlip: () -> Unit, scrub: Float?, mono: FontFamily, beatBox: FloatArray, fixtureBeat: Float?,
+    frame: androidx.compose.runtime.MutableLongState, fixtureLevels: FloatArray?, reduced: Boolean, fixtureRotation: Float?, sourceLabel: String?,
+    sleepOn: Boolean, sleepStrip: @Composable () -> Unit, outIcon: androidx.compose.ui.graphics.vector.ImageVector, outLabel: String,
+    outKind: com.abhi.musicapp.playback.OutputKind, outNote: String?, overlay: Int, setOverlay: (Int) -> Unit, onBack: () -> Unit,
+    progressInFixture: Boolean, ctx: android.content.Context, setOutNote: (String?) -> Unit,
+) {
+    val circle = com.abhi.musicapp.ui.theme.SurfaceSoft
+    val sheet = androidx.compose.ui.graphics.Color(0xFFF6F6F4)
+    androidx.compose.foundation.layout.BoxWithConstraints(Modifier.fillMaxSize()) {
+        val side = (maxHeight - 32.dp).coerceAtLeast(120.dp)
+        val sc = side.value / DIAL_DP
+        Row(Modifier.fillMaxSize().padding(horizontal = 24.dp), verticalAlignment = Alignment.CenterVertically) {
+            // Left: the same dial and coin-flip centre as portrait, scaled to the available height.
+            Box(Modifier.size(side), contentAlignment = Alignment.Center) {
+                TickDial(progress = progress, modifier = Modifier.requiredSize(DIAL_DP.dp).graphicsLayer { scaleX = sc; scaleY = sc }.then(seekMod),
+                    ticks = 48, pointer = true, showProgress = fixture == null || progressInFixture, levels = levelsFn) {}
+                com.abhi.musicapp.ui.components.CentreDisc(
+                    flipped = fixtureFlipped ?: flipped, onFlip = { if (fixture == null) onFlip() }, onTap = { if (fixture == null) PlayerManager.togglePlayPause() },
+                    time = formatMs(if (scrub != null) (scrub * state.durationMs).toLong() else state.positionMs), total = formatTotal(state.durationMs),
+                    mono = mono, levels = levelsFn, beat = if (fixtureBeat != null) ({ fixtureBeat }) else ({ beatBox[0] }),
+                    tick = if (fixtureLevels == null && fixture == null && !reduced) frame else null,
+                    reducedMotion = reduced, isPlaying = state.isPlaying, fixtureRotation = fixtureRotation,
+                    modifier = Modifier.requiredSize(CENTRE_DISC_DP.dp).graphicsLayer { scaleX = sc; scaleY = sc },
+                )
+            }
+            // Right: header, song details, transport, bottom actions.
+            Column(Modifier.weight(1f).fillMaxHeight().padding(start = 28.dp, top = 12.dp, bottom = 12.dp), verticalArrangement = Arrangement.SpaceBetween) {
+                Column {
+                    if (sleepOn) { Box(Modifier.padding(bottom = 8.dp)) { sleepStrip() } }
+                    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                        Text("Playlist", fontSize = 24.sp, fontWeight = FontWeight.Bold, color = InkBlack, modifier = Modifier.weight(1f).clickable(onClick = onBack))
+                        Icon(Icons.Filled.MoreVert, contentDescription = "Menu", tint = InkBlack, modifier = Modifier.clickable { setOverlay(if (overlay == 1) 0 else 1) })
+                    }
+                }
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text(sourceLabel ?: if (fixture != null) "[Playlist/Source]" else "Local music", fontSize = 15.sp, fontWeight = FontWeight.Medium, color = GrayText)
+                    Text(if (state.hasTrack) state.title else "Nothing playing", fontSize = 28.sp, fontWeight = FontWeight.Medium, color = InkBlack,
+                        maxLines = 2, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis, letterSpacing = (-0.6).sp)
+                    Text(formatMs(state.positionMs) + " / " + formatMs(state.durationMs), fontSize = 14.sp, color = GrayText, fontFamily = mono)
+                }
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Box(Modifier.pressScale().size(56.dp).clip(CircleShape).background(PureWhite)
+                        .tapOrHold({ PlayerManager.previous() }, { PlayerManager.startSeekHold(-1) }, { PlayerManager.stopSeekHold() })
+                        .semantics { onClick("Previous track") { PlayerManager.previous(); true } }, contentAlignment = Alignment.Center) { Icon(Icons.Filled.SkipPrevious, contentDescription = "Previous", tint = InkBlack) }
+                    Box(Modifier.pressScale().size(56.dp).clip(CircleShape).background(if (state.isPlaying) Orangs else InkBlack).clickable { PlayerManager.togglePlayPause() }, contentAlignment = Alignment.Center) {
+                        Icon(if (state.isPlaying) Icons.Filled.Pause else Icons.Filled.PlayArrow, contentDescription = if (state.isPlaying) "Pause" else "Play", tint = PureWhite, modifier = Modifier.size(26.dp))
+                    }
+                    Box(Modifier.pressScale().size(56.dp).clip(CircleShape).background(PureWhite)
+                        .tapOrHold({ PlayerManager.next() }, { PlayerManager.startSeekHold(1) }, { PlayerManager.stopSeekHold() })
+                        .semantics { onClick("Next track") { PlayerManager.next(); true } }, contentAlignment = Alignment.Center) { Icon(Icons.Filled.SkipNext, contentDescription = "Next", tint = InkBlack) }
+                }
+                Column {
+                    if (overlay == 2 || overlay == 3) {
+                        val left = overlay == 3
+                        Row(Modifier.padding(bottom = 8.dp).clip(androidx.compose.foundation.shape.RoundedCornerShape(24.dp)).background(sheet).padding(6.dp), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
+                            val icons = if (left) listOf(outIcon) else listOf(Icons.Filled.VolumeOff, Icons.Filled.DarkMode)
+                            icons.forEach { ic ->
+                                Box(Modifier.size(44.dp).clip(CircleShape).background(com.abhi.musicapp.ui.theme.GrayLight)
+                                    .then(if (left && fixture == null) Modifier.clickable(onClickLabel = "Choose output") { setOutNote(com.abhi.musicapp.playback.AudioOutput.openPicker(ctx)) } else Modifier), contentAlignment = Alignment.Center) { Icon(ic, contentDescription = null, tint = InkBlack) }
+                            }
+                            if (left) Text((outLabel.removePrefix("Audio output: ").replaceFirstChar { it.uppercase() }) + " - tap to choose" + (outNote?.let { " ($it)" } ?: ""), fontSize = 12.sp, color = InkBlack, modifier = Modifier.padding(end = 8.dp))
+                            Box(Modifier.size(44.dp).clip(CircleShape).background(InkBlack).clickable { setOverlay(0) }, contentAlignment = Alignment.Center) { Icon(Icons.Filled.Close, contentDescription = "Close", tint = androidx.compose.ui.graphics.Color.White) }
+                        }
+                    }
+                    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
+                        Box(Modifier.pressScale().size(52.dp).clip(CircleShape).background(circle).clickable { setOverlay(if (overlay == 3) 0 else 3) }, contentAlignment = Alignment.Center) { Icon(outIcon, contentDescription = outLabel, tint = InkBlack) }
+                        Row(Modifier.heightIn(min = 24.dp).clip(androidx.compose.foundation.shape.RoundedCornerShape(8.dp)).clickable { if (fixture == null) setOverlay(8) }, horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
+                            Icon(Icons.AutoMirrored.Filled.QueueMusic, contentDescription = null, tint = InkBlack)
+                            Text("Queue", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = InkBlack, maxLines = 1, softWrap = false)
+                        }
+                        Box(Modifier.pressScale().size(52.dp).clip(CircleShape).background(circle).clickable { setOverlay(if (overlay == 2) 0 else 2) }, contentAlignment = Alignment.Center) { Icon(Icons.Filled.SelfImprovement, contentDescription = "Focus mode (icon pending his decision)", tint = InkBlack) }
+                    }
+                }
+            }
+        }
+    }
 }
