@@ -68,6 +68,11 @@ import com.abhi.musicapp.ui.theme.InkBlack
 import com.abhi.musicapp.ui.theme.Orangs
 import com.abhi.musicapp.ui.theme.PureWhite
 
+/** The ring only starts a seek-drag beyond this fraction of the dial width from its centre; the centre disc (164dp of 301dp, radius 0.272) sits inside it, leaving a small dead band between the two. */
+internal const val RING_DRAG_MIN_FRACTION = 0.34f
+internal const val CENTRE_DISC_DP = 164f
+internal const val DIAL_DP = 301f
+
 internal fun formatMs(ms: Long): String {
     if (ms <= 0) return "0:00"
     val totalSec = ms / 1000
@@ -202,7 +207,7 @@ fun PlayerScreen(onBack: () -> Unit, fixture: PlayerUiState? = null, initialOver
                 // Relative to where the finger lands (no jump), clamped at start/end (no wrap).
                 fun ang(o: androidx.compose.ui.geometry.Offset) = Math.toDegrees(kotlin.math.atan2((o.y - size.height / 2f).toDouble(), (o.x - size.width / 2f).toDouble())).toFloat()
                 detectDragGestures(
-                    onDragStart = { o -> ringDrag = kotlin.math.hypot((o.x - size.width / 2f).toDouble(), (o.y - size.height / 2f).toDouble()) > size.width * 0.34; if (ringDrag) { scrub = rawProgress; lastAng = ang(o) } },
+                    onDragStart = { o -> ringDrag = kotlin.math.hypot((o.x - size.width / 2f).toDouble(), (o.y - size.height / 2f).toDouble()) > size.width * RING_DRAG_MIN_FRACTION; if (ringDrag) { scrub = rawProgress; lastAng = ang(o) } },
                     onDrag = { change, _ -> if (ringDrag) { change.consume(); val a = ang(change.position); scrub = scrubFraction(scrub ?: rawProgress, lastAng, a); lastAng = a } },
                     onDragEnd = { scrub?.let { PlayerManager.seekTo((it * state.durationMs).toLong()) }; scrub = null },
                     onDragCancel = { scrub = null },
