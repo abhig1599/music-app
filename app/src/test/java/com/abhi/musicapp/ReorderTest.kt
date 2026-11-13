@@ -71,7 +71,7 @@ class ReorderTest {
         rule.onRoot().captureRoboImage("build/outputs/roborazzi/playlist_list_before.png")
         val rowPx = 76f * 3f // xxhdpi
         rule.onNodeWithTag("handle_0").performTouchInput {
-            down(center); moveBy(Offset(0f, rowPx * 0.6f)); moveBy(Offset(0f, rowPx * 0.9f)) // about 1.5 rows down: lands on index 2
+            down(center); moveBy(Offset(0f, rowPx * 0.9f)); moveBy(Offset(0f, rowPx * 0.9f)) // about 1.7 rows after touch slop: lands on index 2
         }
         rule.onRoot().captureRoboImage("build/outputs/roborazzi/playlist_list_dragging.png")
         rule.onNodeWithTag("handle_0").performTouchInput { up() }
@@ -87,7 +87,6 @@ class ReorderTest {
         rule.onRoot().captureRoboImage("build/outputs/roborazzi/queue_sheet.png")
         rule.onNodeWithTag("qhandle_4").performTouchInput { down(center); moveBy(Offset(0f, -48f * 3f * 1.4f)); up() }
         rule.waitForIdle()
-        assertEquals(listOf(1, 2, 3, 5, 4, 6).size, items.size)
-        assertEquals(listOf("1", "2", "5", "3", "4", "6").let { it }, items.map { it.id }.let { l -> listOf("1", "2", "5", "3", "4", "6") .takeIf { _ -> l[2] == "5" } ?: l })
+        assertEquals(listOf("1", "2", "3", "5", "4", "6"), items.map { it.id })
     }
 }
