@@ -70,11 +70,11 @@ class ReorderTest {
         }
         rule.onRoot().captureRoboImage("build/outputs/roborazzi/playlist_list_before.png")
         val rowPx = 76f * 3f // xxhdpi
-        rule.onNodeWithTag("handle_0").performTouchInput {
+        rule.onNodeWithTag("handle_0", useUnmergedTree = true).performTouchInput {
             down(center); moveBy(Offset(0f, rowPx * 0.9f)); moveBy(Offset(0f, rowPx * 0.9f)) // about 1.7 rows after touch slop: lands on index 2
         }
         rule.onRoot().captureRoboImage("build/outputs/roborazzi/playlist_list_dragging.png")
-        rule.onNodeWithTag("handle_0").performTouchInput { up() }
+        rule.onNodeWithTag("handle_0", useUnmergedTree = true).performTouchInput { up() }
         rule.waitForIdle()
         assertEquals(listOf(2, 3, 1, 4, 5), songs.map { it.id.toInt() })
         rule.onRoot().captureRoboImage("build/outputs/roborazzi/playlist_list_after.png")
@@ -85,7 +85,7 @@ class ReorderTest {
         var items by mutableStateOf((1..6).map { QueueEntry("$it", "Song $it", "Artist $it") })
         rule.setContent { MusicAppTheme { QueueSheetContent(items, current = 1, onMove = { f, t -> items = moveItem(items, f, t) }, onPlay = {}, onClose = {}) } }
         rule.onRoot().captureRoboImage("build/outputs/roborazzi/queue_sheet.png")
-        rule.onNodeWithTag("qhandle_4").performTouchInput { down(center); moveBy(Offset(0f, -48f * 3f * 1.4f)); up() }
+        rule.onNodeWithTag("qhandle_4", useUnmergedTree = true).performTouchInput { down(center); moveBy(Offset(0f, -48f * 3f * 1.4f)); up() }
         rule.waitForIdle()
         assertEquals(listOf("1", "2", "3", "5", "4", "6"), items.map { it.id })
     }
