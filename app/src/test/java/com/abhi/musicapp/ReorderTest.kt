@@ -52,7 +52,7 @@ class ReorderTest {
     }
 
     @Test fun storeSetOrderKeepsMissingSongs() {
-        val f = File.createTempFile("pl", ".json"); f.delete()
+        val f = File.createTempFile("plst", ".json"); f.delete()
         val st = PlaylistStore(f); st.create("A"); listOf(1L, 2L, 3L, 4L).forEach { st.addSong("A", it) }
         st.setOrder("A", listOf(3L, 1L, 2L)) // 4 is "not on the phone"
         assertEquals(listOf(3L, 1L, 2L, 4L), st.load().first().songIds)
