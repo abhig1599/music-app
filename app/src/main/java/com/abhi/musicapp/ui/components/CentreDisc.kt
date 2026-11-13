@@ -135,7 +135,7 @@ fun ClayBlob(levels: (() -> FloatArray?)?, tick: State<Long>?) {
         val path = Path()
         fun mid(a: Offset, b: Offset) = Offset((a.x + b.x) / 2f, (a.y + b.y) / 2f)
         val start = mid(pts[n - 1], pts[0]); path.moveTo(start.x, start.y)
-        for (i in 0 until n) { val m = mid(pts[i], pts[(i + 1) % n]); path.quadraticTo(pts[i].x, pts[i].y, m.x, m.y) }
+        for (i in 0 until n) { val m = mid(pts[i], pts[(i + 1) % n]); path.quadraticBezierTo(pts[i].x, pts[i].y, m.x, m.y) }
         path.close()
         val a = if (tick != null) (System.nanoTime() / 1e9 * 0.45) else 0.9
         val hl = Offset((c.x + r * 0.32f * cos(a)).toFloat() - r * 0.12f, (c.y + r * 0.32f * sin(a)).toFloat() - r * 0.18f)
