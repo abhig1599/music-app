@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.ui.platform.testTag
 import androidx.compose.material.icons.filled.VolumeUp
 import androidx.compose.ui.semantics.setProgress
