@@ -1,16 +1,14 @@
 > Task :app:checkKotlinGradlePluginConfigurationErrors SKIPPED
-> Task :app:checkKotlinGradlePluginConfigurationErrors SKIPPED
-ReorderTest > dragHandleReordersPlaylistRows FAILED
-    java.lang.AssertionError at ReorderTest.kt:73
-ReorderTest > queueSheetRender FAILED
-    java.lang.AssertionError at ReorderTest.kt:88
-> Task :app:testDebugUnitTest FAILED
+> Task :app:compileDebugKotlin FAILED
+e: file:///home/runner/work/music-app/music-app/app/src/main/java/com/abhi/musicapp/ui/components/CentreDisc.kt:154:22 Unresolved reference 'quadTo'.
+e: file:///home/runner/work/music-app/music-app/app/src/main/java/com/abhi/musicapp/ui/components/CentreDisc.kt:155:22 Unresolved reference 'quadTo'.
+e: file:///home/runner/work/music-app/music-app/app/src/main/java/com/abhi/musicapp/ui/screens/PlayerScreen.kt:386:40 Unresolved reference 'fillMaxHeight'.
 * What went wrong:
 * Exception is:
-org.gradle.api.tasks.TaskExecutionException: Execution failed for task ':app:testDebugUnitTest'.
+org.gradle.api.tasks.TaskExecutionException: Execution failed for task ':app:compileDebugKotlin'.
 	at org.gradle.api.internal.tasks.execution.CatchExceptionTaskExecuter.execute(CatchExceptionTaskExecuter.java:36)
-Caused by: org.gradle.api.internal.exceptions.MarkedVerificationException: There were failing tests. See the report at: file:///home/runner/work/music-app/music-app/app/build/reports/tests/testDebugUnitTest/index.html
+Caused by: org.gradle.workers.internal.DefaultWorkerExecutor$WorkExecutionException: A failure occurred while executing org.jetbrains.kotlin.compilerRunner.GradleCompilerRunnerWithWorkers$GradleKotlinCompilerWorkAction
 	at org.gradle.api.internal.tasks.execution.CatchExceptionTaskExecuter.execute(CatchExceptionTaskExecuter.java:36)
-BUILD FAILED in 50s
-<failure message="java.lang.AssertionError: Failed to inject touch input.&#10;Reason: Expected exactly '1' node but could not find any node that satisfies: (TestTag = 'handle_0')&#10;However, the unmerged tree contains '1' node that matches. Are you missing `useUnmergedNode = true` in your finder?&#10;
-<failure message="java.lang.AssertionError: Failed to inject touch input.&#10;Reason: Expected exactly '1' node but could not find any node that satisfies: (TestTag = 'qhandle_4')&#10;However, the unmerged tree contains '1' node that matches. Are you missing `useUnmergedNode = true` in your finder?&#10;
+Caused by: org.jetbrains.kotlin.gradle.tasks.CompilationErrorException: Compilation error. See log for more details
+	at org.jetbrains.kotlin.gradle.tasks.TasksUtilsKt.throwExceptionIfCompilationFailed(tasksUtils.kt:21)
+BUILD FAILED in 28s
