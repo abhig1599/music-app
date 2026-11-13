@@ -151,8 +151,8 @@ fun ClayBlob(levels: (() -> FloatArray?)?, tick: State<Long>?, beat: (() -> Floa
             if (len > 0f) {
                 // concave sides: a liquid cone that stays wide at the pool and narrows to a rounded tip
                 val tip = pt(ang, base + len)
-                path.quadTo(pt(ang - w * 0.10, base + len * 0.35f).x, pt(ang - w * 0.10, base + len * 0.35f).y, tip.x, tip.y)
-                path.quadTo(pt(ang + w * 0.10, base + len * 0.35f).x, pt(ang + w * 0.10, base + len * 0.35f).y, br.x, br.y)
+                path.quadraticBezierTo(pt(ang - w * 0.10, base + len * 0.35f).x, pt(ang - w * 0.10, base + len * 0.35f).y, tip.x, tip.y)
+                path.quadraticBezierTo(pt(ang + w * 0.10, base + len * 0.35f).x, pt(ang + w * 0.10, base + len * 0.35f).y, br.x, br.y)
                 tips.add(tip); bases.add(pt(ang, base * 0.9f))
             } else path.lineTo(br.x, br.y)
         }

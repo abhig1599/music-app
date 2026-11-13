@@ -1,6 +1,7 @@
 package com.abhi.musicapp.ui.screens
 
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.material.icons.filled.VolumeUp
 import androidx.compose.ui.semantics.setProgress
