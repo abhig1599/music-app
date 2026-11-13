@@ -63,6 +63,7 @@ jobs:
         run: |
           mkdir -p docs
           grep -E "^e: |error:|FAILED|What went wrong|Caused by|Exception|Error|expected" /tmp/build.log | head -60 > docs/ci-last-failure.txt || true
+          grep -h -o '<failure message="[^"]\{0,300\}' app/build/test-results/testDebugUnitTest/*.xml 2>/dev/null | head -20 >> docs/ci-last-failure.txt || true
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add docs/ci-last-failure.txt

@@ -25,10 +25,13 @@ internal const val FFT_SIZE = 1024
 object AudioLevels {
     @Volatile var bands: FloatArray = FloatArray(LEVEL_BANDS)
         private set
+    /** 0..1 pulse that jumps on a bass onset (a kick/beat-like jump in low-frequency energy) and decays. An approximation, not tempo tracking. */
+    @Volatile var beat: Float = 0f
+        private set
     @Volatile private var enabled = false
 
     /** The Player screen turns analysis on while it is visible and playing; off, the audio thread does no maths. */
-    fun setEnabled(on: Boolean) { enabled = on; if (!on) bands = FloatArray(LEVEL_BANDS) }
+    fun setEnabled(on: Boolean) { enabled = on; if (!on) { bands = FloatArray(LEVEL_BANDS); beat = 0f } }
 
     private val analyzer = BandAnalyzer()
 
@@ -40,7 +43,7 @@ object AudioLevels {
         }
         override fun handleBuffer(buffer: ByteBuffer) {
             if (!enabled) return
-            analyzer.push(buffer)?.let { bands = it }
+            analyzer.push(buffer)?.let { bands = it; beat = analyzer.beat }
         }
     })
 }
@@ -56,11 +59,15 @@ class BandAnalyzer {
     private val im = DoubleArray(FFT_SIZE)
     private val hann = DoubleArray(FFT_SIZE) { 0.5 - 0.5 * cos(2 * PI * it / (FFT_SIZE - 1)) }
     private var edges = binEdges(rate)
+    /** Beat pulse 0..1 after the latest window: set by a bass jump over its running average, decays about 100 ms per step of ~12 ms hop. */
+    var beat = 0f
+        private set
+    private var bassAvg = 0.0
     private var peak = 1e-3 // slow automatic gain so quiet and loud songs both fill the ring
 
     fun configure(sampleRate: Int, channelCount: Int, enc: Int) {
         rate = if (sampleRate > 0) sampleRate else 44100
-        channels = max(1, channelCount); encoding = enc; filled = 0; edges = binEdges(rate); peak = 1e-3
+        channels = max(1, channelCount); encoding = enc; filled = 0; beat = 0f; bassAvg = 0.0; edges = binEdges(rate); peak = 1e-3
     }
 
     /** Returns fresh levels once a full window has been collected, else null. Unsupported encodings give null. */
@@ -89,6 +96,10 @@ class BandAnalyzer {
             // Pink-ish tilt: music has far more energy in the bass; lift the highs so the whole ring moves.
             raw[k] = m * (1.0 + 6.0 * k / LEVEL_BANDS)
         }
+        val bass = (0 until 8).sumOf { raw[it] } / 8.0
+        beat *= 0.9f
+        if (bass > 2e-4 && bass > bassAvg * 1.45) beat = max(beat, min(1.0, 0.45 + (bass / (bassAvg + 1e-9) - 1.45) * 0.4).toFloat())
+        bassAvg = bassAvg * 0.92 + bass * 0.08
         val frameMax = raw.max()
         peak = max(frameMax, peak * 0.995)
         return FloatArray(LEVEL_BANDS) { k ->

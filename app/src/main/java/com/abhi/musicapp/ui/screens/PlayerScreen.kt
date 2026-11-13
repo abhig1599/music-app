@@ -101,7 +101,7 @@ internal fun scrubFraction(start: Float, prevAngleDeg: Float, curAngleDeg: Float
 }
 
 @Composable
-fun PlayerScreen(onBack: () -> Unit, fixture: PlayerUiState? = null, initialOverlay: Int = 0, sourceLabel: String? = null, progressInFixture: Boolean = false, sleepPreview: com.abhi.musicapp.playback.SleepState? = null, fixtureLevels: FloatArray? = null, fixtureFlipped: Boolean? = null, fixtureRotation: Float? = null) {
+fun PlayerScreen(onBack: () -> Unit, fixture: PlayerUiState? = null, initialOverlay: Int = 0, sourceLabel: String? = null, progressInFixture: Boolean = false, sleepPreview: com.abhi.musicapp.playback.SleepState? = null, fixtureLevels: FloatArray? = null, fixtureFlipped: Boolean? = null, fixtureRotation: Float? = null, fixtureBeat: Float? = null) {
     // 0 none, 1 three-dots menu, 2 focus-mode popup, 3 output-device popup (Figma 'Song Page - menu', 'Song focus mode', 'Song Focus connected device').
     var overlay by androidx.compose.runtime.remember { androidx.compose.runtime.mutableIntStateOf(initialOverlay) }
     var menuNote by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf("") }
@@ -151,17 +151,20 @@ fun PlayerScreen(onBack: () -> Unit, fixture: PlayerUiState? = null, initialOver
     val reduced = reducedMotion()
     val frame = androidx.compose.runtime.remember { androidx.compose.runtime.mutableLongStateOf(0L) }
     val shown = androidx.compose.runtime.remember { FloatArray(com.abhi.musicapp.playback.LEVEL_BANDS) }
+    val beatBox = androidx.compose.runtime.remember { FloatArray(1) }
     val live2 = fixture == null && state.isPlaying && !reduced
     androidx.compose.runtime.DisposableEffect(live2) {
         com.abhi.musicapp.playback.AudioLevels.setEnabled(live2)
         onDispose { com.abhi.musicapp.playback.AudioLevels.setEnabled(false) }
     }
     androidx.compose.runtime.LaunchedEffect(live2) {
-        if (!live2) { shown.fill(0f); frame.longValue++; return@LaunchedEffect }
+        if (!live2) { shown.fill(0f); beatBox[0] = 0f; frame.longValue++; return@LaunchedEffect }
         while (true) {
             androidx.compose.runtime.withFrameNanos { }
             val t = com.abhi.musicapp.playback.AudioLevels.bands
             for (i in shown.indices) { val v = t[i]; shown[i] = if (v > shown[i]) shown[i] + (v - shown[i]) * 0.6f else shown[i] * 0.88f }
+            val tb = com.abhi.musicapp.playback.AudioLevels.beat
+            beatBox[0] = if (tb > beatBox[0]) tb else beatBox[0] * 0.85f
             frame.longValue++
         }
     }
@@ -217,7 +220,7 @@ fun PlayerScreen(onBack: () -> Unit, fixture: PlayerUiState? = null, initialOver
         com.abhi.musicapp.ui.components.CentreDisc(
             flipped = fixtureFlipped ?: flipped, onFlip = { if (fixture == null) flipped = !flipped }, onTap = { if (fixture == null) PlayerManager.togglePlayPause() },
             time = formatMs(if (scrub != null) (scrub!! * state.durationMs).toLong() else state.positionMs), total = formatTotal(state.durationMs),
-            mono = mono, levels = levelsFn, tick = if (fixtureLevels == null && fixture == null && !reduced) frame else null,
+            mono = mono, levels = levelsFn, beat = if (fixtureBeat != null) ({ fixtureBeat }) else ({ beatBox[0] }), tick = if (fixtureLevels == null && fixture == null && !reduced) frame else null,
             reducedMotion = reduced, isPlaying = state.isPlaying, fixtureRotation = fixtureRotation,
             modifier = Modifier.offset(116.5.dp, 135.dp + 150.5.dp * dialScale - 82.dp).size(164.dp).graphicsLayer { scaleX = dialScale; scaleY = dialScale },
         )

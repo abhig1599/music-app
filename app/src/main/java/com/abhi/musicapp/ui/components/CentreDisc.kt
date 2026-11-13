@@ -65,6 +65,7 @@ fun CentreDisc(
     mono: androidx.compose.ui.text.font.FontFamily,
     levels: (() -> FloatArray?)?,
     tick: State<Long>?,
+    beat: (() -> Float)? = null,
     reducedMotion: Boolean,
     isPlaying: Boolean,
     modifier: Modifier = Modifier,
@@ -107,45 +108,50 @@ fun CentreDisc(
             }
         } else {
             // Back face is mirrored by the 180 deg turn; turn it back so the blob reads normally.
-            Box(Modifier.fillMaxSize().graphicsLayer { rotationY = 180f }) { ClayBlob(levels, tick) }
+            Box(Modifier.fillMaxSize().graphicsLayer { rotationY = 180f }) { ClayBlob(levels, tick, beat) }
         }
     }
 }
 
-/** Metallic clay-like blob: its outline is pushed outward by the song's frequency bands (low at the top, mirrored). Silent or paused = a calm round form; only the soft highlight drifts. */
+/**
+ * Ferrofluid-style centre (his words: a black liquid in a dish that comes alive and forms spikes with the beat).
+ * A glossy black pool whose edge grows sharp spikes: one per frequency band (low at the top, mirrored), taller with
+ * louder bands, and the whole pool swells on a detected beat ([beat], 0..1). Silence or pause = a calm round drop, no motion:
+ * nothing here runs on a clock, it only follows the audio levels. My reading of his description, not a copy of any video.
+ */
 @Composable
-fun ClayBlob(levels: (() -> FloatArray?)?, tick: State<Long>?) {
+fun ClayBlob(levels: (() -> FloatArray?)?, tick: State<Long>?, beat: (() -> Float)? = null) {
     Canvas(Modifier.fillMaxSize()) {
         tick?.value // redraw every frame while live
         val lv = levels?.invoke()
+        val b = (beat?.invoke() ?: 0f).coerceIn(0f, 1f)
         val c = Offset(size.width / 2f, size.height / 2f)
         val r = size.minDimension / 2f
-        val n = 72
+        val spikes = 48
+        val base = r * (0.50f + 0.05f * b)
         fun lvl(i: Int): Float {
             if (lv == null || lv.isEmpty()) return 0f
-            val f = i.toFloat() / n; val pos = (1f - abs(2f * f - 1f)) * (lv.size - 1)
-            val a = pos.toInt().coerceIn(0, lv.size - 1); val b = (a + 1).coerceAtMost(lv.size - 1)
-            return lv[a] + (lv[b] - lv[a]) * (pos - a)
-        }
-        val pts = List(n) { i ->
-            val ang = 2.0 * PI * i / n - PI / 2
-            val rad = r * (0.70f + 0.26f * lvl(i))
-            Offset((c.x + rad * cos(ang)).toFloat(), (c.y + rad * sin(ang)).toFloat())
+            val f = i.toFloat() / spikes; val pos = (1f - abs(2f * f - 1f)) * (lv.size - 1)
+            return lv[pos.toInt().coerceIn(0, lv.size - 1)]
         }
         val path = Path()
-        fun mid(a: Offset, b: Offset) = Offset((a.x + b.x) / 2f, (a.y + b.y) / 2f)
-        val start = mid(pts[n - 1], pts[0]); path.moveTo(start.x, start.y)
-        for (i in 0 until n) { val m = mid(pts[i], pts[(i + 1) % n]); path.quadraticBezierTo(pts[i].x, pts[i].y, m.x, m.y) }
+        val steps = spikes * 2
+        for (j in 0 until steps) {
+            val spike = j % 2 == 0
+            val k = j / 2
+            val ang = 2.0 * PI * (j / 2.0 - 0.0) / spikes + (if (spike) 0.0 else PI / spikes) - PI / 2
+            val len = if (spike) r * (0.04f + 0.40f * lvl(k) * (1f + 0.5f * b)).coerceAtMost(0.46f) else 0f
+            val rad = base + len
+            val p = Offset((c.x + rad * cos(ang)).toFloat(), (c.y + rad * sin(ang)).toFloat())
+            if (j == 0) path.moveTo(p.x, p.y) else path.lineTo(p.x, p.y)
+        }
         path.close()
-        val a = if (tick != null) (System.nanoTime() / 1e9 * 0.45) else 0.9
-        val hl = Offset((c.x + r * 0.32f * cos(a)).toFloat() - r * 0.12f, (c.y + r * 0.32f * sin(a)).toFloat() - r * 0.18f)
-        val metal = Brush.radialGradient(
-            0f to Color(0xFFFFFFFF), 0.18f to Color(0xFFE9E9EB), 0.42f to Color(0xFF9B9BA0),
-            0.68f to Color(0xFF3A3A3F), 1f to Color(0xFF151517), center = hl, radius = r * 1.35f,
-        )
-        drawPath(path, metal)
-        drawPath(path, Color(0x33000000), style = Stroke(width = r * 0.02f))
-        // small cool specular glint
-        drawCircle(Color(0x66FFFFFF), radius = r * 0.09f, center = Offset(hl.x - r * 0.02f, hl.y - r * 0.02f))
+        val ink = Brush.radialGradient(0f to Color(0xFF3B3B40), 0.55f to Color(0xFF111113), 1f to Color(0xFF000000), center = Offset(c.x - r * 0.12f, c.y - r * 0.16f), radius = r * 0.95f)
+        drawPath(path, ink)
+        drawPath(path, Color(0xFF000000), style = Stroke(width = r * 0.025f, join = androidx.compose.ui.graphics.StrokeJoin.Round))
+        // wet highlight on the pool, and a thin sheen arc
+        drawCircle(Color(0x55FFFFFF), radius = base * 0.16f, center = Offset(c.x - base * 0.34f, c.y - base * 0.38f))
+        drawArc(Color(0x33FFFFFF), startAngle = 200f, sweepAngle = 70f, useCenter = false,
+            topLeft = Offset(c.x - base * 0.78f, c.y - base * 0.78f), size = androidx.compose.ui.geometry.Size(base * 1.56f, base * 1.56f), style = Stroke(width = base * 0.05f, cap = androidx.compose.ui.graphics.StrokeCap.Round))
     }
 }
