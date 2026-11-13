@@ -3,6 +3,8 @@ package com.abhi.musicapp.ui.screens
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.requiredSize
+import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.ui.platform.testTag
 import androidx.compose.material.icons.filled.VolumeUp
 import androidx.compose.ui.semantics.setProgress
 import androidx.compose.ui.semantics.progressBarRangeInfo
@@ -293,11 +295,11 @@ fun PlayerScreen(onBack: () -> Unit, fixture: PlayerUiState? = null, initialOver
         val sheet = androidx.compose.ui.graphics.Color(0xFFF6F6F4) // estimated popup fill
         val pill = com.abhi.musicapp.ui.theme.GrayLight
         if (overlay != 0) Box(Modifier.fillMaxSize().clickable(indication = null, interactionSource = androidx.compose.runtime.remember { androidx.compose.foundation.interaction.MutableInteractionSource() }) { overlay = 0 })
-        if (overlay == 1) Column((if (landscape) Modifier.align(Alignment.TopEnd).padding(top = 64.dp, end = 24.dp).heightIn(max = maxHeight - 80.dp).verticalScroll(rememberScrollState()) else Modifier.offset(134.dp, 94.dp)).width(232.dp).clip(androidx.compose.foundation.shape.RoundedCornerShape(8.dp)).background(sheet)) {
+        if (overlay == 1) Column((if (landscape) Modifier.align(Alignment.TopEnd).padding(top = 56.dp, end = 24.dp).heightIn(max = maxHeight - 64.dp).verticalScroll(rememberScrollState()) else Modifier.offset(134.dp, 94.dp)).width(232.dp).clip(androidx.compose.foundation.shape.RoundedCornerShape(8.dp)).background(sheet)) {
             // Equaliser is drawn greyed out in the Figma menu: kept disabled (no EQ exists). Add to playlist is wired (shipped path, PlaylistStore); other entries only close the menu until wired.
             listOf("Sleep Time", "Add to playlist", "Share", "Speed", "Delete", "Equaliser", "Lyrics").forEach { t ->
                 val off = t == "Equaliser"
-                Row(Modifier.fillMaxWidth().height(51.dp).then(if (off) Modifier else Modifier.clickable {
+                Row(Modifier.fillMaxWidth().height(if (landscape) 40.dp else 51.dp).testTag("menu_" + t).then(if (off) Modifier else Modifier.clickable {
                     overlay = if (fixture != null) 0 else when (t) {
                         "Sleep Time" -> 5
                         "Add to playlist" -> 4
@@ -369,7 +371,7 @@ private fun LandscapeBody(
     androidx.compose.foundation.layout.BoxWithConstraints(Modifier.fillMaxSize()) {
         val side = (maxHeight - 32.dp).coerceAtLeast(120.dp)
         val sc = side.value / DIAL_DP
-        Row(Modifier.fillMaxSize().padding(horizontal = 24.dp), verticalAlignment = Alignment.CenterVertically) {
+        Row(Modifier.fillMaxSize().windowInsetsPadding(androidx.compose.foundation.layout.WindowInsets.safeDrawing).padding(horizontal = 24.dp), verticalAlignment = Alignment.CenterVertically) {
             // Left: the same dial and coin-flip centre as portrait, scaled to the available height.
             Box(Modifier.size(side), contentAlignment = Alignment.Center) {
                 TickDial(progress = progress, modifier = Modifier.requiredSize(DIAL_DP.dp).graphicsLayer { scaleX = sc; scaleY = sc }.then(seekMod),

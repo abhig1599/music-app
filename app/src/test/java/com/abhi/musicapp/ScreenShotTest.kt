@@ -8,6 +8,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.test.onRoot
+import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.performScrollTo
+import androidx.compose.ui.test.assertIsDisplayed
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.abhi.musicapp.ui.screens.DownloadsScreen
 import com.abhi.musicapp.ui.screens.EqualiserScreen
@@ -81,6 +84,16 @@ class ScreenShotTest {
     @Test fun landscapeFocus() = shotWide("landscape_focus") { PlayerScreen(onBack = {}, fixture = landscapeState(), progressInFixture = true, initialOverlay = 2) }
     @Test fun landscapeLongTitleCompact() = shotWide("landscape_longtitle_compact", 700, 320) {
         PlayerScreen(onBack = {}, fixture = landscapeState().copy(title = "A Very Long Song Title That Goes On And On - Extended Remastered Edition (Live)"), progressInFixture = true)
+    }
+
+    @Test fun landscapeOutput() = shotWide("landscape_output") { PlayerScreen(onBack = {}, fixture = landscapeState(), progressInFixture = true, initialOverlay = 3) }
+    @Test fun landscapeMenuCompact280() = shotWide("landscape_menu_280", 600, 280) { PlayerScreen(onBack = {}, fixture = landscapeState(), progressInFixture = true, initialOverlay = 1) }
+    @Test fun landscapeMenuLastItemReachable() {
+        org.robolectric.RuntimeEnvironment.setQualifiers("w600dp-h280dp")
+        composeRule.setContent { MusicAppTheme { Box(Modifier.size(600.dp, 280.dp)) { PlayerScreen(onBack = {}, fixture = landscapeState(), progressInFixture = true, initialOverlay = 1) } } }
+        composeRule.waitForIdle()
+        composeRule.onNodeWithTag("menu_Lyrics", useUnmergedTree = true).performScrollTo().assertIsDisplayed()
+        composeRule.onRoot().captureRoboImage("build/outputs/roborazzi/landscape_menu_280_scrolled.png")
     }
 
     // TEST RENDER: ferrofluid motion frames from a synthetic beat signal (120 bpm, 12 fps): 24 frames written as ferro_motion_NN.png, plus a contact sheet via ferrofluid_motion.
