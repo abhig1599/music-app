@@ -151,8 +151,8 @@ fun ClayBlob(levels: (() -> FloatArray?)?, tick: State<Long>?, beat: (() -> Floa
             if (len > 0f) {
                 // concave sides: a liquid cone that stays wide at the pool and narrows to a rounded tip
                 val tip = pt(ang, base + len)
-                path.quadraticBezierTo(pt(ang - w * 0.10, base + len * 0.35f).x, pt(ang - w * 0.10, base + len * 0.35f).y, tip.x, tip.y)
-                path.quadraticBezierTo(pt(ang + w * 0.10, base + len * 0.35f).x, pt(ang + w * 0.10, base + len * 0.35f).y, br.x, br.y)
+                path.quadraticBezierTo(pt(ang - w * 0.17, base + len * 0.45f).x, pt(ang - w * 0.17, base + len * 0.45f).y, tip.x, tip.y)
+                path.quadraticBezierTo(pt(ang + w * 0.17, base + len * 0.45f).x, pt(ang + w * 0.17, base + len * 0.45f).y, br.x, br.y)
                 tips.add(tip); bases.add(pt(ang, base * 0.9f))
             } else path.lineTo(br.x, br.y)
         }
@@ -168,5 +168,5 @@ fun ClayBlob(levels: (() -> FloatArray?)?, tick: State<Long>?, beat: (() -> Floa
     }
 }
 
-private const val FERRO_SPIKES = 40
+private const val FERRO_SPIKES = 26
 private val FERRO_JITTER = floatArrayOf(0.2f, 0.9f, 0.5f, 1f, 0.1f, 0.7f, 0.4f, 0.85f, 0.3f, 0.6f, 0.95f, 0.15f, 0.55f)
