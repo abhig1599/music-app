@@ -57,11 +57,11 @@ class ScreenShotTest {
         composeRule.onRoot().captureRoboImage("build/outputs/roborazzi/$name.png")
     }
 
-    private fun shotWide(name: String, content: @androidx.compose.runtime.Composable () -> Unit) {
-        org.robolectric.RuntimeEnvironment.setQualifiers("w844dp-h390dp")
+    private fun shotWide(name: String, w: Int = 844, h: Int = 390, content: @androidx.compose.runtime.Composable () -> Unit) {
+        org.robolectric.RuntimeEnvironment.setQualifiers("w${w}dp-h${h}dp")
         composeRule.setContent {
             MusicAppTheme {
-                Box(Modifier.size(844.dp, 390.dp).background(androidx.compose.material3.MaterialTheme.colorScheme.background)) { content() }
+                Box(Modifier.size(w.dp, h.dp).background(androidx.compose.material3.MaterialTheme.colorScheme.background)) { content() }
             }
         }
         composeRule.waitForIdle()
@@ -75,6 +75,30 @@ class ScreenShotTest {
     @Test fun landscapeFerro() = shotWide("landscape_ferrofluid") {
         val lv = FloatArray(48) { i -> (0.9f * (1f - i / 60f) * (0.55f + 0.45f * kotlin.math.abs(kotlin.math.sin(i * 1.7f)))).coerceIn(0f, 1f) }
         PlayerScreen(onBack = {}, fixture = landscapeState(), progressInFixture = true, fixtureLevels = lv, fixtureFlipped = true, fixtureRotation = 180f, fixtureBeat = 0.8f)
+    }
+
+    @Test fun landscapeMenu() = shotWide("landscape_menu") { PlayerScreen(onBack = {}, fixture = landscapeState(), progressInFixture = true, initialOverlay = 1) }
+    @Test fun landscapeFocus() = shotWide("landscape_focus") { PlayerScreen(onBack = {}, fixture = landscapeState(), progressInFixture = true, initialOverlay = 2) }
+    @Test fun landscapeLongTitleCompact() = shotWide("landscape_longtitle_compact", 700, 320) {
+        PlayerScreen(onBack = {}, fixture = landscapeState().copy(title = "A Very Long Song Title That Goes On And On - Extended Remastered Edition (Live)"), progressInFixture = true)
+    }
+
+    // TEST RENDER: ferrofluid motion frames from a synthetic beat signal (120 bpm, 12 fps): 24 frames written as ferro_motion_NN.png, plus a contact sheet via ferrofluid_motion.
+    @Test fun ferrofluidMotion() {
+        val lvState = androidx.compose.runtime.mutableStateOf(FloatArray(48))
+        val bState = androidx.compose.runtime.mutableFloatStateOf(0f)
+        composeRule.setContent { MusicAppTheme { Box(Modifier.size(200.dp).background(androidx.compose.ui.graphics.Color(0xFFEAEAE8))) {
+            val l = lvState.value; val bb = bState.floatValue
+            com.abhi.musicapp.ui.components.ClayBlob({ l }, null, { bb }) } } }
+        for (f in 0 until 24) {
+            val t = f / 12f
+            val beat = ((t * 2f) % 1f).let { ph -> kotlin.math.exp(-ph * 5f) }
+            val amp = 0.25f + 0.65f * beat
+            lvState.value = FloatArray(48) { i -> (amp * (1f - i / 60f) * (0.5f + 0.5f * kotlin.math.abs(kotlin.math.sin(i * 1.7f + t * 3f)))).coerceIn(0f, 1f) }
+            bState.floatValue = beat
+            composeRule.waitForIdle()
+            composeRule.onRoot().captureRoboImage("build/outputs/roborazzi/ferro_motion_%02d.png".format(f))
+        }
     }
 
     // TEST RENDER: ferrofluid states side by side with synthetic stimulus. Top: silent/paused, quiet, loud, loud+beat peak. Bottom: synthetic beat decay 1.0 -> 0 over 6 steps.

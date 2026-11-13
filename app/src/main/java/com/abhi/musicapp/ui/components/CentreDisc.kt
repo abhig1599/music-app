@@ -41,6 +41,7 @@ import com.abhi.musicapp.ui.theme.GrayLight
 import kotlin.math.PI
 import kotlin.math.abs
 import kotlin.math.cos
+import kotlin.math.exp
 import kotlin.math.sin
 import kotlin.math.sqrt
 
@@ -135,28 +136,39 @@ fun ClayBlob(levels: (() -> FloatArray?)?, tick: State<Long>?, beat: (() -> Floa
             val f = i.toFloat() / n; val pos = (1f - abs(2f * f - 1f)) * (lv.size - 1)
             return lv[pos.toInt().coerceIn(0, lv.size - 1)]
         }
+        // Liquid outline: radius(theta) = pool + sum of rounded gaussian bumps (one per band). Bumps merge at the base like
+        // ferrofluid; tall ones are narrower, short ones broad. Heights come only from the audio bands and beat.
         val path = Path()
+        val steps = 240
         val w = 2.0 * PI / n
-        val tips = ArrayList<Offset>()
-        val bases = ArrayList<Offset>()
-        for (k in 0 until n) {
+        val hs = FloatArray(n) { k ->
             val l = lvl(k)
-            val jit = 0.7f + 0.3f * FERRO_JITTER[k % FERRO_JITTER.size]
-            val len = if (l < 0.03f) 0f else r * (0.55f * l * (1f + 0.45f * b) * jit).coerceAtMost(0.50f)
-            val ang = w * k - PI / 2
-            fun pt(a: Double, rad: Float) = Offset((c.x + rad * cos(a)).toFloat(), (c.y + rad * sin(a)).toFloat())
-            val bl = pt(ang - w * 0.62, base)
-            val br = pt(ang + w * 0.62, base)
-            if (k == 0) path.moveTo(bl.x, bl.y) else path.lineTo(bl.x, bl.y)
-            if (len > 0f) {
-                // concave sides: a liquid cone that stays wide at the pool and narrows to a rounded tip
-                val tip = pt(ang, base + len)
-                path.quadraticBezierTo(pt(ang - w * 0.17, base + len * 0.45f).x, pt(ang - w * 0.17, base + len * 0.45f).y, tip.x, tip.y)
-                path.quadraticBezierTo(pt(ang + w * 0.17, base + len * 0.45f).x, pt(ang + w * 0.17, base + len * 0.45f).y, br.x, br.y)
-                tips.add(tip); bases.add(pt(ang, base * 0.9f))
-            } else path.lineTo(br.x, br.y)
+            if (l < 0.03f) 0f else r * (0.55f * l * (1f + 0.45f * b) * (0.7f + 0.3f * FERRO_JITTER[k % FERRO_JITTER.size])).coerceAtMost(0.50f)
+        }
+        val tips = ArrayList<Offset>(); val bases = ArrayList<Offset>()
+        for (j in 0 until steps) {
+            val th = 2.0 * PI * j / steps - PI / 2
+            var add = 0f
+            for (k in 0 until n) {
+                if (hs[k] <= 0f) continue
+                val ak = w * k - PI / 2
+                var d = th - ak
+                while (d > PI) d -= 2 * PI
+                while (d < -PI) d += 2 * PI
+                val sigma = w * (0.55 - 0.25 * (hs[k] / (r * 0.5f)).coerceIn(0f, 1f))
+                val x = d / sigma
+                if (kotlin.math.abs(x) < 3.0) add += hs[k] * exp(-x * x).toFloat()
+            }
+            val rad = base + add.coerceAtMost(r * 0.52f)
+            val pt = Offset((c.x + rad * cos(th)).toFloat(), (c.y + rad * sin(th)).toFloat())
+            if (j == 0) path.moveTo(pt.x, pt.y) else path.lineTo(pt.x, pt.y)
         }
         path.close()
+        for (k in 0 until n) if (hs[k] > r * 0.08f) {
+            val ak = w * k - PI / 2
+            tips.add(Offset((c.x + (base + hs[k]) * cos(ak)).toFloat(), (c.y + (base + hs[k]) * sin(ak)).toFloat()))
+            bases.add(Offset((c.x + base * 0.9f * cos(ak)).toFloat(), (c.y + base * 0.9f * sin(ak)).toFloat()))
+        }
         val ink = Brush.radialGradient(0f to Color(0xFF2E2E33), 0.5f to Color(0xFF0E0E10), 1f to Color(0xFF000000), center = Offset(c.x - r * 0.10f, c.y - r * 0.14f), radius = r * 0.9f)
         drawPath(path, ink)
         drawPath(path, Color(0xFF000000), style = Stroke(width = r * 0.03f, join = androidx.compose.ui.graphics.StrokeJoin.Round))
@@ -168,5 +180,5 @@ fun ClayBlob(levels: (() -> FloatArray?)?, tick: State<Long>?, beat: (() -> Floa
     }
 }
 
-private const val FERRO_SPIKES = 26
+private const val FERRO_SPIKES = 22
 private val FERRO_JITTER = floatArrayOf(0.2f, 0.9f, 0.5f, 1f, 0.1f, 0.7f, 0.4f, 0.85f, 0.3f, 0.6f, 0.95f, 0.15f, 0.55f)
