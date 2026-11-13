@@ -96,7 +96,7 @@ internal fun scrubFraction(start: Float, prevAngleDeg: Float, curAngleDeg: Float
 }
 
 @Composable
-fun PlayerScreen(onBack: () -> Unit, fixture: PlayerUiState? = null, initialOverlay: Int = 0, sourceLabel: String? = null, progressInFixture: Boolean = false, sleepPreview: com.abhi.musicapp.playback.SleepState? = null, fixtureLevels: FloatArray? = null) {
+fun PlayerScreen(onBack: () -> Unit, fixture: PlayerUiState? = null, initialOverlay: Int = 0, sourceLabel: String? = null, progressInFixture: Boolean = false, sleepPreview: com.abhi.musicapp.playback.SleepState? = null, fixtureLevels: FloatArray? = null, fixtureFlipped: Boolean? = null, fixtureRotation: Float? = null) {
     // 0 none, 1 three-dots menu, 2 focus-mode popup, 3 output-device popup (Figma 'Song Page - menu', 'Song focus mode', 'Song Focus connected device').
     var overlay by androidx.compose.runtime.remember { androidx.compose.runtime.mutableIntStateOf(initialOverlay) }
     var menuNote by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf("") }
@@ -136,6 +136,8 @@ fun PlayerScreen(onBack: () -> Unit, fixture: PlayerUiState? = null, initialOver
         else -> "Audio output: unknown"
     }
     var lastAng by androidx.compose.runtime.remember { androidx.compose.runtime.mutableFloatStateOf(0f) }
+    var ringDrag by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
+    var flipped by androidx.compose.runtime.saveable.rememberSaveable { androidx.compose.runtime.mutableStateOf(false) }
     var scrub by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf<Float?>(null) }
     val progress = if (scrub != null) scrub!! else if (fixture != null || reducedMotion()) rawProgress else
         androidx.compose.animation.core.animateFloatAsState(rawProgress, androidx.compose.animation.core.tween(260, easing = androidx.compose.animation.core.LinearEasing), label = "dial").value
@@ -200,34 +202,20 @@ fun PlayerScreen(onBack: () -> Unit, fixture: PlayerUiState? = null, initialOver
                 // Relative to where the finger lands (no jump), clamped at start/end (no wrap).
                 fun ang(o: androidx.compose.ui.geometry.Offset) = Math.toDegrees(kotlin.math.atan2((o.y - size.height / 2f).toDouble(), (o.x - size.width / 2f).toDouble())).toFloat()
                 detectDragGestures(
-                    onDragStart = { o -> scrub = rawProgress; lastAng = ang(o) },
-                    onDrag = { change, _ -> change.consume(); val a = ang(change.position); scrub = scrubFraction(scrub ?: rawProgress, lastAng, a); lastAng = a },
+                    onDragStart = { o -> ringDrag = kotlin.math.hypot((o.x - size.width / 2f).toDouble(), (o.y - size.height / 2f).toDouble()) > size.width * 0.34; if (ringDrag) { scrub = rawProgress; lastAng = ang(o) } },
+                    onDrag = { change, _ -> if (ringDrag) { change.consume(); val a = ang(change.position); scrub = scrubFraction(scrub ?: rawProgress, lastAng, a); lastAng = a } },
                     onDragEnd = { scrub?.let { PlayerManager.seekTo((it * state.durationMs).toLong()) }; scrub = null },
                     onDragCancel = { scrub = null },
                 )
             }
-            .pointerInput(fixture == null) {
-                if (fixture != null) return@pointerInput
-                // Tap the centre of the dial = play/pause (taps on the ticks do nothing; dragging still scrubs).
-                detectTapGestures { o ->
-                    val dx = o.x - size.width / 2f; val dy = o.y - size.height / 2f
-                    if (kotlin.math.sqrt(dx * dx + dy * dy) < size.width * 0.33f) PlayerManager.togglePlayPause()
-                }
-            }
-            .semantics { onClick(if (state.isPlaying) "Pause" else "Play") { PlayerManager.togglePlayPause(); true } }
             .semantics { if (state.durationMs > 0) { progressBarRangeInfo = androidx.compose.ui.semantics.ProgressBarRangeInfo(rawProgress, 0f..1f); setProgress("Seek") { v -> PlayerManager.seekTo((v.coerceIn(0f, 1f) * state.durationMs).toLong()); true } } }.graphicsLayer { scaleX = dialScale; scaleY = dialScale; transformOrigin = androidx.compose.ui.graphics.TransformOrigin(0.5f, 0f) }, ticks = 48, pointer = true, showProgress = fixture == null || progressInFixture, levels = levelsFn) {}
-        Column(
-            modifier = Modifier.offset(147.dp, 135.dp + (252.dp - 135.dp) * dialScale).width(104.dp).wrapContentHeight(unbounded = true, align = Alignment.Top).graphicsLayer { scaleX = dialScale; scaleY = dialScale },
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(1.dp),
-        ) {
-            Row(verticalAlignment = Alignment.Top) {
-                Text(formatMs(if (scrub != null) (scrub!! * state.durationMs).toLong() else state.positionMs), fontSize = 35.68.sp, fontFamily = mono, color = InkBlack)
-                Text("M", fontSize = 20.sp, color = InkBlack)
-            }
-            Box(Modifier.size(width = 104.dp, height = 1.dp).background(GrayLight))
-            Text(formatTotal(state.durationMs), fontSize = 16.51.sp, fontFamily = mono, color = InkBlack)
-        }
+        com.abhi.musicapp.ui.components.CentreDisc(
+            flipped = fixtureFlipped ?: flipped, onFlip = { if (fixture == null) flipped = !flipped }, onTap = { if (fixture == null) PlayerManager.togglePlayPause() },
+            time = formatMs(if (scrub != null) (scrub!! * state.durationMs).toLong() else state.positionMs), total = formatTotal(state.durationMs),
+            mono = mono, levels = levelsFn, tick = if (fixtureLevels == null && fixture == null && !reduced) frame else null,
+            reducedMotion = reduced, isPlaying = state.isPlaying, fixtureRotation = fixtureRotation,
+            modifier = Modifier.offset(116.5.dp, 135.dp + 150.5.dp * dialScale - 82.dp).size(164.dp).graphicsLayer { scaleX = dialScale; scaleY = dialScale },
+        )
         Column(
             modifier = Modifier.offset(23.5.dp, (489.dp - shrink)).width(344.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
