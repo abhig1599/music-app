@@ -194,7 +194,7 @@ fun ClayBlob(levels: (() -> FloatArray?)?, tick: State<Long>?, beat: (() -> Floa
 
 /** Short-lived drops. Each lives about 0.8 s: out to a peak distance along its angle, then back into the pool, shrinking as it merges. */
 class ClayDrops {
-    private class Drop(val angle: Double, val bornNs: Long, val reach: Float, val size: Float, val spikeH: Float)
+    private class Drop(val angle: Double, val bornNs: Long, val reach: Float, val size: Float, val spikeH: Float, val lifeNs: Double = 800_000_000.0)
     private val live = ArrayList<Drop>()
     private var armed = true
     private var lastSpawnNs = Long.MIN_VALUE
@@ -203,10 +203,11 @@ class ClayDrops {
         if (!armed || beat < 0.4f || cands.isEmpty()) return
         if (lastSpawnNs != Long.MIN_VALUE && nowNs - lastSpawnNs < 120_000_000L) return
         armed = false; lastSpawnNs = nowNs
-        cands.forEachIndexed { i, (angle, strength, _) ->
+        cands.forEachIndexed { i, (angle, strength, spike) ->
+            val jit = FERRO_JITTER[spike % FERRO_JITTER.size]; val sizeK = 0.8f + 0.4f * jit; val lifeNs = 800_000_000.0 * (0.85 + 0.35 * jit)
             val st = strength.coerceIn(0f, 1f)
-            if (i == 0) live.add(Drop(angle, nowNs, 0.14f + 0.14f * st, 0.11f + 0.04f * st, strength))
-            else if (beat > 0.55f) live.add(Drop(angle, nowNs + i * 55_000_000L, 0.10f + 0.10f * st, 0.07f + 0.04f * st, strength))
+            if (i == 0) live.add(Drop(angle, nowNs, 0.24f + 0.20f * st, (0.11f + 0.04f * st) * sizeK, strength, lifeNs))
+            else if (beat > 0.55f) live.add(Drop(angle, nowNs + i * 55_000_000L, 0.18f + 0.16f * st, (0.07f + 0.04f * st) * sizeK, strength, lifeNs))
         }
         while (live.size > 6) live.removeAt(0)
     }
@@ -214,13 +215,13 @@ class ClayDrops {
         val it = live.iterator()
         while (it.hasNext()) {
             val d = it.next()
-            val life = ((nowNs - d.bornNs) / 800_000_000.0).toFloat()
+            val life = ((nowNs - d.bornNs) / d.lifeNs).toFloat()
             if (life >= 1f) { it.remove(); continue }
             if (life < 0f) continue
             // Distance: leaves the pool edge, peaks mid-life, returns inside it (base * 0.8) so it visibly mixes back.
             val out = kotlin.math.sin(PI * life).toFloat()
             val tipR = base + r * d.spikeH // starts at the top of the spike it pinches off from, so it is not hidden inside the pool
-            val dist = tipR * (0.97f - 0.17f * life) + r * d.reach * out
+            val dist = minOf(tipR * (0.97f - 0.17f * life) + r * d.reach * out, r * 0.80f) // keep drops inside the disc
             val rad = r * d.size * (1f - 0.55f * life)
             val tip = Offset((c.x + dist * cos(d.angle)).toFloat(), (c.y + dist * sin(d.angle)).toFloat())
             val edge = Offset((c.x + base * 0.9f * cos(d.angle)).toFloat(), (c.y + base * 0.9f * sin(d.angle)).toFloat())
