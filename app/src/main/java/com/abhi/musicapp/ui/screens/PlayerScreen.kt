@@ -355,7 +355,7 @@ fun PlayerScreen(onBack: () -> Unit, fixture: PlayerUiState? = null, initialOver
             }
             if (left) androidx.compose.material3.Text(
                 outStatus,
-                fontSize = 12.sp, color = InkBlack, modifier = Modifier.offset(x, 726.dp - shrink - 70.dp - 16.dp - 56.dp).width(260.dp))
+                fontSize = 12.sp, color = InkBlack, modifier = Modifier.offset(x, 726.dp - shrink - 196.dp).width(260.dp))
             Box(Modifier.offset(x, 726.dp - shrink).size(72.dp).clip(CircleShape).background(InkBlack).clickable { overlay = 0 }, contentAlignment = Alignment.Center) {
                 Icon(if (left) outIcon else Icons.Filled.Close, contentDescription = "Close", tint = androidx.compose.ui.graphics.Color.White)
             }

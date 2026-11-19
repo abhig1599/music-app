@@ -329,11 +329,15 @@ private fun AboutCard(startExpanded: Boolean) {
     }
     AccordionCard("About", startExpanded) {
         // Labels say what they are: no real privacy policy or terms page exists yet, all rows open the portfolio.
-        listOf("Privacy policy (portfolio page for now)", "Terms of service (portfolio page for now)", "About the maker (portfolio)").forEach { label ->
-            Row(Modifier.fillMaxWidth().heightIn(min = 48.dp).clickable(onClick = open), verticalAlignment = Alignment.CenterVertically) {
-                Text(label, fontFamily = com.abhi.musicapp.ui.theme.GeistMono, fontSize = 12.sp, color = InkBlack, modifier = Modifier.weight(1f))
-                Icon(Icons.Filled.ChevronRight, null, tint = InkBlack)
+        // Privacy policy and Terms of service do not exist yet: shown as not published and not tappable (no stand-in legal text).
+        listOf("Privacy policy: not published yet", "Terms of service: not published yet").forEach { label ->
+            Row(Modifier.fillMaxWidth().heightIn(min = 48.dp), verticalAlignment = Alignment.CenterVertically) {
+                Text(label, fontFamily = com.abhi.musicapp.ui.theme.GeistMono, fontSize = 12.sp, color = com.abhi.musicapp.ui.theme.GrayText, modifier = Modifier.weight(1f))
             }
+        }
+        Row(Modifier.fillMaxWidth().heightIn(min = 48.dp).clickable(onClick = open), verticalAlignment = Alignment.CenterVertically) {
+            Text("About the maker (portfolio)", fontFamily = com.abhi.musicapp.ui.theme.GeistMono, fontSize = 12.sp, color = InkBlack, modifier = Modifier.weight(1f))
+            Icon(Icons.Filled.ChevronRight, null, tint = InkBlack)
         }
     }
 }
