@@ -407,26 +407,34 @@ private fun CircleTile(
     }
 }
 
-/** His scan dial: 12 thick rays, orange fading cluster at the upper left (decorative, not playback state). */
+/**
+ * His scan dial: 12 thick rays, orange fading cluster at the upper left (decorative, not playback state).
+ * While [scanning] the grey rays stay where they are and only the orange cluster travels around them (the ring is NOT rotated).
+ * [phaseOverride] (0..12 ray steps) is for test renders only.
+ */
 @Composable
-internal fun ScanRays(modifier: Modifier = Modifier, scanning: Boolean = false) {
-    val spin = if (scanning && !com.abhi.musicapp.ui.reducedMotion()) {
+internal fun ScanRays(modifier: Modifier = Modifier, scanning: Boolean = false, phaseOverride: Float? = null) {
+    val phase = if (phaseOverride != null) phaseOverride else if (scanning && !com.abhi.musicapp.ui.reducedMotion()) {
         val t = androidx.compose.animation.core.rememberInfiniteTransition(label = "scan")
-        val a by t.animateFloat(0f, 360f, androidx.compose.animation.core.infiniteRepeatable(androidx.compose.animation.core.tween(1400, easing = androidx.compose.animation.core.LinearEasing)), label = "scanAngle")
+        val a by t.animateFloat(0f, 12f, androidx.compose.animation.core.infiniteRepeatable(androidx.compose.animation.core.tween(1400, easing = androidx.compose.animation.core.LinearEasing)), label = "scanPhase")
         a
     } else 0f
     val lit = Orangs
     val dim = com.abhi.musicapp.ui.theme.GrayLight
-    androidx.compose.foundation.Canvas(modifier = modifier.graphicsLayer { rotationZ = spin }) {
+    androidx.compose.foundation.Canvas(modifier = modifier) {
         val cx = size.width / 2f
         val cy = size.height / 2f
         val outer = size.minDimension / 2f
         val inner = outer * 0.62f
-        val alphas = mapOf(9 to 0.45f, 10 to 1f, 11 to 0.8f, 0 to 0.55f, 1 to 0.35f)
+        val pattern = floatArrayOf(0.55f, 0.35f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0.45f, 1f, 0.8f) // alpha per ray, index 0 = top
+        val lo = kotlin.math.floor(phase).toInt()
+        val fr = phase - lo
         for (i in 0 until 12) {
             val angle = Math.toRadians(i * 30.0 - 90.0)
-            val a = alphas[i]
-            val color = if (a != null) lit.copy(alpha = a) else dim
+            val a0 = pattern[((i - lo) % 12 + 12) % 12]
+            val a1 = pattern[((i - lo - 1) % 12 + 12) % 12]
+            val a = a0 + (a1 - a0) * fr
+            val color = if (a > 0.02f) lit.copy(alpha = a) else dim
             drawLine(
                 color = color,
                 start = androidx.compose.ui.geometry.Offset(

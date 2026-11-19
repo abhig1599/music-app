@@ -8,6 +8,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.test.onRoot
+import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.test.swipeUp
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.assertIsDisplayed
@@ -100,10 +102,12 @@ class ScreenShotTest {
     @Test fun ferrofluidMotion() {
         val lvState = androidx.compose.runtime.mutableStateOf(FloatArray(48))
         val bState = androidx.compose.runtime.mutableFloatStateOf(0f)
+        val clk = androidx.compose.runtime.mutableLongStateOf(1_000_000_000L)
         composeRule.setContent { MusicAppTheme { Box(Modifier.size(200.dp).background(androidx.compose.ui.graphics.Color(0xFFEAEAE8))) {
             val l = lvState.value; val bb = bState.floatValue
-            com.abhi.musicapp.ui.components.ClayBlob({ l }, null, { bb }) } } }
+            com.abhi.musicapp.ui.components.ClayBlob({ l }, null, { bb }, { clk.longValue }) } } }
         for (f in 0 until 24) {
+            clk.longValue = 1_000_000_000L + f * 83_333_333L
             val t = f / 12f
             val beat = ((t * 2f) % 1f).let { ph -> kotlin.math.exp(-ph * 5f) }
             val amp = 0.25f + 0.65f * beat
@@ -266,10 +270,26 @@ class ScreenShotTest {
     @Test fun downloadsLoadingFixture() = shot("downloads_loading_fixture") { DownloadsScreen(onBack = {}, fixture = com.abhi.musicapp.ui.screens.DlFixture.Loading) }
     @Test fun downloadsSongsFixture() = shot("downloads_songs_fixture") { DownloadsScreen(onBack = {}, fixture = com.abhi.musicapp.ui.screens.DlFixture.Songs) }
 
-    @Test fun playerSheetQueueSmall() = shot("player_sheet_queue_small", 560) { com.abhi.musicapp.ui.screens.PlayerSheetFixture(com.abhi.musicapp.ui.screens.PlayerSheet.Queue) }
-    @Test fun playerSheetQueueLargeFont() {
-        shot("player_sheet_queue_largefont", 640) { androidx.compose.runtime.CompositionLocalProvider(androidx.compose.ui.platform.LocalDensity provides androidx.compose.ui.unit.Density(androidx.compose.ui.platform.LocalDensity.current.density, 1.6f)) { com.abhi.musicapp.ui.screens.PlayerSheetFixture(com.abhi.musicapp.ui.screens.PlayerSheet.Queue) } }
+    private fun queueItems() = (1..8).map { com.abhi.musicapp.ui.screens.QueueEntry("$it", "Malcolm Todd - Earrings $it", "Artist $it") }
+    @Test fun queueSmallScreen() = shot("queue_small_screen", 520) { com.abhi.musicapp.ui.screens.QueueSheetContent(queueItems(), 1, { _, _ -> }, {}, {}) }
+    @Test fun queueLargeFont() = shot("queue_large_font", 700) {
+        androidx.compose.runtime.CompositionLocalProvider(androidx.compose.ui.platform.LocalDensity provides androidx.compose.ui.unit.Density(androidx.compose.ui.platform.LocalDensity.current.density, 1.6f)) {
+            com.abhi.musicapp.ui.screens.QueueSheetContent(queueItems(), 1, { _, _ -> }, {}, {}) }
     }
-    @Test fun settingsTransitions() = shot("settings_transitions", 1100) { SettingsScreen(onBack = {}, onRowClick = {}, startExpanded = true) }
+    @Test fun settingsTransitions() = shot("settings_transitions", 1500) { SettingsScreen(onBack = {}, onRowClick = {}, startExpanded = true) }
+    @Test fun settingsTransitionsScrolled() {
+        composeRule.setContent { MusicAppTheme { Box(Modifier.size(390.dp, 600.dp).background(androidx.compose.material3.MaterialTheme.colorScheme.background)) { SettingsScreen(onBack = {}, onRowClick = {}, startExpanded = true) } } }
+        composeRule.onNode(androidx.compose.ui.test.hasScrollAction()).performTouchInput { swipeUp(startY = bottom - 10f, endY = top + 10f) }
+        composeRule.onNode(androidx.compose.ui.test.hasScrollAction()).performTouchInput { swipeUp(startY = bottom - 10f, endY = top + 10f) }
+        composeRule.waitForIdle()
+        composeRule.onRoot().captureRoboImage("build/outputs/roborazzi/settings_transitions_scrolled.png")
+    }
+    // Home scan ring: grey rays stay put, orange cluster advances (phase in ray steps). One row of 6 frames.
+    @Test fun scanRingTravel() = shot("scan_ring_travel", 120) {
+        androidx.compose.foundation.layout.Row {
+            listOf(0f, 2.5f, 5f, 7.5f, 10f, 12f).forEach { ph -> Box(Modifier.size(64.dp).padding(2.dp)) { com.abhi.musicapp.ui.screens.ScanRays(Modifier.fillMaxSize(), phaseOverride = ph) } }
+        }
+    }
+
     @Test fun equaliser() = shot("equaliser") { EqualiserScreen(onBack = {}) }
 }

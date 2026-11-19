@@ -64,8 +64,8 @@ fun EqualiserScreen(onBack: () -> Unit) {
             modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 6.dp).clip(RoundedCornerShape(16.dp)).background(SurfaceSoft).padding(16.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Text("Enabled", fontSize = 16.sp, color = InkBlack, modifier = Modifier.weight(1f))
-            Switch(checked = enabled, onCheckedChange = { enabled = it; com.abhi.musicapp.playback.EqEngine.setEnabled(ctx, it) },
+            Text(if (info == null) "Unavailable until a song plays" else "Enabled", fontSize = 16.sp, color = if (info == null) GrayText else InkBlack, modifier = Modifier.weight(1f))
+            Switch(checked = enabled && info != null, onCheckedChange = { enabled = it; com.abhi.musicapp.playback.EqEngine.setEnabled(ctx, it) },
                 enabled = info != null, colors = SwitchDefaults.colors(checkedTrackColor = Orangs))
         }
         if (info == null) {

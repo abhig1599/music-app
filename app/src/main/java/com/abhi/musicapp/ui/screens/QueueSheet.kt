@@ -68,6 +68,8 @@ fun QueueSheet(onClose: () -> Unit) {
 fun QueueSheetContent(items: List<QueueEntry>, current: Int, onMove: (Int, Int) -> Unit, onPlay: (Int) -> Unit, onClose: () -> Unit) {
     BoxWithConstraints(Modifier.fillMaxSize().background(Color(0x66000000)).clickable { onClose() }) {
         // Sheet height follows the screen (about 58%, between 300 and 480 dp) so the dial stays visible and short screens still fit.
+        // Rows grow with the user's font size (up to 1.6x) so larger text is not clipped.
+        val fs = androidx.compose.ui.platform.LocalDensity.current.fontScale.coerceIn(1f, 1.6f)
         val sheetHeight = (maxHeight * 0.58f).coerceIn(300.dp, 480.dp)
         Column(
             Modifier.align(Alignment.BottomCenter).fillMaxWidth().height(sheetHeight).clip(RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp))
@@ -79,9 +81,9 @@ fun QueueSheetContent(items: List<QueueEntry>, current: Int, onMove: (Int, Int) 
             Spacer(Modifier.height(14.dp))
             if (items.isEmpty()) Text("Nothing is queued. Play a song or open a playlist first.", fontSize = 14.sp, color = GrayText)
             Column(Modifier.weight(1f).verticalScroll(rememberScrollState())) {
-                ReorderColumn(items, rowHeight = 54.dp, onMove = onMove) { e, i, handle, dragging ->
+                ReorderColumn(items, rowHeight = (54f * fs).dp, onMove = onMove) { e, i, handle, dragging ->
                     Row(
-                        Modifier.fillMaxWidth().padding(vertical = 3.dp).height(48.dp).clip(RoundedCornerShape(8.dp))
+                        Modifier.fillMaxWidth().padding(vertical = 3.dp).height((48f * fs).dp).clip(RoundedCornerShape(8.dp))
                             .background(if (dragging) Color(0xFFFFFFFF) else Color.Transparent)
                             .border(1.dp, if (dragging) Orangs else GrayLight, RoundedCornerShape(8.dp))
                             .clickable { onPlay(i) }.padding(start = 10.dp),
