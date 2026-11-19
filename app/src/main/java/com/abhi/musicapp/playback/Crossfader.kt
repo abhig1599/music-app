@@ -59,6 +59,7 @@ class Crossfader(private val ctx: Context, private val main: ExoPlayer) {
         override fun onMediaItemTransition(mediaItem: androidx.media3.common.MediaItem?, reason: Int) {
             if (incoming != null && !handingOff && reason != Player.MEDIA_ITEM_TRANSITION_REASON_AUTO) cancel()
         }
+        override fun onPlaybackParametersChanged(p: androidx.media3.common.PlaybackParameters) { incoming?.playbackParameters = p }
         override fun onRepeatModeChanged(repeatMode: Int) { if (repeatMode == Player.REPEAT_MODE_ONE) cancel() }
     }
 
@@ -96,7 +97,7 @@ class Crossfader(private val ctx: Context, private val main: ExoPlayer) {
         if (dur == C.TIME_UNSET || dur <= 0L) return
         val f = min(seconds(ctx) * 1000L, dur / 3)
         val remaining = dur - main.currentPosition
-        if (remaining > f + 1500L || remaining < 300L) return
+        if (!shouldBegin(remaining, f, main.playbackParameters.speed)) return
         fadeMs = f; toIndex = next
         val p = ExoPlayer.Builder(ctx).build()
         p.setAudioAttributes(AudioAttributes.Builder().setUsage(C.USAGE_MEDIA).setContentType(C.AUDIO_CONTENT_TYPE_MUSIC).build(), false)
@@ -135,6 +136,17 @@ class Crossfader(private val ctx: Context, private val main: ExoPlayer) {
 
     companion object {
         private fun prefs(c: Context) = c.applicationContext.getSharedPreferences("transitions", Context.MODE_PRIVATE)
+        /** Start the incoming song when the wall-clock time left (media time / speed) is within the fade plus 1.5 s, and not already over. */
+        internal fun shouldBegin(remainingMediaMs: Long, fadeMs: Long, speed: Float): Boolean {
+            val sp = if (speed > 0f) speed else 1f
+            val wall = remainingMediaMs / sp
+            return wall <= fadeMs + 1500f && wall >= 300f
+        }
+        /** Equal-power gains for outgoing and incoming at ramp position t in 0..1. */
+        internal fun gains(t: Float): Pair<Float, Float> {
+            val x = t.coerceIn(0f, 1f)
+            return cos(x * PI / 2).toFloat() to sin(x * PI / 2).toFloat()
+        }
         fun enabled(c: Context) = prefs(c).getBoolean("on", false)
         fun seconds(c: Context) = prefs(c).getInt("secs", 4).coerceIn(1, 12)
         fun setEnabled(c: Context, on: Boolean) { prefs(c).edit().putBoolean("on", on).apply() }
