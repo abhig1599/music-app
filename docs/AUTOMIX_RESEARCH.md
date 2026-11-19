@@ -20,3 +20,7 @@ The Apple page (support.apple.com/en-in/105067) says AutoMix works only with App
 ## Boundary
 - Current batch: plain Crossfade only (Off by default).
 - AutoMix prototype: separate batch, after the user has heard Crossfade on a phone.
+
+## Planner (experimental, unused)
+`analysis/AutoMixPlanner.kt` maps two tempo estimates to a plan: both known and within 8% (also half/double) means a whole-bar fade inside the user's 1-12 s limit and an incoming speed nudge of at most 6%; anything else falls back to a plain crossfade. Unit-tested on made-up tempos only. Nothing in playback or the UI calls it. Before it can be wired to an opt-in setting a phone test must show: the tempo decode runs on real files without stalling playback, the speed nudge sounds acceptable, and the overlap lands on the beat.
+Crossfade hardening: the fade is abandoned if the incoming player errors, is not ready within 4 s, or if the outgoing song ends before the incoming one is playing.

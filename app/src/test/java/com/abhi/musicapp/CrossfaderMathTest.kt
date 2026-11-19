@@ -24,4 +24,7 @@ class CrossfaderMathTest {
         assertFalse(Crossfader.shouldBegin(4_000, 4000, 0.5f))
         assertTrue(Crossfader.shouldBegin(2_500, 4000, 0.5f))
     }
+    @Test fun givesUpWaitingForIncomingAfterFourSeconds() {
+        assertFalse(Crossfader.shouldGiveUp(3999L)); assertTrue(Crossfader.shouldGiveUp(4001L))
+    }
 }

@@ -40,6 +40,7 @@ class Crossfader(
     private var rampStart = 0L
     private var fadeMs = 4000L
     private var toIndex = C.INDEX_UNSET
+    private var beganAt = 0L
     @Volatile var muted = false
         private set
 
@@ -58,7 +59,10 @@ class Crossfader(
         }
         override fun onPositionDiscontinuity(old: Player.PositionInfo, new: Player.PositionInfo, reason: Int) {
             if (incoming == null) return
-            if (reason == Player.DISCONTINUITY_REASON_AUTO_TRANSITION && main.currentMediaItemIndex == toIndex) swap()
+            if (reason == Player.DISCONTINUITY_REASON_AUTO_TRANSITION && main.currentMediaItemIndex == toIndex) {
+                // Main reached the next song itself. Hand over only if the incoming player is actually playing; otherwise main just carries on.
+                if (rampStart != 0L) swap() else cancel()
+            }
             else if (reason == Player.DISCONTINUITY_REASON_SEEK || reason == Player.DISCONTINUITY_REASON_SEEK_ADJUSTMENT || reason == Player.DISCONTINUITY_REASON_REMOVE) cancel()
         }
         override fun onMediaItemTransition(mediaItem: androidx.media3.common.MediaItem?, reason: Int) {
@@ -83,7 +87,10 @@ class Crossfader(
     private fun step() {
         val inc = incoming
         if (inc == null) { maybeBegin(); return }
-        if (rampStart == 0L) return // incoming not ready yet; main keeps playing at full volume
+        if (rampStart == 0L) { // incoming not ready yet; main keeps playing at full volume, but do not wait forever
+            if (shouldGiveUp(SystemClock.uptimeMillis() - beganAt)) cancel()
+            return
+        }
         val t = ((SystemClock.uptimeMillis() - rampStart) / fadeMs.toFloat()).coerceIn(0f, 1f)
         val (out, into) = gains(t)
         main.volume = base * out
@@ -113,10 +120,11 @@ class Crossfader(
         p.setMediaItems((0 until main.mediaItemCount).map { main.getMediaItemAt(it) }, next, 0L)
         val l = object : Player.Listener {
             override fun onPlaybackStateChanged(state: Int) { if (state == Player.STATE_READY && rampStart == 0L) rampStart = SystemClock.uptimeMillis() }
+            override fun onPlayerError(error: androidx.media3.common.PlaybackException) { cancel() } // unreadable next file: skip the fade
         }
         incomingReady = l; p.addListener(l)
         p.prepare(); p.playWhenReady = true
-        incoming = p; rampStart = 0L
+        incoming = p; rampStart = 0L; beganAt = SystemClock.uptimeMillis()
     }
 
     /** The incoming player becomes the active one: point the session at it and release the old player. No seek, no replay. */
@@ -152,6 +160,8 @@ class Crossfader(
             val wall = remainingMediaMs / sp
             return wall <= fadeMs + 1500f && wall >= 300f
         }
+        /** The incoming player has this long (wall clock) to become ready before the fade is abandoned. */
+        internal fun shouldGiveUp(sinceBeginMs: Long) = sinceBeginMs > 4000L
         /** Equal-power gains for outgoing and incoming at ramp position t in 0..1. */
         internal fun gains(t: Float): Pair<Float, Float> {
             val x = t.coerceIn(0f, 1f)
