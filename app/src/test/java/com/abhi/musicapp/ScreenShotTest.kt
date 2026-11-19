@@ -343,11 +343,14 @@ class ScreenShotTest {
     }
     // TEST RENDER (synthetic levels, fixed clock): the new smaller irregular centre in five states: silent, quiet, low-heavy, one band, loud. No audio.
     @Test fun clayShapes() {
-        val states = listOf<FloatArray?>(null, FloatArray(48) { 0.12f }, FloatArray(48) { i -> (0.8f * (1f - i / 60f)).coerceIn(0f, 1f) },
-            FloatArray(48) { i -> if (i in 18..26) 0.95f else 0.1f }, FloatArray(48) { i -> if (i % 3 == 0) 1f else 0.7f })
-        shotWide("clay_shapes", 844, 200) {
+        val loud = FloatArray(48) { i -> if (i % 3 == 0) 1f else 0.7f }
+        val low = FloatArray(48) { i -> (0.8f * (1f - i / 60f)).coerceIn(0f, 1f) }
+        val one = FloatArray(48) { i -> if (i in 18..26) 0.95f else 0.1f }
+        // (levels, clock seconds): silent, quiet (below the gate), then music at different times so the shapes differ.
+        val states = listOf<Pair<FloatArray?, Long>>(null to 5L, FloatArray(48) { 0.12f } to 5L, low to 5L, one to 5L, loud to 5L, loud to 13L, one to 21L, low to 30L)
+        shotWide("clay_shapes", 1312, 200) {
             androidx.compose.foundation.layout.Row {
-                states.forEach { lv -> Box(Modifier.size(164.dp)) { com.abhi.musicapp.ui.components.ClayBlob({ lv }, null, { if (lv == null) 0f else 0.5f }, { 5_000_000_000L }) } }
+                states.forEach { (lv, sec) -> Box(Modifier.size(164.dp)) { com.abhi.musicapp.ui.components.ClayBlob({ lv }, null, { if (lv == null) 0f else 0.5f }, { sec * 1_000_000_000L }) } }
             }
         }
     }

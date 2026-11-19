@@ -137,7 +137,7 @@ fun ClayBlob(levels: (() -> FloatArray?)?, tick: State<Long>?, beat: (() -> Floa
         // Small irregular mass of clay: a modest core with a few stretched lobes that reach out with the bands and pull back, and a slow
         // wobble so the outline is never a circle. Lobe angles drift slowly. Heights come only from the audio bands and the beat.
         val lobes = LOBES
-        val core = r * (0.22f + 0.025f * b)
+        val core = r * (0.22f + 0.012f * b)
         fun band(i: Int): Float {
             if (lv == null || lv.isEmpty()) return 0f
             val lo = (i * lv.size) / lobes; val hi = ((i + 1) * lv.size) / lobes
@@ -146,31 +146,35 @@ fun ClayBlob(levels: (() -> FloatArray?)?, tick: State<Long>?, beat: (() -> Floa
             return m
         }
         val capL = r * 0.34f
-        val ang = DoubleArray(lobes) { i -> LOBE_BASE[i] + 0.35 * sin(0.23 * sec + i * 1.7) }
+        // Lobe directions wander widely and each lobe's strength drifts on its own slow cycle, so successive shapes differ.
+        val ang = DoubleArray(lobes) { i -> LOBE_BASE[i] + 0.12 * sec + 0.9 * sin(0.31 * sec + i * 1.7) }
         val len = FloatArray(lobes) { i ->
             val l = band(i)
-            // A faint idle length keeps the shape irregular and alive-looking only through slow drift; real reach needs real levels.
-            val idle = r * (0.05f + 0.03f * FERRO_JITTER[(i + 3) % FERRO_JITTER.size])
-            val live = if (l < 0.02f) 0f else r * 0.62f * l * LOBE_WEIGHT[i] * (1f + 0.6f * b)
-            idle + capL * kotlin.math.tanh(live / capL)
+            // Resting form is a plain circle: no idle length. A noise gate plus a low gain keeps small level changes from moving it.
+            val vary = 0.65f + 0.35f * sin(0.37 * sec + i * 2.1).toFloat()
+            val live = if (l < SENS_GATE) 0f else r * SENS_GAIN * (l - SENS_GATE) * LOBE_WEIGHT[i] * vary * (1f + 0.4f * b)
+            capL * kotlin.math.tanh(live / capL)
         }
         val clay = Brush.radialGradient(0f to Color(0xFF4A4A4E), 1f to Color(0xFF38383C), center = Offset(c.x - r * 0.06f, c.y - r * 0.08f), radius = r * 0.8f)
         // Chunky clay: the core and each lobe are unions of overlapping circles (thick neck, rounded bulb at the tip), so lobes are fat and
         // blobby with soft joins, not thin points. Lobes bend a little along their length and sway slowly.
         val tipAng = DoubleArray(lobes) { i -> ang[i] + 0.22 * sin(1.1 * sec + i * 2.3) }
-        drawCircle(clay, core * (1f + 0.05f * sin(2.0 * sec).toFloat()), c)
-        for (k in 0 until 3) { // lumpy core
+        val energy = (len.max() / (r * 0.12f)).coerceIn(0f, 1f) // 0 = resting circle
+        drawCircle(clay, core * (1f + 0.02f * sin(2.0 * sec).toFloat()), c)
+        for (k in 0 until 3) { if (energy <= 0f) break // lumpy core only while the music deforms it
             val ca = 2.1 * k + 0.4 * sec
-            drawCircle(clay, core * 0.72f, Offset((c.x + core * 0.35f * cos(ca)).toFloat(), (c.y + core * 0.35f * sin(ca)).toFloat()))
+            drawCircle(clay, core * 0.72f, Offset((c.x + energy * core * 0.35f * cos(ca)).toFloat(), (c.y + energy * core * 0.35f * sin(ca)).toFloat()))
         }
         for (i in 0 until lobes) {
             val reach = len[i]
+            if (reach < r * 0.02f) continue
+            val grow = (reach / (r * 0.08f)).coerceIn(0f, 1f)
             val bulb = core * (0.34f + 0.16f * (reach / capL).coerceIn(0f, 1f)) // longer lobes end in a bigger rounded bulb
-            val neck = core * 0.62f
+            val neck = core * 0.62f * grow
             val steps = (reach / (bulb * 0.45f)).toInt().coerceIn(2, 16)
             for (st in 0..steps) {
                 val t = st.toFloat() / steps
-                val dist = core * 0.5f + t * (reach + core * 0.2f)
+                val dist = core * 0.5f * grow + t * (reach + core * 0.2f)
                 val a2 = ang[i] + (tipAng[i] - ang[i]) * t
                 val rad = neck + (bulb - neck) * (t * t) // stays thick in the middle, rounded at the end
                 drawCircle(clay, rad, Offset((c.x + dist * cos(a2)).toFloat(), (c.y + dist * sin(a2)).toFloat()))
@@ -179,7 +183,7 @@ fun ClayBlob(levels: (() -> FloatArray?)?, tick: State<Long>?, beat: (() -> Floa
         // Drops: on a beat a drop pinches off the longest lobe tip and flies out into the empty space around the mass, then merges back.
         var loud = 0; var loudL = 0f
         for (i in 0 until lobes) if (len[i] > loudL) { loudL = len[i]; loud = i }
-        if (loudL > r * 0.16f) {
+        if (loudL > r * 0.20f) {
             val picks = ArrayList<Int>(); picks.add(loud)
             for (k in (0 until lobes).sortedByDescending { len[it] }) {
                 if (picks.size >= 3) break
@@ -245,6 +249,8 @@ class ClayDrops {
 }
 
 private const val LOBES = 4
+private const val SENS_GATE = 0.15f // levels below this do nothing
+private const val SENS_GAIN = 0.34f // was 0.62; tuning value, no number was given by the user
 /** Fixed, deliberately unequal lobe directions (radians) and strength weights: one long, one medium, two shorter, so the shape is never symmetric. */
 private val LOBE_BASE = doubleArrayOf(-1.75, 0.55, 2.35, 3.85)
 private val LOBE_WEIGHT = floatArrayOf(1.0f, 0.62f, 0.8f, 0.45f)
