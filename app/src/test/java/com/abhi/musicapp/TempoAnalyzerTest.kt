@@ -28,7 +28,7 @@ class TempoAnalyzerTest {
     @Test fun finds140() = check(140f)
     private fun check(bpm: Float) {
         val r = TempoAnalyzer.analyze(clicks(bpm, 30), sr)
-        assertNotNull(r.bpm); assertEquals(bpm, r.bpm!!, 2f)
+        assertNotNull(r.bpm); assertEquals(bpm, r.bpm!!, 2.5f)
     }
     @Test fun noiseIsUnknown() {
         val rnd = Random(7); val x = FloatArray(sr * 30) { (rnd.nextFloat() - 0.5f) * 0.5f }

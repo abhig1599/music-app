@@ -17,7 +17,7 @@ object TempoAnalyzer {
     const val MIN_BPM = 60f
     const val MAX_BPM = 180f
     const val MIN_CONFIDENCE = 0.35f
-    private const val HOP = 512
+    private const val HOP = 256
     private const val WIN = 1024
 
     fun analyze(samples: FloatArray, sampleRate: Int): TempoResult {
@@ -55,6 +55,12 @@ object TempoAnalyzer {
         var best = minLag; var bestV = -1f
         for (lag in minLag..maxLag) if (ac[lag] > bestV && ac[lag] >= ac[lag - 1] && ac[lag] >= ac[lag + 1]) { bestV = ac[lag]; best = lag }
         if (bestV <= 0f) return TempoResult(null, 0f)
+        // Prefer the faster tempo when its half-lag peak is nearly as strong (avoids picking half tempo).
+        while (best / 2 >= minLag) {
+            val h = best / 2; var hl = h; var hv = -1f
+            for (l in (h - 1)..(h + 1)) if (l >= minLag && ac[l] > hv) { hv = ac[l]; hl = l }
+            if (hv >= 0.85f * bestV) { best = hl; bestV = hv } else break
+        }
         // Parabolic refinement of the peak.
         val a = ac[best - 1]; val b = ac[best]; val c = ac[best + 1]
         val d = a - 2 * b + c
