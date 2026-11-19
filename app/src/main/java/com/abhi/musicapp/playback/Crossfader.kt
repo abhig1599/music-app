@@ -42,6 +42,7 @@ class Crossfader(
     private var fadeMs = 4000L
     private var toIndex = C.INDEX_UNSET
     private var beganAt = 0L
+    private var fadeChecked = false
     @Volatile var muted = false
         private set
 
@@ -93,6 +94,12 @@ class Crossfader(
             if (shouldGiveUp(SystemClock.uptimeMillis() - beganAt)) cancel()
             return
         }
+        if (!fadeChecked) { // now that the incoming song is ready its length is known: never fade longer than a third of it
+            fadeChecked = true
+            val e = effectiveFade(fadeMs, inc.duration)
+            if (e == 0L) { cancel(); return }
+            fadeMs = e
+        }
         val t = ((SystemClock.uptimeMillis() - rampStart) / fadeMs.toFloat()).coerceIn(0f, 1f)
         val (out, into) = gains(t)
         main.volume = base * out
@@ -126,7 +133,7 @@ class Crossfader(
         }
         incomingReady = l; p.addListener(l)
         p.prepare(); p.playWhenReady = true
-        incoming = p; rampStart = 0L; beganAt = SystemClock.uptimeMillis()
+        incoming = p; rampStart = 0L; fadeChecked = false; beganAt = SystemClock.uptimeMillis()
     }
 
     /** The incoming player becomes the active one: point the session at it and release the old player. No seek, no replay. */
@@ -162,6 +169,15 @@ class Crossfader(
             val sp = if (speed > 0f) speed else 1f
             val wall = remainingMediaMs / sp
             return wall <= fadeMs + 1500f && wall >= 300f
+        }
+        /**
+         * Fade length given the next song's duration. Unknown or invalid duration (unset, zero or negative) keeps the planned fade. A known
+         * duration caps the fade at a third of it. Under 500 ms left means the song is too short to crossfade into: 0 = skip the fade.
+         */
+        internal fun effectiveFade(fadeMs: Long, nextDurationMs: Long): Long {
+            if (nextDurationMs == C.TIME_UNSET || nextDurationMs <= 0L) return fadeMs
+            val e = min(fadeMs, nextDurationMs / 3)
+            return if (e < 500L) 0L else e
         }
         /** The incoming player has this long (wall clock) to become ready before the fade is abandoned. */
         internal fun shouldGiveUp(sinceBeginMs: Long) = sinceBeginMs > 4000L

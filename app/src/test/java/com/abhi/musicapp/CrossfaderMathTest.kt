@@ -27,4 +27,14 @@ class CrossfaderMathTest {
     @Test fun givesUpWaitingForIncomingAfterFourSeconds() {
         assertFalse(Crossfader.shouldGiveUp(3999L)); assertTrue(Crossfader.shouldGiveUp(4001L))
     }
+    @Test fun nextSongDurationCapsTheFade() {
+        assertEquals(6000L, Crossfader.effectiveFade(6000L, 180_000L)) // long song: unchanged
+        assertEquals(2000L, Crossfader.effectiveFade(6000L, 6000L))    // short song: a third of it
+        assertEquals(0L, Crossfader.effectiveFade(6000L, 1200L))       // too short to fade into
+    }
+    @Test fun unknownOrInvalidNextDurationKeepsThePlannedFade() {
+        assertEquals(5000L, Crossfader.effectiveFade(5000L, androidx.media3.common.C.TIME_UNSET))
+        assertEquals(5000L, Crossfader.effectiveFade(5000L, 0L))
+        assertEquals(5000L, Crossfader.effectiveFade(5000L, -5L))
+    }
 }
