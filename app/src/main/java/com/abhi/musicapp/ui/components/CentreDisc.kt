@@ -154,28 +154,28 @@ fun ClayBlob(levels: (() -> FloatArray?)?, tick: State<Long>?, beat: (() -> Floa
             val live = if (l < 0.02f) 0f else r * 0.62f * l * (1f + 0.6f * b) * (0.7f + 0.3f * FERRO_JITTER[i % FERRO_JITTER.size])
             idle + capL * kotlin.math.tanh(live / capL)
         }
-        val path = Path()
-        val steps = 220
-        for (j in 0 until steps) {
-            val th = 2.0 * PI * j / steps - PI / 2
-            var add = 0f
-            for (i in 0 until lobes) {
-                var d = th - ang[i]
-                while (d > PI) d -= 2 * PI
-                while (d < -PI) d += 2 * PI
-                // Longer lobes are narrower (stretched), short ones broad; the lobe ends are rounded by the gaussian.
-                val sigma = 0.42 - 0.16 * (len[i] / capL).coerceIn(0f, 1f)
-                val x = d / sigma
-                if (abs(x) < 3.0) add += len[i] * exp(-x * x).toFloat()
-            }
-            val wob = 1f + 0.05f * sin(3.0 * th + 1.3 * sec).toFloat() + 0.03f * sin(5.0 * th - 0.9 * sec).toFloat()
-            val rad = core * wob + add
-            val pt = Offset((c.x + rad * cos(th)).toFloat(), (c.y + rad * sin(th)).toFloat())
-            if (j == 0) path.moveTo(pt.x, pt.y) else path.lineTo(pt.x, pt.y)
-        }
-        path.close()
         val clay = Brush.radialGradient(0f to Color(0xFF4A4A4E), 1f to Color(0xFF38383C), center = Offset(c.x - r * 0.06f, c.y - r * 0.08f), radius = r * 0.8f)
-        drawPath(path, clay)
+        // Chunky clay: the core and each lobe are unions of overlapping circles (thick neck, rounded bulb at the tip), so lobes are fat and
+        // blobby with soft joins, not thin points. Lobes bend a little along their length and sway slowly.
+        val tipAng = DoubleArray(lobes) { i -> ang[i] + 0.22 * sin(1.1 * sec + i * 2.3) }
+        drawCircle(clay, core * (1f + 0.05f * sin(2.0 * sec).toFloat()), c)
+        for (k in 0 until 3) { // lumpy core
+            val ca = 2.1 * k + 0.4 * sec
+            drawCircle(clay, core * 0.72f, Offset((c.x + core * 0.35f * cos(ca)).toFloat(), (c.y + core * 0.35f * sin(ca)).toFloat()))
+        }
+        for (i in 0 until lobes) {
+            val reach = len[i]
+            val bulb = core * (0.34f + 0.16f * (reach / capL).coerceIn(0f, 1f)) // longer lobes end in a bigger rounded bulb
+            val neck = core * 0.62f
+            val steps = (reach / (bulb * 0.45f)).toInt().coerceIn(2, 16)
+            for (st in 0..steps) {
+                val t = st.toFloat() / steps
+                val dist = core * 0.5f + t * (reach + core * 0.2f)
+                val a2 = ang[i] + (tipAng[i] - ang[i]) * t
+                val rad = neck + (bulb - neck) * (t * t) // stays thick in the middle, rounded at the end
+                drawCircle(clay, rad, Offset((c.x + dist * cos(a2)).toFloat(), (c.y + dist * sin(a2)).toFloat()))
+            }
+        }
         // Drops: on a beat a drop pinches off the longest lobe tip and flies out into the empty space around the mass, then merges back.
         var loud = 0; var loudL = 0f
         for (i in 0 until lobes) if (len[i] > loudL) { loudL = len[i]; loud = i }
@@ -186,7 +186,7 @@ fun ClayBlob(levels: (() -> FloatArray?)?, tick: State<Long>?, beat: (() -> Floa
                 if (k in picks || len[k] < loudL * 0.6f || len[k] < r * 0.14f) continue
                 picks.add(k)
             }
-            drops.onBeat(b, now, picks.map { Triple(ang[it], len[it] / r, it) })
+            drops.onBeat(b, now, picks.map { Triple(tipAng[it], len[it] / r, it) })
         }
         drops.draw(this, c, core, r, now, clay)
     }

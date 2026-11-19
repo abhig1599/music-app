@@ -69,6 +69,12 @@ class Crossfader(
         override fun onTimelineChanged(timeline: androidx.media3.common.Timeline, reason: Int) { if (incoming != null) cancel() }
     }
 
+    // Test seams (no audio): let a unit test put a player in the incoming role and drive the swap and cancel paths.
+    internal val activePlayer: ExoPlayer get() = main
+    internal fun injectIncomingForTest(p: ExoPlayer, toIdx: Int) { incoming = p; toIndex = toIdx; rampStart = 0L }
+    internal fun swapForTest() = swap()
+    internal fun cancelForTest() = cancel()
+
     fun start() { main.addListener(mainListener); handler.post(loop) }
     fun stop() { handler.removeCallbacks(loop); main.removeListener(mainListener); cancel() }
 

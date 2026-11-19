@@ -333,8 +333,8 @@ class ScreenShotTest {
                 fixtureBeat = bt.floatValue, fixtureLevels = FloatArray(48) { i -> if (i % 4 == 0) 1f else 0.85f },
                 fixture = com.abhi.musicapp.playback.PlayerUiState(title = "Malcolm Todd - Earrings", artist = "", isPlaying = true, positionMs = 61_000L, durationMs = 192_000L, hasTrack = true)) } }
             composeRule.waitForIdle()
-            for (f in 0 until 4) {
-                clk.longValue = 1_000_000_000L + f * 100_000_000L
+            for (f in 0 until 12) {
+                clk.longValue = 1_000_000_000L + f * 75_000_000L
                 bt.floatValue = if (f == 0) 1f else 0.1f
                 composeRule.waitForIdle()
                 composeRule.onRoot().captureRoboImage("build/outputs/roborazzi/player_drop_multi_%d.png".format(f))
