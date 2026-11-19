@@ -276,7 +276,7 @@ class ScreenShotTest {
         androidx.compose.runtime.CompositionLocalProvider(androidx.compose.ui.platform.LocalDensity provides androidx.compose.ui.unit.Density(androidx.compose.ui.platform.LocalDensity.current.density, 1.6f)) {
             com.abhi.musicapp.ui.screens.QueueSheetContent(queueItems(), 1, { _, _ -> }, {}, {}) }
     }
-    @Test fun lyricsEmptyState() = shot("lyrics_empty_state", 600) { Box(Modifier.fillMaxSize()) { com.abhi.musicapp.ui.screens.LyricsSheet(-1L, "Malcolm Todd - Earrings") {} } }
+    @Test fun lyricsEmptyState() = shot("lyrics_empty_state", 600) { Box(Modifier.size(390.dp, 600.dp)) { com.abhi.musicapp.ui.screens.LyricsSheet(-1L, "Malcolm Todd - Earrings") {} } }
     @Test fun settingsTransitions() = shot("settings_transitions", 1500) { SettingsScreen(onBack = {}, onRowClick = {}, startExpanded = true) }
     @Test fun settingsTransitionsScrolled() {
         composeRule.setContent { MusicAppTheme { Box(Modifier.size(390.dp, 600.dp).background(androidx.compose.material3.MaterialTheme.colorScheme.background)) { SettingsScreen(onBack = {}, onRowClick = {}, startExpanded = true) } } }
