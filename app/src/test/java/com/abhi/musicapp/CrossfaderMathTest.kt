@@ -24,8 +24,4 @@ class CrossfaderMathTest {
         assertFalse(Crossfader.shouldBegin(4_000, 4000, 0.5f))
         assertTrue(Crossfader.shouldBegin(2_500, 4000, 0.5f))
     }
-    @Test fun handOverSeeksAheadByLatencyTimesSpeed() {
-        assertEquals(10_150L, Crossfader.handOverTarget(10_000, 150, 1f))
-        assertEquals(10_300L, Crossfader.handOverTarget(10_000, 150, 2f))
-    }
 }

@@ -28,7 +28,15 @@ class PlaybackService : MediaSessionService() {
 
     override fun onCreate() {
         super.onCreate()
-        // Same sink as the default, plus a pass-through tap that feeds the Player dial's frequency levels.
+        val player = buildPlayer()
+        exo = player
+        val session = MediaSession.Builder(this, player).build()
+        mediaSession = session
+        crossfader = Crossfader(this, player, { buildPlayer() }, { p -> session.player = p; exo = p }).also { it.start() }
+    }
+
+    /** Same sink as the default, plus a pass-through tap that feeds the Player dial's frequency levels. Used for every player this service creates. */
+    private fun buildPlayer(): ExoPlayer {
         val factory = object : DefaultRenderersFactory(this) {
             override fun buildAudioSink(context: Context, enableFloatOutput: Boolean, enableAudioTrackPlaybackParams: Boolean): AudioSink =
                 DefaultAudioSink.Builder(context)
@@ -37,10 +45,7 @@ class PlaybackService : MediaSessionService() {
                     .setAudioProcessors(arrayOf(AudioLevels.newProcessor()))
                     .build()
         }
-        val player = ExoPlayer.Builder(this, factory).build()
-        exo = player
-        crossfader = Crossfader(this, player).also { it.start() }
-        mediaSession = MediaSession.Builder(this, player).build()
+        return ExoPlayer.Builder(this, factory).build()
     }
 
     override fun onGetSession(controllerInfo: MediaSession.ControllerInfo): MediaSession? =
