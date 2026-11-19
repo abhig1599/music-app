@@ -132,67 +132,63 @@ fun ClayBlob(levels: (() -> FloatArray?)?, tick: State<Long>?, beat: (() -> Floa
         val b = (beat?.invoke() ?: 0f).coerceIn(0f, 1f)
         val c = Offset(size.width / 2f, size.height / 2f)
         val r = size.minDimension / 2f
-        val n = FERRO_SPIKES
-        val base = r * (0.46f + 0.07f * b)
-        // Spike height per band (low frequencies at the top, mirrored); fixed per-spike variation makes heights uneven like a real cluster, not a time loop.
-        fun lvl(i: Int): Float {
+        val now = clockNs()
+        val sec = (now / 1_000_000L) / 1000f
+        // Small irregular mass of clay: a modest core with a few stretched lobes that reach out with the bands and pull back, and a slow
+        // wobble so the outline is never a circle. Lobe angles drift slowly. Heights come only from the audio bands and the beat.
+        val lobes = LOBES
+        val core = r * (0.22f + 0.025f * b)
+        fun band(i: Int): Float {
             if (lv == null || lv.isEmpty()) return 0f
-            val f = i.toFloat() / n; val pos = (1f - abs(2f * f - 1f)) * (lv.size - 1)
-            return lv[pos.toInt().coerceIn(0, lv.size - 1)]
+            val lo = (i * lv.size) / lobes; val hi = ((i + 1) * lv.size) / lobes
+            var m = 0f; var k = lo
+            while (k < hi.coerceAtLeast(lo + 1)) { m = maxOf(m, lv[k.coerceIn(0, lv.size - 1)]); k++ }
+            return m
         }
-        // Liquid outline: radius(theta) = pool + sum of rounded gaussian bumps (one per band). Bumps merge at the base like
-        // ferrofluid; tall ones are narrower, short ones broad. Heights come only from the audio bands and beat.
+        val capL = r * 0.40f
+        val ang = DoubleArray(lobes) { i -> 2.0 * PI * i / lobes - PI / 2 + 0.35 * sin(0.23 * sec + i * 1.7) + FERRO_JITTER[i % FERRO_JITTER.size] * 0.25 }
+        val len = FloatArray(lobes) { i ->
+            val l = band(i)
+            // A faint idle length keeps the shape irregular and alive-looking only through slow drift; real reach needs real levels.
+            val idle = r * (0.05f + 0.03f * FERRO_JITTER[(i + 3) % FERRO_JITTER.size])
+            val live = if (l < 0.02f) 0f else r * 0.62f * l * (1f + 0.6f * b) * (0.7f + 0.3f * FERRO_JITTER[i % FERRO_JITTER.size])
+            idle + capL * kotlin.math.tanh(live / capL)
+        }
         val path = Path()
-        val steps = 240
-        val w = 2.0 * PI / n
-        val hs = FloatArray(n) { k ->
-            val l = lvl(k)
-            if (l < 0.015f) 0f else r * (0.46f * l * (1f + 0.7f * b) * (0.7f + 0.3f * FERRO_JITTER[k % FERRO_JITTER.size])).coerceAtMost(0.34f)
-        }
-        val tips = ArrayList<Offset>(); val bases = ArrayList<Offset>()
+        val steps = 220
         for (j in 0 until steps) {
             val th = 2.0 * PI * j / steps - PI / 2
             var add = 0f
-            for (k in 0 until n) {
-                if (hs[k] <= 0f) continue
-                val ak = w * k - PI / 2
-                var d = th - ak
+            for (i in 0 until lobes) {
+                var d = th - ang[i]
                 while (d > PI) d -= 2 * PI
                 while (d < -PI) d += 2 * PI
-                val sigma = w * (0.95 - 0.2 * (hs[k] / (r * 0.5f)).coerceIn(0f, 1f))
+                // Longer lobes are narrower (stretched), short ones broad; the lobe ends are rounded by the gaussian.
+                val sigma = 0.42 - 0.16 * (len[i] / capL).coerceIn(0f, 1f)
                 val x = d / sigma
-                if (kotlin.math.abs(x) < 3.0) add += hs[k] * exp(-x * x).toFloat()
+                if (abs(x) < 3.0) add += len[i] * exp(-x * x).toFloat()
             }
-            val capH = r * 0.34f
-            val rad = base + capH * kotlin.math.tanh(add / capH)
+            val wob = 1f + 0.05f * sin(3.0 * th + 1.3 * sec).toFloat() + 0.03f * sin(5.0 * th - 0.9 * sec).toFloat()
+            val rad = core * wob + add
             val pt = Offset((c.x + rad * cos(th)).toFloat(), (c.y + rad * sin(th)).toFloat())
             if (j == 0) path.moveTo(pt.x, pt.y) else path.lineTo(pt.x, pt.y)
         }
         path.close()
-        for (k in 0 until n) if (hs[k] > r * 0.08f) {
-            val ak = w * k - PI / 2
-            tips.add(Offset((c.x + (base + hs[k]) * cos(ak)).toFloat(), (c.y + (base + hs[k]) * sin(ak)).toFloat()))
-            bases.add(Offset((c.x + base * 0.9f * cos(ak)).toFloat(), (c.y + base * 0.9f * sin(ak)).toFloat()))
-        }
-        // Natural clay: one matte tone, only a faint top-light falloff, no gloss, sheen or hard outline.
-        val clay = Brush.radialGradient(0f to Color(0xFF4A4A4E), 1f to Color(0xFF38383C), center = Offset(c.x - r * 0.10f, c.y - r * 0.14f), radius = r * 1.1f)
+        val clay = Brush.radialGradient(0f to Color(0xFF4A4A4E), 1f to Color(0xFF38383C), center = Offset(c.x - r * 0.06f, c.y - r * 0.08f), radius = r * 0.8f)
         drawPath(path, clay)
-        // Droplets: on a beat a small drop pinches off the loudest spike, flies out and falls back into the pool (same clay tone, so it merges).
-        val now = clockNs()
-        var loud = 0; var loudH = 0f
-        for (k in 0 until n) if (hs[k] > loudH) { loudH = hs[k]; loud = k }
-        if (loudH > r * 0.03f) {
-            // Candidates: the loudest spike plus up to two other tall spikes that are not neighbours of one already chosen. Quiet beats give one drop.
+        // Drops: on a beat a drop pinches off the longest lobe tip and flies out into the empty space around the mass, then merges back.
+        var loud = 0; var loudL = 0f
+        for (i in 0 until lobes) if (len[i] > loudL) { loudL = len[i]; loud = i }
+        if (loudL > r * 0.16f) {
             val picks = ArrayList<Int>(); picks.add(loud)
-            for (k in (0 until n).sortedByDescending { hs[it] }) {
+            for (k in (0 until lobes).sortedByDescending { len[it] }) {
                 if (picks.size >= 3) break
-                if (k in picks || hs[k] < loudH * 0.6f || hs[k] < r * 0.06f) continue
-                if (picks.any { pk -> val dd = kotlin.math.abs(pk - k); minOf(dd, n - dd) < 2 }) continue
+                if (k in picks || len[k] < loudL * 0.6f || len[k] < r * 0.14f) continue
                 picks.add(k)
             }
-            drops.onBeat(b, now, picks.map { Triple(w * it - PI / 2, hs[it] / r, it) })
+            drops.onBeat(b, now, picks.map { Triple(ang[it], len[it] / r, it) })
         }
-        drops.draw(this, c, base, r, now, clay)
+        drops.draw(this, c, core, r, now, clay)
     }
 }
 
@@ -209,8 +205,8 @@ class ClayDrops {
         armed = false; lastSpawnNs = nowNs
         cands.forEachIndexed { i, (angle, strength, _) ->
             val st = strength.coerceIn(0f, 1f)
-            if (i == 0) live.add(Drop(angle, nowNs, 0.22f + 0.22f * st, 0.09f + 0.04f * st, strength))
-            else if (beat > 0.55f) live.add(Drop(angle, nowNs + i * 45_000_000L, 0.14f + 0.18f * st, 0.05f + 0.03f * st, strength))
+            if (i == 0) live.add(Drop(angle, nowNs, 0.12f + 0.14f * st, 0.06f + 0.035f * st, strength))
+            else if (beat > 0.55f) live.add(Drop(angle, nowNs + i * 55_000_000L, 0.09f + 0.11f * st, 0.04f + 0.03f * st, strength))
         }
         while (live.size > 6) live.removeAt(0)
     }
@@ -247,5 +243,5 @@ class ClayDrops {
     }
 }
 
-private const val FERRO_SPIKES = 14
+private const val LOBES = 5
 private val FERRO_JITTER = floatArrayOf(0.2f, 0.9f, 0.5f, 1f, 0.1f, 0.7f, 0.4f, 0.85f, 0.3f, 0.6f, 0.95f, 0.15f, 0.55f)

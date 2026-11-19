@@ -46,6 +46,12 @@ jobs:
           path: app/build/outputs/roborazzi/
           retention-days: 14
 
+      - name: Record that this run passed
+        if: ${{ success() && !startsWith(github.ref, 'refs/tags/') }}
+        run: |
+          mkdir -p docs
+          echo "Last successful CI run: $GITHUB_SHA" > docs/ci-last-success.txt
+
       - name: Commit screenshots back to repo
         if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         run: |
@@ -54,7 +60,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git rm -q --ignore-unmatch docs/ci-last-failure.txt
-          git add docs/screenshots/
+          git add docs/screenshots/ docs/ci-last-success.txt
           git diff --cached --quiet && exit 0
           git commit -m "Update rendered screen screenshots [skip ci]"
           git push
