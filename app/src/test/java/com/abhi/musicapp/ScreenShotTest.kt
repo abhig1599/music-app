@@ -276,6 +276,16 @@ class ScreenShotTest {
         androidx.compose.runtime.CompositionLocalProvider(androidx.compose.ui.platform.LocalDensity provides androidx.compose.ui.unit.Density(androidx.compose.ui.platform.LocalDensity.current.density, 1.6f)) {
             com.abhi.musicapp.ui.screens.QueueSheetContent(queueItems(), 1, { _, _ -> }, {}, {}) }
     }
+    // RENDER-ONLY: production PlayerScreen with injected rail state (muted, speaker preferred) and the clay face showing. Not real routing or audio.
+    @Test fun outputRailProduction() = shot("output_rail_production") {
+        com.abhi.musicapp.ui.screens.PlayerScreen(onBack = {}, initialOverlay = 3, fixtureFlipped = true, fixtureMuted = true, fixturePrefSpeaker = true,
+            fixtureBeat = 0.5f, fixtureLevels = FloatArray(48) { i -> (0.7f * (1f - i / 60f)).coerceIn(0f, 1f) },
+            fixture = com.abhi.musicapp.playback.PlayerUiState(title = "Malcolm Todd - Earrings", artist = "", isPlaying = true, positionMs = 61_000L, durationMs = 192_000L, hasTrack = true))
+    }
+    @Test fun outputRailProductionLandscape() = shotWide("output_rail_production_landscape") {
+        com.abhi.musicapp.ui.screens.PlayerScreen(onBack = {}, initialOverlay = 3, fixtureFlipped = true, fixtureMuted = false, fixturePrefSpeaker = false,
+            fixture = com.abhi.musicapp.playback.PlayerUiState(title = "Malcolm Todd - Earrings", artist = "", isPlaying = true, positionMs = 61_000L, durationMs = 192_000L, hasTrack = true))
+    }
     @Test fun lyricsEmptyState() = shot("lyrics_empty_state", 600) { Box(Modifier.size(390.dp, 600.dp)) { com.abhi.musicapp.ui.screens.LyricsSheet(-1L, "Malcolm Todd - Earrings") {} } }
     @Test fun settingsTransitions() = shot("settings_transitions", 1500) { SettingsScreen(onBack = {}, onRowClick = {}, startExpanded = true) }
     @Test fun settingsTransitionsScrolled() {

@@ -106,7 +106,7 @@ internal fun scrubFraction(start: Float, prevAngleDeg: Float, curAngleDeg: Float
 }
 
 @Composable
-fun PlayerScreen(onBack: () -> Unit, fixture: PlayerUiState? = null, initialOverlay: Int = 0, sourceLabel: String? = null, progressInFixture: Boolean = false, sleepPreview: com.abhi.musicapp.playback.SleepState? = null, fixtureLevels: FloatArray? = null, fixtureFlipped: Boolean? = null, fixtureRotation: Float? = null, fixtureBeat: Float? = null, onOpenEqualiser: () -> Unit = {}) {
+fun PlayerScreen(onBack: () -> Unit, fixture: PlayerUiState? = null, initialOverlay: Int = 0, sourceLabel: String? = null, progressInFixture: Boolean = false, sleepPreview: com.abhi.musicapp.playback.SleepState? = null, fixtureLevels: FloatArray? = null, fixtureFlipped: Boolean? = null, fixtureRotation: Float? = null, fixtureBeat: Float? = null, onOpenEqualiser: () -> Unit = {}, fixtureMuted: Boolean? = null, fixturePrefSpeaker: Boolean? = null) {
     // 0 none, 1 three-dots menu, 2 focus-mode popup, 3 output-device popup (Figma 'Song Page - menu', 'Song focus mode', 'Song Focus connected device').
     var overlay by androidx.compose.runtime.remember { androidx.compose.runtime.mutableIntStateOf(initialOverlay) }
     var menuNote by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf("") }
@@ -145,8 +145,8 @@ fun PlayerScreen(onBack: () -> Unit, fixture: PlayerUiState? = null, initialOver
         com.abhi.musicapp.playback.OutputKind.USB -> "Audio output: USB audio"
         else -> "Audio output: unknown"
     }
-    var prefSpeaker by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(com.abhi.musicapp.playback.AudioOutput.speakerPreferred) }
-    var muted by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(com.abhi.musicapp.playback.AudioOutput.isMuted()) }
+    var prefSpeaker by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(fixturePrefSpeaker ?: com.abhi.musicapp.playback.AudioOutput.speakerPreferred) }
+    var muted by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(fixtureMuted ?: com.abhi.musicapp.playback.AudioOutput.isMuted()) }
     val routedNow = if (outKind == com.abhi.musicapp.playback.OutputKind.UNKNOWN) "unknown on this Android version" else outLabel.removePrefix("Audio output: ")
     val outStatus = "Preferred: " + (if (prefSpeaker) "phone speaker" else "headphones / system default") + "\nRouted now: " + routedNow + (outNote?.let { "\n$it" } ?: "")
     val railTap: (Boolean, Int) -> Unit = { left, i ->
