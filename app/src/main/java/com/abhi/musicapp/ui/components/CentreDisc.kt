@@ -194,7 +194,7 @@ class ClayDrops {
         if (lastSpawnNs != Long.MIN_VALUE && nowNs - lastSpawnNs < 120_000_000L) return
         armed = false; lastSpawnNs = nowNs
         val spread = if (spike % 2 == 0) 0.22 else -0.22
-        live.add(Drop(angle, nowNs, 0.22f + 0.22f * strength.coerceIn(0f, 1f), 0.075f + 0.04f * strength.coerceIn(0f, 1f)))
+        live.add(Drop(angle, nowNs, 0.22f + 0.22f * strength.coerceIn(0f, 1f), 0.09f + 0.04f * strength.coerceIn(0f, 1f)))
         if (beat > 0.7f) live.add(Drop(angle + spread, nowNs + 40_000_000L, 0.12f + 0.2f * strength.coerceIn(0f, 1f), 0.04f))
         while (live.size > 6) live.removeAt(0)
     }
@@ -211,9 +211,20 @@ class ClayDrops {
             val rad = r * d.size * (1f - 0.55f * life)
             val tip = Offset((c.x + dist * cos(d.angle)).toFloat(), (c.y + dist * sin(d.angle)).toFloat())
             val edge = Offset((c.x + base * 0.9f * cos(d.angle)).toFloat(), (c.y + base * 0.9f * sin(d.angle)).toFloat())
-            // A thin neck while the drop is close to the pool, thinning as it separates (the "split").
-            val neck = (1f - (out * 1.6f).coerceIn(0f, 1f)) * rad * 1.1f
-            if (neck > 0.5f) scope.drawLine(androidx.compose.ui.graphics.Color(0xFF3F3F43), edge, tip, strokeWidth = neck)
+            // Neck: a tapered stalk from the pool edge to the drop. It is wide at the pool, thins as the drop rises and snaps when it separates
+            // (out > 0.8), then the drop falls back and a short stalk grows again as it merges (life > 0.7).
+            val sep = (1f - out) * (1f - out)
+            val neckW = if (out > 0.92f) 0f else rad * (0.12f + 1.2f * sep)
+            if (neckW > 0.6f && (kotlin.math.abs(dist - base) > 0.5f)) {
+                val nx = (-sin(d.angle)).toFloat(); val ny = cos(d.angle).toFloat()
+                val np = Path()
+                np.moveTo(edge.x + nx * rad * 1.4f, edge.y + ny * rad * 1.4f)
+                np.lineTo(tip.x + nx * neckW * 0.5f, tip.y + ny * neckW * 0.5f)
+                np.lineTo(tip.x - nx * neckW * 0.5f, tip.y - ny * neckW * 0.5f)
+                np.lineTo(edge.x - nx * rad * 1.4f, edge.y - ny * rad * 1.4f)
+                np.close()
+                scope.drawPath(np, brush)
+            }
             scope.drawCircle(brush, rad, tip)
         }
     }
