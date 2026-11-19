@@ -305,6 +305,24 @@ class ScreenShotTest {
             composeRule.onRoot().captureRoboImage("build/outputs/roborazzi/clay_drop_life_%d.png".format(f))
         }
     }
+    // TEST RENDER (synthetic beat, injected state, no audio): production PlayerScreen, 8 frames 100 ms apart after one beat, to check drop headroom and motion in the real layout.
+    @Test fun clayDropLifeProductionPlayer() {
+        val clk = androidx.compose.runtime.mutableLongStateOf(1_000_000_000L)
+        val bt = androidx.compose.runtime.mutableFloatStateOf(1f)
+        com.abhi.musicapp.ui.components.clayClockOverride = { clk.longValue }
+        try {
+            composeRule.setContent { MusicAppTheme { com.abhi.musicapp.ui.screens.PlayerScreen(onBack = {}, fixtureFlipped = true,
+                fixtureBeat = bt.floatValue, fixtureLevels = FloatArray(48) { i -> (0.8f * (1f - i / 60f)).coerceIn(0f, 1f) },
+                fixture = com.abhi.musicapp.playback.PlayerUiState(title = "Malcolm Todd - Earrings", artist = "", isPlaying = true, positionMs = 61_000L, durationMs = 192_000L, hasTrack = true)) } }
+            composeRule.waitForIdle()
+            for (f in 0 until 8) {
+                clk.longValue = 1_000_000_000L + f * 100_000_000L
+                bt.floatValue = if (f == 0) 1f else 0.1f
+                composeRule.waitForIdle()
+                composeRule.onRoot().captureRoboImage("build/outputs/roborazzi/player_drop_life_%d.png".format(f))
+            }
+        } finally { com.abhi.musicapp.ui.components.clayClockOverride = null }
+    }
     @Test fun lyricsEmptyState() = shot("lyrics_empty_state", 600) { Box(Modifier.size(390.dp, 600.dp)) { com.abhi.musicapp.ui.screens.LyricsSheet(-1L, "Malcolm Todd - Earrings") {} } }
     @Test fun settingsTransitions() = shot("settings_transitions", 1500) { SettingsScreen(onBack = {}, onRowClick = {}, startExpanded = true) }
     @Test fun settingsTransitionsScrolled() {

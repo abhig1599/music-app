@@ -120,8 +120,11 @@ fun CentreDisc(
  * louder bands, and the whole pool swells on a detected beat ([beat], 0..1). Silence or pause = a calm round drop, no motion:
  * nothing here runs on a clock, it only follows the audio levels. My reading of his description, not a copy of any video.
  */
+/** Test-only: pins the blob's clock so renders can step time. Null in the app. */
+internal var clayClockOverride: (() -> Long)? = null
+
 @Composable
-fun ClayBlob(levels: (() -> FloatArray?)?, tick: State<Long>?, beat: (() -> Float)? = null, clockNs: () -> Long = System::nanoTime) {
+fun ClayBlob(levels: (() -> FloatArray?)?, tick: State<Long>?, beat: (() -> Float)? = null, clockNs: () -> Long = { clayClockOverride?.invoke() ?: System.nanoTime() }) {
     val drops = remember { ClayDrops() }
     Canvas(Modifier.fillMaxSize()) {
         tick?.value // redraw every frame while live

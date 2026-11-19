@@ -53,6 +53,7 @@ jobs:
           cp app/build/outputs/roborazzi/*.png docs/screenshots/ || exit 0
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git rm -q --ignore-unmatch docs/ci-last-failure.txt
           git add docs/screenshots/
           git diff --cached --quiet && exit 0
           git commit -m "Update rendered screen screenshots [skip ci]"
