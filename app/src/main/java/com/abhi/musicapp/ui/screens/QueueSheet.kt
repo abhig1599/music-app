@@ -83,10 +83,10 @@ fun QueueSheetContent(items: List<QueueEntry>, current: Int, onMove: (Int, Int) 
             Column(Modifier.weight(1f).verticalScroll(rememberScrollState())) {
                 ReorderColumn(items, rowHeight = (54f * fs).dp, onMove = onMove) { e, i, handle, dragging ->
                     Row(
-                        Modifier.fillMaxWidth().padding(vertical = 3.dp).height((48f * fs).dp).clip(RoundedCornerShape(8.dp))
+                        Modifier.fillMaxWidth().padding(vertical = 3.dp).height((56f * fs).dp).clip(RoundedCornerShape(8.dp))
                             .background(if (dragging) Color(0xFFFFFFFF) else Color.Transparent)
                             .border(1.dp, if (dragging) Orangs else GrayLight, RoundedCornerShape(8.dp))
-                            .clickable { onPlay(i) }.padding(start = 10.dp),
+                            .clickable { onPlay(i) }.padding(start = 16.dp, end = 6.dp), // inner padding; the 3dp gap between rows is unchanged
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Box(Modifier.size(28.dp).clip(RoundedCornerShape(6.dp)).background(GrayLight)) // album photo not shipped
