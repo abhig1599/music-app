@@ -176,7 +176,7 @@ fun PlayerScreen(onBack: () -> Unit, fixture: PlayerUiState? = null, initialOver
         onDispose { com.abhi.musicapp.playback.AudioLevels.setEnabled(false) }
     }
     androidx.compose.runtime.LaunchedEffect(live2) {
-        if (!live2) { shown.fill(0f); beatBox[0] = 0f; frame.longValue++; return@LaunchedEffect }
+        if (!live2) { shown.fill(0f); beatBox[0] = 0f; repeat(90) { androidx.compose.runtime.withFrameNanos { }; frame.longValue++ }; return@LaunchedEffect } // keep drawing about 1.5 s so the blob can glide back to its circle
         while (true) {
             androidx.compose.runtime.withFrameNanos { }
             val t = com.abhi.musicapp.playback.AudioLevels.bands

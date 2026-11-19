@@ -33,6 +33,7 @@ class Crossfader(
     private var main: ExoPlayer,
     private val newPlayer: () -> ExoPlayer,
     private val onSwap: (ExoPlayer) -> Unit,
+    private val onItemChanged: (ExoPlayer) -> Unit = {},
 ) {
     private val handler = Handler(Looper.getMainLooper())
     private var incoming: ExoPlayer? = null
@@ -66,6 +67,7 @@ class Crossfader(
             else if (reason == Player.DISCONTINUITY_REASON_SEEK || reason == Player.DISCONTINUITY_REASON_SEEK_ADJUSTMENT || reason == Player.DISCONTINUITY_REASON_REMOVE) cancel()
         }
         override fun onMediaItemTransition(mediaItem: androidx.media3.common.MediaItem?, reason: Int) {
+            onItemChanged(main)
             if (incoming != null && reason != Player.MEDIA_ITEM_TRANSITION_REASON_AUTO) cancel()
         }
         override fun onPlaybackParametersChanged(p: androidx.media3.common.PlaybackParameters) { incoming?.playbackParameters = p }
@@ -79,7 +81,7 @@ class Crossfader(
     internal fun swapForTest() = swap()
     internal fun cancelForTest() = cancel()
 
-    fun start() { main.addListener(mainListener); handler.post(loop) }
+    fun start() { main.addListener(mainListener); handler.post(loop); onItemChanged(main) }
     fun stop() { handler.removeCallbacks(loop); main.removeListener(mainListener); cancel() }
 
     fun setMuted(m: Boolean) { muted = m; if (incoming == null) main.volume = base }
@@ -138,6 +140,7 @@ class Crossfader(
         main = inc
         onSwap(inc)
         inc.addListener(mainListener)
+        onItemChanged(inc)
         old.volume = 0f; old.playWhenReady = false; old.release()
     }
 

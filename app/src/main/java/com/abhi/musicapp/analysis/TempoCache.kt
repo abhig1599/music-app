@@ -19,14 +19,19 @@ object TempoCache {
     fun cached(c: Context, key: String): Float? = if (prefs(c).contains(key)) prefs(c).getFloat(key, -1f) else null
 
     /** Blocking (call off the main thread). Returns the BPM or null when unknown. */
-    fun analyse(c: Context, uri: Uri, key: String): Float? {
+    fun analyse(c: Context, uri: Uri, key: String, cancelled: () -> Boolean = { false }): Float? {
         cached(c, key)?.let { return if (it > 0f) it else null }
-        val r = try { decode(c, uri)?.let { TempoAnalyzer.analyze(it.first, it.second) } } catch (e: Exception) { null }
+        val decoded = try { decode(c, uri, cancelled) } catch (e: Exception) { null }
+        if (cancelled()) return null // never cache a cancelled run as "unknown"
+        val r = decoded?.let { TempoAnalyzer.analyze(it.first, it.second) }
         prefs(c).edit().putFloat(key, r?.bpm ?: -1f).apply()
         return r?.bpm
     }
 
-    private fun decode(c: Context, uri: Uri): Pair<FloatArray, Int>? {
+    /** Background tempo prefetch for the next queued song. Off by default and has no setting in the UI; nothing audible uses the result. */
+    fun prefetchEnabled(c: Context) = prefs(c).getBoolean("prefetch_on", false)
+
+    private fun decode(c: Context, uri: Uri, cancelled: () -> Boolean): Pair<FloatArray, Int>? {
         val ex = MediaExtractor()
         try {
             ex.setDataSource(c, uri, null)
@@ -36,10 +41,11 @@ object TempoCache {
             val sr = fmt.getInteger(MediaFormat.KEY_SAMPLE_RATE)
             var ch = fmt.getInteger(MediaFormat.KEY_CHANNEL_COUNT).coerceAtLeast(1)
             val codec = MediaCodec.createDecoderByType(fmt.getString(MediaFormat.KEY_MIME)!!)
+            try {
             codec.configure(fmt, null, null, 0); codec.start()
             val out = FloatArray(sr * MAX_SECONDS); var n = 0
             val info = MediaCodec.BufferInfo(); var inDone = false; var outDone = false
-            while (!outDone && n < out.size) {
+            while (!outDone && n < out.size && !cancelled()) {
                 if (!inDone) {
                     val i = codec.dequeueInputBuffer(10_000)
                     if (i >= 0) {
@@ -63,7 +69,7 @@ object TempoCache {
                     ch = codec.outputFormat.getInteger(MediaFormat.KEY_CHANNEL_COUNT).coerceAtLeast(1)
                 }
             }
-            codec.stop(); codec.release()
+            } finally { try { codec.stop() } catch (e: Exception) {}; codec.release() } // always freed, also on error or cancel
             return out.copyOf(n) to sr
         } finally { ex.release() }
     }

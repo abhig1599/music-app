@@ -32,7 +32,22 @@ class PlaybackService : MediaSessionService() {
         exo = player
         val session = MediaSession.Builder(this, player).build()
         mediaSession = session
-        crossfader = Crossfader(this, player, { buildPlayer() }, { p -> session.player = p; exo = p }).also { it.start() }
+        crossfader = Crossfader(this, player, { buildPlayer() }, { p -> session.player = p; exo = p }, { p -> prefetchNext(p) }).also { it.start() }
+    }
+
+    private val tempoPrefetcher = com.abhi.musicapp.analysis.TempoPrefetcher()
+
+    /** Hidden, off by default: analyse the tempo of the NEXT queued local song in the background and cache it. Nothing audible uses it. */
+    private fun prefetchNext(p: ExoPlayer) {
+        if (!com.abhi.musicapp.analysis.TempoCache.prefetchEnabled(this)) return
+        val pm = getSystemService(android.os.PowerManager::class.java)
+        if (pm?.isPowerSaveMode == true) return
+        val next = p.nextMediaItemIndex
+        if (next == androidx.media3.common.C.INDEX_UNSET) return
+        val item = p.getMediaItemAt(next)
+        val uri = item.localConfiguration?.uri ?: return
+        val key = item.mediaId
+        tempoPrefetcher.request(key) { cancelled -> com.abhi.musicapp.analysis.TempoCache.analyse(this, uri, key, cancelled) }
     }
 
     /** Same sink as the default, plus a pass-through tap that feeds the Player dial's frequency levels. Used for every player this service creates. */
@@ -58,6 +73,7 @@ class PlaybackService : MediaSessionService() {
         }
         mediaSession = null
         crossfader?.stop(); crossfader = null
+        tempoPrefetcher.shutdown()
         exo = null
         super.onDestroy()
     }

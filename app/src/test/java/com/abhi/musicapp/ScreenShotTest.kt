@@ -354,6 +354,23 @@ class ScreenShotTest {
             }
         }
     }
+    // Defining behaviour in one sequence: quiet circle, beat deformation, release, smooth return. Synthetic levels over time; each frame replays the
+    // smoothing history up to that moment (20 ms steps) so the frame shows the real production smoothing, then draws the production ClayBlob.
+    @Test fun clayReleaseSequence() {
+        fun lv(t: Float): FloatArray = if (t in 0.4f..1.0f) FloatArray(48) { i -> if (i % 3 == 0) 1f else 0.7f } else FloatArray(48) { 0.05f }
+        fun bt(t: Float): Float = if (t in 0.4f..1.0f) kotlin.math.exp(-(t - 0.4f) / 0.15f) else 0f
+        val times = listOf(0.2f, 0.5f, 0.8f, 1.0f, 1.12f, 1.3f, 1.6f, 2.2f)
+        val base = 5_000_000_000L
+        shotWide("clay_release_sequence", 1312, 200) {
+            androidx.compose.foundation.layout.Row {
+                times.forEach { t ->
+                    val sm = com.abhi.musicapp.ui.components.ClaySmoother(4)
+                    var u = 0f; while (u < t) { sm.step(com.abhi.musicapp.ui.components.clayTargets(lv(u), bt(u), (base / 1e9f) + u), base + (u * 1e9f).toLong()); u += 0.02f }
+                    Box(Modifier.size(164.dp)) { com.abhi.musicapp.ui.components.ClayBlob({ lv(t) }, null, { bt(t) }, { base + (t * 1e9f).toLong() }, sm) }
+                }
+            }
+        }
+    }
     @Test fun lyricsEmptyState() = shot("lyrics_empty_state", 600) { Box(Modifier.size(390.dp, 600.dp)) { com.abhi.musicapp.ui.screens.LyricsSheet(-1L, "Malcolm Todd - Earrings") {} } }
     @Test fun settingsTransitions() = shot("settings_transitions", 1500) { SettingsScreen(onBack = {}, onRowClick = {}, startExpanded = true) }
     @Test fun settingsTransitionsScrolled() {

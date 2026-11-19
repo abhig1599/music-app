@@ -124,7 +124,7 @@ fun CentreDisc(
 internal var clayClockOverride: (() -> Long)? = null
 
 @Composable
-fun ClayBlob(levels: (() -> FloatArray?)?, tick: State<Long>?, beat: (() -> Float)? = null, clockNs: () -> Long = { clayClockOverride?.invoke() ?: System.nanoTime() }) {
+fun ClayBlob(levels: (() -> FloatArray?)?, tick: State<Long>?, beat: (() -> Float)? = null, clockNs: () -> Long = { clayClockOverride?.invoke() ?: System.nanoTime() }, smoother: ClaySmoother = remember { ClaySmoother(LOBES) }) {
     val drops = remember { ClayDrops() }
     Canvas(Modifier.fillMaxSize()) {
         tick?.value // redraw every frame while live
@@ -138,23 +138,11 @@ fun ClayBlob(levels: (() -> FloatArray?)?, tick: State<Long>?, beat: (() -> Floa
         // wobble so the outline is never a circle. Lobe angles drift slowly. Heights come only from the audio bands and the beat.
         val lobes = LOBES
         val core = r * (0.22f + 0.012f * b)
-        fun band(i: Int): Float {
-            if (lv == null || lv.isEmpty()) return 0f
-            val lo = (i * lv.size) / lobes; val hi = ((i + 1) * lv.size) / lobes
-            var m = 0f; var k = lo
-            while (k < hi.coerceAtLeast(lo + 1)) { m = maxOf(m, lv[k.coerceIn(0, lv.size - 1)]); k++ }
-            return m
-        }
         val capL = r * 0.34f
-        // Lobe directions wander widely and each lobe's strength drifts on its own slow cycle, so successive shapes differ.
         val ang = DoubleArray(lobes) { i -> LOBE_BASE[i] + 0.12 * sec + 0.9 * sin(0.31 * sec + i * 1.7) }
-        val len = FloatArray(lobes) { i ->
-            val l = band(i)
-            // Resting form is a plain circle: no idle length. A noise gate plus a low gain keeps small level changes from moving it.
-            val vary = 0.65f + 0.35f * sin(0.37 * sec + i * 2.1).toFloat()
-            val live = if (l < SENS_GATE) 0f else r * SENS_GAIN * (l - SENS_GATE) * LOBE_WEIGHT[i] * vary * (1f + 0.4f * b)
-            capL * kotlin.math.tanh(live / capL)
-        }
+        // Quick to grow with the music, slow to settle, so a quiet moment glides back to the resting circle instead of snapping.
+        val sm = smoother.step(clayTargets(lv, b, sec), now)
+        val len = FloatArray(lobes) { sm[it] * r }
         val clay = Brush.radialGradient(0f to Color(0xFF4A4A4E), 1f to Color(0xFF38383C), center = Offset(c.x - r * 0.06f, c.y - r * 0.08f), radius = r * 0.8f)
         // Chunky clay: the core and each lobe are unions of overlapping circles (thick neck, rounded bulb at the tip), so lobes are fat and
         // blobby with soft joins, not thin points. Lobes bend a little along their length and sway slowly.
@@ -194,6 +182,42 @@ fun ClayBlob(levels: (() -> FloatArray?)?, tick: State<Long>?, beat: (() -> Floa
         }
         drops.draw(this, c, core, r, now, clay)
     }
+}
+
+/** Normalised (units of the disc radius) lobe lengths for the given levels, beat and time. Resting circle = all zeros. */
+internal fun clayTargets(lv: FloatArray?, b: Float, sec: Float): FloatArray {
+    fun band(i: Int): Float {
+        if (lv == null || lv.isEmpty()) return 0f
+        val lo = (i * lv.size) / LOBES; val hi = ((i + 1) * lv.size) / LOBES
+        var m = 0f; var k = lo
+        while (k < hi.coerceAtLeast(lo + 1)) { m = maxOf(m, lv[k.coerceIn(0, lv.size - 1)]); k++ }
+        return m
+    }
+    val capL = 0.34f
+    return FloatArray(LOBES) { i ->
+        val l = band(i)
+        val vary = 0.65f + 0.35f * sin(0.37 * sec + i * 2.1).toFloat()
+        val live = if (l < SENS_GATE) 0f else SENS_GAIN * (l - SENS_GATE) * LOBE_WEIGHT[i] * vary * (1f + 0.4f * b)
+        capL * kotlin.math.tanh(live / capL)
+    }
+}
+
+/** Per-lobe smoothing: attack about 90 ms, release about 450 ms. The first step snaps to the target (no history). */
+class ClaySmoother(n: Int) {
+    private val v = FloatArray(n)
+    private var last = Long.MIN_VALUE
+    val settled: Boolean get() = v.all { it < 0.5f }
+    fun step(target: FloatArray, nowNs: Long): FloatArray {
+        if (last == Long.MIN_VALUE) { for (i in v.indices) v[i] = target[i]; last = nowNs; return v }
+        val dt = ((nowNs - last) / 1e9f).coerceIn(0f, 0.25f)
+        if (nowNs > last) last = nowNs
+        for (i in v.indices) {
+            val tau = if (target[i] > v[i]) 0.09f else 0.45f
+            v[i] += (target[i] - v[i]) * (1f - kotlin.math.exp(-dt / tau))
+        }
+        return v
+    }
+    fun maxValue() = v.max()
 }
 
 /** Short-lived drops. Each lives about 0.8 s: out to a peak distance along its angle, then back into the pool, shrinking as it merges. */
