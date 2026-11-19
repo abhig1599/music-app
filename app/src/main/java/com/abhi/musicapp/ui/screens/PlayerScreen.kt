@@ -106,7 +106,7 @@ internal fun scrubFraction(start: Float, prevAngleDeg: Float, curAngleDeg: Float
 }
 
 @Composable
-fun PlayerScreen(onBack: () -> Unit, fixture: PlayerUiState? = null, initialOverlay: Int = 0, sourceLabel: String? = null, progressInFixture: Boolean = false, sleepPreview: com.abhi.musicapp.playback.SleepState? = null, fixtureLevels: FloatArray? = null, fixtureFlipped: Boolean? = null, fixtureRotation: Float? = null, fixtureBeat: Float? = null) {
+fun PlayerScreen(onBack: () -> Unit, fixture: PlayerUiState? = null, initialOverlay: Int = 0, sourceLabel: String? = null, progressInFixture: Boolean = false, sleepPreview: com.abhi.musicapp.playback.SleepState? = null, fixtureLevels: FloatArray? = null, fixtureFlipped: Boolean? = null, fixtureRotation: Float? = null, fixtureBeat: Float? = null, onOpenEqualiser: () -> Unit = {}) {
     // 0 none, 1 three-dots menu, 2 focus-mode popup, 3 output-device popup (Figma 'Song Page - menu', 'Song focus mode', 'Song Focus connected device').
     var overlay by androidx.compose.runtime.remember { androidx.compose.runtime.mutableIntStateOf(initialOverlay) }
     var menuNote by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf("") }
@@ -144,6 +144,19 @@ fun PlayerScreen(onBack: () -> Unit, fixture: PlayerUiState? = null, initialOver
         com.abhi.musicapp.playback.OutputKind.BLUETOOTH -> "Audio output: Bluetooth"
         com.abhi.musicapp.playback.OutputKind.USB -> "Audio output: USB audio"
         else -> "Audio output: unknown"
+    }
+    var prefSpeaker by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(com.abhi.musicapp.playback.AudioOutput.speakerPreferred) }
+    var muted by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(com.abhi.musicapp.playback.AudioOutput.isMuted()) }
+    val routedNow = if (outKind == com.abhi.musicapp.playback.OutputKind.UNKNOWN) "unknown on this Android version" else outLabel.removePrefix("Audio output: ")
+    val outStatus = "Preferred: " + (if (prefSpeaker) "phone speaker" else "headphones / system default") + "\nRouted now: " + routedNow + (outNote?.let { "\n$it" } ?: "")
+    val railTap: (Boolean, Int) -> Unit = { left, i ->
+        if (fixture == null) {
+            if (left) {
+                val ok = com.abhi.musicapp.playback.AudioOutput.setPreferSpeaker(ctx, i == 0)
+                prefSpeaker = (i == 0)
+                outNote = if (ok) null else "Could not apply: no active player or no built-in speaker found"
+            } else if (i == 0) { muted = !muted; com.abhi.musicapp.playback.AudioOutput.setMuted(muted) }
+        }
     }
     var lastAng by androidx.compose.runtime.remember { androidx.compose.runtime.mutableFloatStateOf(0f) }
     var ringDrag by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
@@ -299,7 +312,7 @@ fun PlayerScreen(onBack: () -> Unit, fixture: PlayerUiState? = null, initialOver
         if (overlay == 1) Column((if (landscape) Modifier.align(Alignment.TopEnd).padding(top = 56.dp, end = 24.dp).heightIn(max = maxHeight - 64.dp).verticalScroll(rememberScrollState()) else Modifier.offset(134.dp, 94.dp)).width(232.dp).clip(androidx.compose.foundation.shape.RoundedCornerShape(8.dp)).background(sheet)) {
             // Equaliser is drawn greyed out in the Figma menu: kept disabled (no EQ exists). Add to playlist is wired (shipped path, PlaylistStore); other entries only close the menu until wired.
             listOf("Sleep Time", "Add to playlist", "Share", "Speed", "Delete", "Equaliser", "Lyrics").forEach { t ->
-                val off = t == "Equaliser"
+                val off = false
                 Row(Modifier.fillMaxWidth().height(if (landscape) 40.dp else 51.dp).testTag("menu_" + t).then(if (off) Modifier else Modifier.clickable {
                     overlay = if (fixture != null) 0 else when (t) {
                         "Sleep Time" -> 5
@@ -307,7 +320,8 @@ fun PlayerScreen(onBack: () -> Unit, fixture: PlayerUiState? = null, initialOver
                         "Speed" -> 6
                         "Share" -> { shareCurrent(ctx, state.mediaId, state.title); 0 }
                         "Delete" -> { menuNote = "Delete is not built yet. It stays off so no song is removed by accident."; 7 }
-                        "Lyrics" -> { menuNote = "Lyrics are not built yet: no lyrics source has been chosen."; 7 }
+                        "Lyrics" -> 9
+                        "Equaliser" -> { onOpenEqualiser(); 0 }
                         else -> 0
                     }
                 }).padding(horizontal = 12.dp),
@@ -321,24 +335,26 @@ fun PlayerScreen(onBack: () -> Unit, fixture: PlayerUiState? = null, initialOver
         if (overlay == 5) SleepTimerSheet { overlay = 0 }
         if (overlay == 6) SpeedSheet { overlay = 0 }
         if (overlay == 8) QueueSheet { overlay = 0 }
+        if (overlay == 9) LyricsSheet(state.mediaId, state.title) { overlay = 0 }
         if (overlay == 7) Box(Modifier.align(Alignment.Center).padding(horizontal = 40.dp).clip(androidx.compose.foundation.shape.RoundedCornerShape(12.dp)).background(sheet).padding(20.dp)) {
             Text(menuNote, fontSize = 14.sp, color = InkBlack)
         }
         if (overlay == 4) AddToPlaylistSheet(state.mediaId) { overlay = 0 } // shipped path only (menu sets 4 only when fixture == null)
         if (!landscape && (overlay == 2 || overlay == 3)) {
             val left = overlay == 3
-            val icons = if (left) listOf(outIcon) else listOf(Icons.Filled.VolumeOff, Icons.Filled.DarkMode)
+            val icons = if (left) listOf(Icons.Filled.Speaker, Icons.Filled.Headset) else listOf(Icons.Filled.VolumeOff, Icons.Filled.DarkMode)
             val n = icons.size
             val x = if (left) 19.dp else 298.dp
             Box(Modifier.offset(x, 726.dp - shrink - (70.dp * n) - 16.dp).size(72.dp, 70.dp * n + 88.dp).clip(CircleShape).background(sheet))
             icons.forEachIndexed { i, ic ->
                 // Buttons are visual only: no device list or audio-route capability exists in the app yet.
-                Box(Modifier.offset(x + 4.dp, 726.dp - shrink - (70.dp * (n - i)) + 4.dp - 6.dp).size(64.dp).clip(CircleShape).background(pill).then(if (left && fixture == null) Modifier.clickable(onClickLabel = "Choose output") { outNote = com.abhi.musicapp.playback.AudioOutput.openPicker(ctx) } else Modifier), contentAlignment = Alignment.Center) {
-                    Icon(ic, contentDescription = null, tint = InkBlack, modifier = Modifier.size(22.dp))
+                Box(Modifier.offset(x + 4.dp, 726.dp - shrink - (70.dp * (n - i)) + 4.dp - 6.dp).size(64.dp).clip(CircleShape).background(pill).then(if (fixture == null && (left || i == 0)) Modifier.clickable(onClickLabel = if (left) (if (i == 0) "Prefer phone speaker" else "Prefer headphones") else "Mute") { railTap(left, i) } else Modifier), contentAlignment = Alignment.Center) {
+                    val on = if (left) (prefSpeaker == (i == 0)) else (i == 0 && muted)
+                    Icon(if (!left && i == 0 && muted) Icons.Filled.VolumeOff else ic, contentDescription = null, tint = if (on) com.abhi.musicapp.ui.theme.Orangs else InkBlack, modifier = Modifier.size(22.dp))
                 }
             }
             if (left) androidx.compose.material3.Text(
-                (outLabel.removePrefix("Audio output: ").replaceFirstChar { it.uppercase() }) + " - tap to choose output" + (outNote?.let { "\n$it" } ?: if (outKind == com.abhi.musicapp.playback.OutputKind.UNKNOWN) "\nCurrent output unknown on this Android version" else ""),
+                outStatus,
                 fontSize = 12.sp, color = InkBlack, modifier = Modifier.offset(x, 726.dp - shrink - 70.dp - 16.dp - 56.dp).width(260.dp))
             Box(Modifier.offset(x, 726.dp - shrink).size(72.dp).clip(CircleShape).background(InkBlack).clickable { overlay = 0 }, contentAlignment = Alignment.Center) {
                 Icon(if (left) outIcon else Icons.Filled.Close, contentDescription = "Close", tint = androidx.compose.ui.graphics.Color.White)
@@ -416,12 +432,13 @@ private fun LandscapeBody(
                     if (overlay == 2 || overlay == 3) {
                         val left = overlay == 3
                         Row(Modifier.padding(bottom = 8.dp).clip(androidx.compose.foundation.shape.RoundedCornerShape(24.dp)).background(sheet).padding(6.dp), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
-                            val icons = if (left) listOf(outIcon) else listOf(Icons.Filled.VolumeOff, Icons.Filled.DarkMode)
-                            icons.forEach { ic ->
+                            val icons = if (left) listOf(Icons.Filled.Speaker, Icons.Filled.Headset) else listOf(Icons.Filled.VolumeOff, Icons.Filled.DarkMode)
+                            icons.forEachIndexed { i, ic ->
+                                val on = if (left) (prefSpeaker == (i == 0)) else (i == 0 && muted)
                                 Box(Modifier.size(44.dp).clip(CircleShape).background(com.abhi.musicapp.ui.theme.GrayLight)
-                                    .then(if (left && fixture == null) Modifier.clickable(onClickLabel = "Choose output") { setOutNote(com.abhi.musicapp.playback.AudioOutput.openPicker(ctx)) } else Modifier), contentAlignment = Alignment.Center) { Icon(ic, contentDescription = null, tint = InkBlack) }
+                                    .then(if (fixture == null && (left || i == 0)) Modifier.clickable(onClickLabel = if (left) (if (i == 0) "Prefer phone speaker" else "Prefer headphones") else "Mute") { railTap(left, i) } else Modifier), contentAlignment = Alignment.Center) { Icon(ic, contentDescription = null, tint = if (on) com.abhi.musicapp.ui.theme.Orangs else InkBlack) }
                             }
-                            if (left) Text((outLabel.removePrefix("Audio output: ").replaceFirstChar { it.uppercase() }) + " - tap to choose" + (outNote?.let { " ($it)" } ?: ""), fontSize = 12.sp, color = InkBlack, modifier = Modifier.padding(end = 8.dp))
+                            if (left) Text(outStatus.replace("\n", " | "), fontSize = 12.sp, color = InkBlack, modifier = Modifier.padding(end = 8.dp))
                             Box(Modifier.size(44.dp).clip(CircleShape).background(InkBlack).clickable { setOverlay(0) }, contentAlignment = Alignment.Center) { Icon(Icons.Filled.Close, contentDescription = "Close", tint = androidx.compose.ui.graphics.Color.White) }
                         }
                     }

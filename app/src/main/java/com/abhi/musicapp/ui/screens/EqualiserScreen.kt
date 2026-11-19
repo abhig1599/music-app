@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
@@ -46,91 +47,67 @@ import com.abhi.musicapp.ui.theme.SurfaceSoft
  */
 @Composable
 fun EqualiserScreen(onBack: () -> Unit) {
-    // Not connected to playback: all controls are shown disabled so they are not mistaken for working EQ.
-    var enabled by remember { mutableStateOf(false) }
-    var preset by remember { mutableIntStateOf(0) }
-    val bands = remember { List(5) { mutableIntStateOf(0) } }
+    val ctx = androidx.compose.ui.platform.LocalContext.current
+    var tick by remember { mutableIntStateOf(0) }
+    val info = remember(tick) { com.abhi.musicapp.playback.EqEngine.info() }
+    var enabled by remember { mutableStateOf(com.abhi.musicapp.playback.EqEngine.enabled(ctx)) }
+    var preset by remember { mutableIntStateOf(com.abhi.musicapp.playback.EqEngine.preset(ctx)) }
+    val levels = remember(info) { List(info?.bands ?: 0) { mutableIntStateOf(com.abhi.musicapp.playback.EqEngine.level(ctx, it)) } }
+    androidx.compose.runtime.LaunchedEffect(info) { if (info != null) com.abhi.musicapp.playback.EqEngine.apply(ctx) }
 
     Column(modifier = Modifier.fillMaxSize()) {
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Icon(Icons.Filled.ArrowBack, contentDescription = "Back",
-                tint = InkBlack, modifier = Modifier.clickable(onClick = onBack))
+        Row(modifier = Modifier.fillMaxWidth().padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+            Icon(Icons.Filled.ArrowBack, contentDescription = "Back", tint = InkBlack, modifier = Modifier.clickable(onClick = onBack))
         }
         ScreenTitle("Equaliser")
-
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 20.dp, vertical = 6.dp)
-                .clip(RoundedCornerShape(16.dp))
-                .background(SurfaceSoft)
-                .padding(16.dp),
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 6.dp).clip(RoundedCornerShape(16.dp)).background(SurfaceSoft).padding(16.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text("Enabled", fontSize = 16.sp, color = InkBlack, modifier = Modifier.weight(1f))
-            Switch(
-                checked = enabled,
-                onCheckedChange = null,
-                enabled = false,
-                colors = SwitchDefaults.colors(checkedTrackColor = Orangs),
-            )
+            Switch(checked = enabled, onCheckedChange = { enabled = it; com.abhi.musicapp.playback.EqEngine.setEnabled(ctx, it) },
+                enabled = info != null, colors = SwitchDefaults.colors(checkedTrackColor = Orangs))
         }
-
-        val presets = listOf("Normal", "Bass", "Rock", "Pop", "Jazz", "Flat")
+        if (info == null) {
+            Text((com.abhi.musicapp.playback.EqEngine.lastError ?: "No equaliser available.") + " Play a song, then reopen this screen.",
+                fontSize = 13.sp, color = GrayText, modifier = Modifier.padding(horizontal = 24.dp, vertical = 12.dp))
+            Text("Retry", fontSize = 14.sp, color = Orangs, modifier = Modifier.padding(horizontal = 24.dp).clickable { tick++ })
+            return@Column
+        }
         LazyRow(Modifier.padding(horizontal = 14.dp, vertical = 8.dp)) {
-            items(presets.size) { i ->
+            items(info.presets.size) { i ->
                 Text(
-                    presets[i],
-                    color = if (preset == i) PureWhite else InkBlack,
-                    fontSize = 14.sp,
+                    info.presets[i], color = if (preset == i) PureWhite else InkBlack, fontSize = 14.sp,
                     fontWeight = if (preset == i) FontWeight.Bold else FontWeight.Normal,
-                    modifier = Modifier
-                        .padding(horizontal = 4.dp)
-                        .clip(RoundedCornerShape(10.dp))
+                    modifier = Modifier.padding(horizontal = 4.dp).clip(RoundedCornerShape(10.dp))
                         .background(if (preset == i) Orangs else SurfaceSoft)
-                        
-                        .padding(horizontal = 14.dp, vertical = 8.dp),
+                        .clickable {
+                            com.abhi.musicapp.playback.EqEngine.usePreset(ctx, i); preset = i
+                            levels.forEachIndexed { b, st -> st.intValue = com.abhi.musicapp.playback.EqEngine.level(ctx, b) }
+                            com.abhi.musicapp.playback.EqEngine.apply(ctx)
+                        }.padding(horizontal = 14.dp, vertical = 8.dp),
                 )
             }
         }
-
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 20.dp, vertical = 8.dp)
-                .clip(RoundedCornerShape(16.dp))
-                .background(SurfaceSoft)
-                .padding(16.dp),
-        ) {
-            val labels = listOf("60Hz", "230Hz", "910Hz", "3.6kHz", "14kHz")
-            labels.forEachIndexed { i, label ->
+        Column(Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 8.dp).clip(RoundedCornerShape(16.dp)).background(SurfaceSoft).padding(16.dp)) {
+            info.centreHz.forEachIndexed { i, hz ->
+                val label = if (hz >= 1000) "%.1fkHz".format(hz / 1000f) else "${hz}Hz"
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(label, fontSize = 13.sp, color = GrayText, maxLines = 1, softWrap = false,
-                        modifier = Modifier.width(52.dp).padding(end = 8.dp))
+                    Text(label, fontSize = 13.sp, color = GrayText, maxLines = 1, softWrap = false, modifier = Modifier.width(60.dp).padding(end = 8.dp))
                     Slider(
-                        value = bands[i].intValue.toFloat(),
-                        onValueChange = { bands[i].intValue = it.toInt() },
-                        valueRange = -15f..15f,
-                        enabled = false,
-                        modifier = Modifier.weight(1f),
-                        colors = SliderDefaults.colors(
-                            thumbColor = Orangs,
-                            activeTrackColor = Orangs,
-                        ),
+                        value = levels[i].intValue.toFloat(),
+                        onValueChange = { levels[i].intValue = it.toInt(); preset = -1; com.abhi.musicapp.playback.EqEngine.setBand(ctx, i, it.toInt()) },
+                        valueRange = info.minMb.toFloat()..info.maxMb.toFloat(),
+                        enabled = enabled, modifier = Modifier.weight(1f),
+                        colors = SliderDefaults.colors(thumbColor = Orangs, activeTrackColor = Orangs),
                     )
-                    Text("${bands[i].intValue}dB", fontSize = 13.sp, color = GrayText, maxLines = 1, softWrap = false,
-                        textAlign = androidx.compose.ui.text.style.TextAlign.End, modifier = Modifier.width(44.dp))
+                    Text("%.1fdB".format(levels[i].intValue / 100f), fontSize = 13.sp, color = GrayText, maxLines = 1, softWrap = false,
+                        textAlign = androidx.compose.ui.text.style.TextAlign.End, modifier = Modifier.width(56.dp))
                 }
             }
         }
-
-        Text(
-            "Equaliser is not connected to playback yet. These controls do nothing and sound is not changed.",
-            fontSize = 12.sp, color = GrayText, modifier = Modifier.padding(horizontal = 24.dp),
-        )
+        Text("Bands, ranges and presets come from this phone's own equaliser effect. Not yet checked by ear on hardware.",
+            fontSize = 12.sp, color = GrayText, modifier = Modifier.padding(horizontal = 24.dp))
         Spacer(Modifier.height(16.dp))
     }
 }

@@ -266,5 +266,10 @@ class ScreenShotTest {
     @Test fun downloadsLoadingFixture() = shot("downloads_loading_fixture") { DownloadsScreen(onBack = {}, fixture = com.abhi.musicapp.ui.screens.DlFixture.Loading) }
     @Test fun downloadsSongsFixture() = shot("downloads_songs_fixture") { DownloadsScreen(onBack = {}, fixture = com.abhi.musicapp.ui.screens.DlFixture.Songs) }
 
+    @Test fun playerSheetQueueSmall() = shot("player_sheet_queue_small", 560) { com.abhi.musicapp.ui.screens.PlayerSheetFixture(com.abhi.musicapp.ui.screens.PlayerSheet.Queue) }
+    @Test fun playerSheetQueueLargeFont() {
+        shot("player_sheet_queue_largefont", 640) { androidx.compose.runtime.CompositionLocalProvider(androidx.compose.ui.platform.LocalDensity provides androidx.compose.ui.unit.Density(androidx.compose.ui.platform.LocalDensity.current.density, 1.6f)) { com.abhi.musicapp.ui.screens.PlayerSheetFixture(com.abhi.musicapp.ui.screens.PlayerSheet.Queue) } }
+    }
+    @Test fun settingsTransitions() = shot("settings_transitions", 1100) { SettingsScreen(onBack = {}, onRowClick = {}, startExpanded = true) }
     @Test fun equaliser() = shot("equaliser") { EqualiserScreen(onBack = {}) }
 }

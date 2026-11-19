@@ -64,6 +64,7 @@ object PlayerManager {
                     pushState()
                 }
                 override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
+                    EqEngine.apply(context) // re-attach saved equaliser settings if the audio session changed
                     // Sleep timer "play last one to end": the song finished on its own, stop before the next one is heard.
                     if (reason == Player.MEDIA_ITEM_TRANSITION_REASON_AUTO && SleepTimer.isFinishingSong) { player().pause(); SleepTimer.onSongEnded() }
                 }

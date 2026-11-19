@@ -79,7 +79,7 @@ fun AppNav() {
                 onOpenPlaylist = { name -> nav.navigate(Routes.playlistDetail(name)) },
             )
         }
-        composable(Routes.PLAYER) { PlayerScreen(onBack = { nav.popBackStack() }) }
+        composable(Routes.PLAYER) { PlayerScreen(onBack = { nav.popBackStack() }, onOpenEqualiser = { nav.navigate(Routes.EQUALISER) }) }
         composable(Routes.SEARCH) { SearchScreen(onBack = { nav.popBackStack() }, onOpenPlayer = { nav.navigate(Routes.PLAYER) }) }
         composable(Routes.SETTINGS) {
             SettingsScreen(

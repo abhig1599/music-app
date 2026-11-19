@@ -167,6 +167,27 @@ fun SettingsScreen(onBack: () -> Unit, onRowClick: (String) -> Unit = {}, fixtur
             }
         }
         Spacer(Modifier.height(6.dp))
+        AccordionCard("Song Transitions", startExpanded) {
+            Spacer(Modifier.height(13.dp))
+            val tctx = androidx.compose.ui.platform.LocalContext.current
+            var xOn by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(!fixture && com.abhi.musicapp.playback.Crossfader.enabled(tctx)) }
+            var xSecs by androidx.compose.runtime.remember { androidx.compose.runtime.mutableFloatStateOf(if (fixture) 4f else com.abhi.musicapp.playback.Crossfader.seconds(tctx).toFloat()) }
+            ToggleRow("Crossfade", if (xOn) "The next song starts before this one ends" else "Off. Songs play one after the other", xOn) {
+                xOn = !xOn
+                if (!fixture) com.abhi.musicapp.playback.Crossfader.setEnabled(tctx, xOn)
+            }
+            Spacer(Modifier.height(13.dp))
+            Text("Duration: ${xSecs.toInt()} seconds", fontFamily = mono, fontSize = 12.sp, fontWeight = FontWeight.Bold, color = if (xOn) InkBlack else GrayText)
+            androidx.compose.material3.Slider(
+                value = xSecs, onValueChange = { xSecs = it.toInt().toFloat(); if (!fixture) com.abhi.musicapp.playback.Crossfader.setSeconds(tctx, xSecs.toInt()) },
+                valueRange = 1f..12f, steps = 10, enabled = xOn,
+                colors = androidx.compose.material3.SliderDefaults.colors(thumbColor = com.abhi.musicapp.ui.theme.Orangs, activeTrackColor = com.abhi.musicapp.ui.theme.Orangs),
+            )
+            Spacer(Modifier.height(6.dp))
+            Text("AutoMix is not available. Crossfade is a plain overlap for a set time. It has not been heard on a real phone yet.", fontFamily = mono, fontSize = 11.sp, color = GrayText)
+            Spacer(Modifier.height(10.dp))
+        }
+        Spacer(Modifier.height(6.dp))
         NavCard("Read Now") { onRowClick("Read Now") }
         Spacer(Modifier.height(6.dp))
         NavCard("Recycle Bin") { onRowClick("Recycle bin") }

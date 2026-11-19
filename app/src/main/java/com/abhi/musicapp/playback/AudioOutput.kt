@@ -23,6 +23,7 @@ internal fun classifyOutput(type: Int): OutputKind = when (type) {
     else -> OutputKind.UNKNOWN
 }
 
+@kotlin.OptIn(androidx.media3.common.util.UnstableApi::class)
 object AudioOutput {
     private val mediaAttrs = AudioAttributes.Builder()
         .setUsage(AudioAttributes.USAGE_MEDIA).setContentType(AudioAttributes.CONTENT_TYPE_MUSIC).build()
@@ -56,4 +57,31 @@ object AudioOutput {
             "Opened sound settings (this phone has no in-app output picker)"
         } catch (e: Exception) { "Could not open output settings" }
     }
+
+    /** Last output the user asked for in the app: true = phone speaker, false = system default (headphones when connected). */
+    @Volatile var speakerPreferred = false
+        private set
+    /** The speaker device we asked for (null = system default), kept so a crossfade's second player uses the same preference. */
+    @Volatile var preferredDevice: AudioDeviceInfo? = null
+        private set
+
+    /**
+     * Asks Media3/AudioTrack to prefer the built-in speaker (or the system default). This is a PREFERENCE: Android may ignore it,
+     * so what is actually routed is read back with [current] (Android 13+ only), never assumed. Returns false if no player or no speaker found.
+     */
+    fun setPreferSpeaker(context: Context, prefer: Boolean): Boolean {
+        speakerPreferred = prefer
+        val p = PlaybackService.exo ?: return false
+        if (!prefer) { preferredDevice = null; p.setPreferredAudioDevice(null); return true }
+        val am = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
+        val spk = am.getDevices(AudioManager.GET_DEVICES_OUTPUTS).firstOrNull { it.type == AudioDeviceInfo.TYPE_BUILTIN_SPEAKER } ?: return false
+        preferredDevice = spk
+        p.setPreferredAudioDevice(spk)
+        return true
+    }
+
+    fun isMuted(): Boolean = PlaybackService.crossfader?.muted ?: false
+
+    /** In-app mute: player volume 0 (the phone's media volume is untouched). */
+    fun setMuted(mute: Boolean) { PlaybackService.crossfader?.setMuted(mute) }
 }

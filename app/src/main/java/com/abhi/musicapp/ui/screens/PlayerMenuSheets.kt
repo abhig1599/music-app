@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
@@ -174,3 +175,29 @@ fun SpeedSheet(onDismiss: () -> Unit) {
         }
     }
 }
+
+
+/** Lyrics: shows lyrics embedded in the MP3 file when there are any; otherwise an honest empty state. No lyrics service, no downloads. */
+@Composable
+fun LyricsSheet(mediaId: Long, title: String, onDismiss: () -> Unit) {
+    val ctx = androidx.compose.ui.platform.LocalContext.current
+    var text by remember { mutableStateOf<String?>(null) }
+    var loaded by remember { mutableStateOf(false) }
+    androidx.compose.runtime.LaunchedEffect(mediaId) {
+        text = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+            if (mediaId < 0) null else com.abhi.musicapp.library.EmbeddedLyrics.read(ctx, android.content.ContentUris.withAppendedId(android.provider.MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, mediaId))
+        }
+        loaded = true
+    }
+    BottomSheet(heightDp = 520, onDismiss = onDismiss) {
+        Text("Lyrics", fontSize = 17.sp, fontWeight = FontWeight.Medium, color = InkBlack)
+        Text(title, fontSize = 12.sp, color = com.abhi.musicapp.ui.theme.GrayText, maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
+        Spacer(Modifier.height(12.dp))
+        when {
+            !loaded -> Text("Looking for lyrics in the file...", fontSize = 14.sp, color = com.abhi.musicapp.ui.theme.GrayText)
+            text == null -> Text("No lyrics found in this file. The app only shows lyrics saved inside an MP3 (ID3 tag). It does not download lyrics.", fontSize = 14.sp, color = InkBlack)
+            else -> Column(Modifier.weight(1f).verticalScroll(androidx.compose.foundation.rememberScrollState())) { Text(text!!, fontSize = 15.sp, color = InkBlack, lineHeight = 22.sp) }
+        }
+    }
+}
+

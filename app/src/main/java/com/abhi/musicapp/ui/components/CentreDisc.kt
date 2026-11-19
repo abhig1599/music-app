@@ -121,7 +121,8 @@ fun CentreDisc(
  * nothing here runs on a clock, it only follows the audio levels. My reading of his description, not a copy of any video.
  */
 @Composable
-fun ClayBlob(levels: (() -> FloatArray?)?, tick: State<Long>?, beat: (() -> Float)? = null) {
+fun ClayBlob(levels: (() -> FloatArray?)?, tick: State<Long>?, beat: (() -> Float)? = null, clockNs: () -> Long = System::nanoTime) {
+    val drops = remember { ClayDrops() }
     Canvas(Modifier.fillMaxSize()) {
         tick?.value // redraw every frame while live
         val lv = levels?.invoke()
@@ -129,7 +130,7 @@ fun ClayBlob(levels: (() -> FloatArray?)?, tick: State<Long>?, beat: (() -> Floa
         val c = Offset(size.width / 2f, size.height / 2f)
         val r = size.minDimension / 2f
         val n = FERRO_SPIKES
-        val base = r * (0.52f + 0.05f * b)
+        val base = r * (0.50f + 0.11f * b)
         // Spike height per band (low frequencies at the top, mirrored); fixed per-spike variation makes heights uneven like a real cluster, not a time loop.
         fun lvl(i: Int): Float {
             if (lv == null || lv.isEmpty()) return 0f
@@ -143,7 +144,7 @@ fun ClayBlob(levels: (() -> FloatArray?)?, tick: State<Long>?, beat: (() -> Floa
         val w = 2.0 * PI / n
         val hs = FloatArray(n) { k ->
             val l = lvl(k)
-            if (l < 0.03f) 0f else r * (0.34f * l * (1f + 0.4f * b) * (0.7f + 0.3f * FERRO_JITTER[k % FERRO_JITTER.size])).coerceAtMost(0.30f)
+            if (l < 0.015f) 0f else r * (0.46f * l * (1f + 0.7f * b) * (0.7f + 0.3f * FERRO_JITTER[k % FERRO_JITTER.size])).coerceAtMost(0.40f)
         }
         val tips = ArrayList<Offset>(); val bases = ArrayList<Offset>()
         for (j in 0 until steps) {
@@ -159,7 +160,7 @@ fun ClayBlob(levels: (() -> FloatArray?)?, tick: State<Long>?, beat: (() -> Floa
                 val x = d / sigma
                 if (kotlin.math.abs(x) < 3.0) add += hs[k] * exp(-x * x).toFloat()
             }
-            val rad = base + add.coerceAtMost(r * 0.32f)
+            val rad = base + add.coerceAtMost(r * 0.40f)
             val pt = Offset((c.x + rad * cos(th)).toFloat(), (c.y + rad * sin(th)).toFloat())
             if (j == 0) path.moveTo(pt.x, pt.y) else path.lineTo(pt.x, pt.y)
         }
@@ -172,6 +173,49 @@ fun ClayBlob(levels: (() -> FloatArray?)?, tick: State<Long>?, beat: (() -> Floa
         // Natural clay: one matte tone, only a faint top-light falloff, no gloss, sheen or hard outline.
         val clay = Brush.radialGradient(0f to Color(0xFF4A4A4E), 1f to Color(0xFF38383C), center = Offset(c.x - r * 0.10f, c.y - r * 0.14f), radius = r * 1.1f)
         drawPath(path, clay)
+        // Droplets: on a beat a small drop pinches off the loudest spike, flies out and falls back into the pool (same clay tone, so it merges).
+        val now = clockNs()
+        var loud = 0; var loudH = 0f
+        for (k in 0 until n) if (hs[k] > loudH) { loudH = hs[k]; loud = k }
+        if (loudH > r * 0.03f) drops.onBeat(b, now, w * loud - PI / 2, loudH / r, loud)
+        drops.draw(this, c, base, r, now, clay)
+    }
+}
+
+/** Short-lived drops. Each lives about 0.8 s: out to a peak distance along its angle, then back into the pool, shrinking as it merges. */
+class ClayDrops {
+    private class Drop(val angle: Double, val bornNs: Long, val reach: Float, val size: Float)
+    private val live = ArrayList<Drop>()
+    private var armed = true
+    private var lastSpawnNs = Long.MIN_VALUE
+    fun onBeat(beat: Float, nowNs: Long, angle: Double, strength: Float, spike: Int) {
+        if (beat < 0.25f) { armed = true; return }
+        if (!armed || beat < 0.4f) return
+        if (lastSpawnNs != Long.MIN_VALUE && nowNs - lastSpawnNs < 120_000_000L) return
+        armed = false; lastSpawnNs = nowNs
+        val spread = if (spike % 2 == 0) 0.22 else -0.22
+        live.add(Drop(angle, nowNs, 0.16f + 0.30f * strength.coerceIn(0f, 1f), 0.055f + 0.03f * strength.coerceIn(0f, 1f)))
+        if (beat > 0.7f) live.add(Drop(angle + spread, nowNs + 40_000_000L, 0.12f + 0.2f * strength.coerceIn(0f, 1f), 0.04f))
+        while (live.size > 6) live.removeAt(0)
+    }
+    fun draw(scope: androidx.compose.ui.graphics.drawscope.DrawScope, c: Offset, base: Float, r: Float, nowNs: Long, brush: Brush) {
+        val it = live.iterator()
+        while (it.hasNext()) {
+            val d = it.next()
+            val life = ((nowNs - d.bornNs) / 800_000_000.0).toFloat()
+            if (life >= 1f) { it.remove(); continue }
+            if (life < 0f) continue
+            // Distance: leaves the pool edge, peaks mid-life, returns inside it (base * 0.8) so it visibly mixes back.
+            val out = kotlin.math.sin(PI * life).toFloat()
+            val dist = base * (0.82f + 0.18f * life) + r * d.reach * out
+            val rad = r * d.size * (1f - 0.55f * life)
+            val tip = Offset((c.x + dist * cos(d.angle)).toFloat(), (c.y + dist * sin(d.angle)).toFloat())
+            val edge = Offset((c.x + base * 0.9f * cos(d.angle)).toFloat(), (c.y + base * 0.9f * sin(d.angle)).toFloat())
+            // A thin neck while the drop is close to the pool, thinning as it separates (the "split").
+            val neck = (1f - (out * 1.6f).coerceIn(0f, 1f)) * rad * 1.1f
+            if (neck > 0.5f) scope.drawLine(androidx.compose.ui.graphics.Color(0xFF3F3F43), edge, tip, strokeWidth = neck)
+            scope.drawCircle(brush, rad, tip)
+        }
     }
 }
 

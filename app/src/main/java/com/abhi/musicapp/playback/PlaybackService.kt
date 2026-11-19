@@ -20,6 +20,12 @@ class PlaybackService : MediaSessionService() {
 
     private var mediaSession: MediaSession? = null
 
+    companion object {
+        /** The one in-process player, for output preference and mute (same process as the UI; used on the main thread only). */
+        @Volatile var exo: ExoPlayer? = null
+        @Volatile var crossfader: Crossfader? = null
+    }
+
     override fun onCreate() {
         super.onCreate()
         // Same sink as the default, plus a pass-through tap that feeds the Player dial's frequency levels.
@@ -32,6 +38,8 @@ class PlaybackService : MediaSessionService() {
                     .build()
         }
         val player = ExoPlayer.Builder(this, factory).build()
+        exo = player
+        crossfader = Crossfader(this, player).also { it.start() }
         mediaSession = MediaSession.Builder(this, player).build()
     }
 
@@ -44,6 +52,8 @@ class PlaybackService : MediaSessionService() {
             session.release()
         }
         mediaSession = null
+        crossfader?.stop(); crossfader = null
+        exo = null
         super.onDestroy()
     }
 }
