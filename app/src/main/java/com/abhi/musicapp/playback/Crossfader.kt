@@ -35,6 +35,7 @@ class Crossfader(private val ctx: Context, private val main: ExoPlayer) {
     private var handingOff = false
     private var handOffStart = 0L
     private var backStart = 0L
+    private var seekLatencyMs = 150L // learned: time the main player needs to become ready after the hand-over seek
     @Volatile var muted = false
         private set
 
@@ -74,7 +75,7 @@ class Crossfader(private val ctx: Context, private val main: ExoPlayer) {
         val now = SystemClock.uptimeMillis()
         if (handingOff) {
             if (main.playbackState == Player.STATE_READY && main.isPlaying) {
-                if (backStart == 0L) backStart = now
+                if (backStart == 0L) { backStart = now; seekLatencyMs = (now - handOffStart).coerceIn(30L, 600L) }
                 val t = ((now - backStart) / 250f).coerceIn(0f, 1f)
                 main.volume = base * t; inc.volume = base * (1f - t)
                 if (t >= 1f) finish()
@@ -118,7 +119,8 @@ class Crossfader(private val ctx: Context, private val main: ExoPlayer) {
         val inc = incoming ?: return
         handingOff = true; handOffStart = SystemClock.uptimeMillis(); backStart = 0L
         main.volume = 0f; inc.volume = base
-        main.seekTo(toIndex, inc.currentPosition)
+        // Seek slightly ahead by the learned latency so main lands in time with the incoming player (less phasing during the swap).
+        main.seekTo(toIndex, handOverTarget(inc.currentPosition, seekLatencyMs, inc.playbackParameters.speed))
         main.playWhenReady = true
     }
 
@@ -142,6 +144,7 @@ class Crossfader(private val ctx: Context, private val main: ExoPlayer) {
             val wall = remainingMediaMs / sp
             return wall <= fadeMs + 1500f && wall >= 300f
         }
+        internal fun handOverTarget(incomingPosMs: Long, latencyMs: Long, speed: Float): Long = incomingPosMs + (latencyMs * (if (speed > 0f) speed else 1f)).toLong()
         /** Equal-power gains for outgoing and incoming at ramp position t in 0..1. */
         internal fun gains(t: Float): Pair<Float, Float> {
             val x = t.coerceIn(0f, 1f)

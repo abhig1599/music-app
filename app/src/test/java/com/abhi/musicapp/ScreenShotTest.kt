@@ -323,6 +323,24 @@ class ScreenShotTest {
             }
         } finally { com.abhi.musicapp.ui.components.clayClockOverride = null }
     }
+    // TEST RENDER (synthetic): every band high at once, 4 frames, to check that several drops stay inside the player layout.
+    @Test fun clayDropMultiProductionPlayer() {
+        val clk = androidx.compose.runtime.mutableLongStateOf(1_000_000_000L)
+        val bt = androidx.compose.runtime.mutableFloatStateOf(1f)
+        com.abhi.musicapp.ui.components.clayClockOverride = { clk.longValue }
+        try {
+            composeRule.setContent { MusicAppTheme { com.abhi.musicapp.ui.screens.PlayerScreen(onBack = {}, fixtureFlipped = true,
+                fixtureBeat = bt.floatValue, fixtureLevels = FloatArray(48) { i -> if (i % 4 == 0) 1f else 0.85f },
+                fixture = com.abhi.musicapp.playback.PlayerUiState(title = "Malcolm Todd - Earrings", artist = "", isPlaying = true, positionMs = 61_000L, durationMs = 192_000L, hasTrack = true)) } }
+            composeRule.waitForIdle()
+            for (f in 0 until 4) {
+                clk.longValue = 1_000_000_000L + f * 100_000_000L
+                bt.floatValue = if (f == 0) 1f else 0.1f
+                composeRule.waitForIdle()
+                composeRule.onRoot().captureRoboImage("build/outputs/roborazzi/player_drop_multi_%d.png".format(f))
+            }
+        } finally { com.abhi.musicapp.ui.components.clayClockOverride = null }
+    }
     @Test fun lyricsEmptyState() = shot("lyrics_empty_state", 600) { Box(Modifier.size(390.dp, 600.dp)) { com.abhi.musicapp.ui.screens.LyricsSheet(-1L, "Malcolm Todd - Earrings") {} } }
     @Test fun settingsTransitions() = shot("settings_transitions", 1500) { SettingsScreen(onBack = {}, onRowClick = {}, startExpanded = true) }
     @Test fun settingsTransitionsScrolled() {
