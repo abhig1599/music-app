@@ -4,6 +4,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -64,9 +66,11 @@ fun QueueSheet(onClose: () -> Unit) {
 
 @Composable
 fun QueueSheetContent(items: List<QueueEntry>, current: Int, onMove: (Int, Int) -> Unit, onPlay: (Int) -> Unit, onClose: () -> Unit) {
-    Box(Modifier.fillMaxSize().background(Color(0x66000000)).clickable { onClose() }) {
+    BoxWithConstraints(Modifier.fillMaxSize().background(Color(0x66000000)).clickable { onClose() }) {
+        // Sheet height follows the screen (about 58%, between 300 and 480 dp) so the dial stays visible and short screens still fit.
+        val sheetHeight = (maxHeight * 0.58f).coerceIn(300.dp, 480.dp)
         Column(
-            Modifier.align(Alignment.BottomCenter).fillMaxWidth().height(480.dp).clip(RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp))
+            Modifier.align(Alignment.BottomCenter).fillMaxWidth().height(sheetHeight).clip(RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp))
                 .background(Color(0xFFF6F6F4)).clickable(enabled = false) {}.padding(horizontal = 12.dp),
         ) {
             Box(Modifier.padding(top = 8.dp).align(Alignment.CenterHorizontally).size(width = 28.dp, height = 3.dp).clip(CircleShape).background(GrayLight))
@@ -95,7 +99,7 @@ fun QueueSheetContent(items: List<QueueEntry>, current: Int, onMove: (Int, Int) 
                     }
                 }
             }
-            Spacer(Modifier.height(12.dp))
+            Spacer(Modifier.height(12.dp).navigationBarsPadding())
         }
     }
 }
