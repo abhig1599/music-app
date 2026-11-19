@@ -158,7 +158,7 @@ fun ClayBlob(levels: (() -> FloatArray?)?, tick: State<Long>?, beat: (() -> Floa
             if (reach < r * 0.02f) continue
             val grow = (reach / (r * 0.08f)).coerceIn(0f, 1f)
             val x = (reach / capL).coerceIn(0f, 1f)
-            val point = ((x - 0.55f) / 0.45f).coerceIn(0f, 1f) // only the strongest deformations sharpen into points (the star-like peak in his strip)
+            val point = ((x - 0.33f) / 0.4f).coerceIn(0f, 1f) // only the strongest deformations sharpen into points (the star-like peak in his strip)
             val bulb = core * (0.34f + 0.16f * minOf(x, 0.6f)) * (1f - 0.6f * point) // mid-length lobes end in a rounded bulb, peak ones taper
             val neck = core * 0.62f * grow
             val steps = (reach / (bulb * 0.45f)).toInt().coerceIn(2, 16)
@@ -182,7 +182,7 @@ fun ClayBlob(levels: (() -> FloatArray?)?, tick: State<Long>?, beat: (() -> Floa
             }
             val cands = ArrayList(picks.map { Triple(tipAng[it], len[it] / r, it) })
             // At a strong peak a few tiny extra droplets scatter between the lobes (his reference strip); weak beats get none.
-            if (loudL > r * 0.26f) picks.forEach { cands.add(Triple(tipAng[it] + 0.55, len[it] / r * 0.7f, 100 + it)) }
+            if (loudL > r * 0.17f) picks.forEach { cands.add(Triple(tipAng[it] + 0.55, len[it] / r * 0.7f, 100 + it)) }
             drops.onBeat(b, now, cands)
         }
         drops.draw(this, c, core, r, now, clay)
