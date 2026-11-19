@@ -130,7 +130,7 @@ fun ClayBlob(levels: (() -> FloatArray?)?, tick: State<Long>?, beat: (() -> Floa
         val c = Offset(size.width / 2f, size.height / 2f)
         val r = size.minDimension / 2f
         val n = FERRO_SPIKES
-        val base = r * (0.50f + 0.11f * b)
+        val base = r * (0.46f + 0.07f * b)
         // Spike height per band (low frequencies at the top, mirrored); fixed per-spike variation makes heights uneven like a real cluster, not a time loop.
         fun lvl(i: Int): Float {
             if (lv == null || lv.isEmpty()) return 0f
@@ -144,7 +144,7 @@ fun ClayBlob(levels: (() -> FloatArray?)?, tick: State<Long>?, beat: (() -> Floa
         val w = 2.0 * PI / n
         val hs = FloatArray(n) { k ->
             val l = lvl(k)
-            if (l < 0.015f) 0f else r * (0.46f * l * (1f + 0.7f * b) * (0.7f + 0.3f * FERRO_JITTER[k % FERRO_JITTER.size])).coerceAtMost(0.40f)
+            if (l < 0.015f) 0f else r * (0.46f * l * (1f + 0.7f * b) * (0.7f + 0.3f * FERRO_JITTER[k % FERRO_JITTER.size])).coerceAtMost(0.34f)
         }
         val tips = ArrayList<Offset>(); val bases = ArrayList<Offset>()
         for (j in 0 until steps) {
@@ -160,7 +160,7 @@ fun ClayBlob(levels: (() -> FloatArray?)?, tick: State<Long>?, beat: (() -> Floa
                 val x = d / sigma
                 if (kotlin.math.abs(x) < 3.0) add += hs[k] * exp(-x * x).toFloat()
             }
-            val rad = base + add.coerceAtMost(r * 0.40f)
+            val rad = base + add.coerceAtMost(r * 0.34f)
             val pt = Offset((c.x + rad * cos(th)).toFloat(), (c.y + rad * sin(th)).toFloat())
             if (j == 0) path.moveTo(pt.x, pt.y) else path.lineTo(pt.x, pt.y)
         }
@@ -194,7 +194,7 @@ class ClayDrops {
         if (lastSpawnNs != Long.MIN_VALUE && nowNs - lastSpawnNs < 120_000_000L) return
         armed = false; lastSpawnNs = nowNs
         val spread = if (spike % 2 == 0) 0.22 else -0.22
-        live.add(Drop(angle, nowNs, 0.16f + 0.30f * strength.coerceIn(0f, 1f), 0.055f + 0.03f * strength.coerceIn(0f, 1f)))
+        live.add(Drop(angle, nowNs, 0.22f + 0.22f * strength.coerceIn(0f, 1f), 0.075f + 0.04f * strength.coerceIn(0f, 1f)))
         if (beat > 0.7f) live.add(Drop(angle + spread, nowNs + 40_000_000L, 0.12f + 0.2f * strength.coerceIn(0f, 1f), 0.04f))
         while (live.size > 6) live.removeAt(0)
     }
