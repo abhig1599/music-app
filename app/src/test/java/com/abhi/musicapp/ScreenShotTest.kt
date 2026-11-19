@@ -282,6 +282,10 @@ class ScreenShotTest {
             fixtureBeat = 0.5f, fixtureLevels = FloatArray(48) { i -> (0.7f * (1f - i / 60f)).coerceIn(0f, 1f) },
             fixture = com.abhi.musicapp.playback.PlayerUiState(title = "Malcolm Todd - Earrings", artist = "", isPlaying = true, positionMs = 61_000L, durationMs = 192_000L, hasTrack = true))
     }
+    @Test fun focusRailMutedProduction() = shot("focus_rail_muted_production") {
+        com.abhi.musicapp.ui.screens.PlayerScreen(onBack = {}, initialOverlay = 2, fixtureFlipped = true, fixtureMuted = true,
+            fixture = com.abhi.musicapp.playback.PlayerUiState(title = "Malcolm Todd - Earrings", artist = "", isPlaying = true, positionMs = 61_000L, durationMs = 192_000L, hasTrack = true))
+    }
     @Test fun outputRailProductionLandscape() = shotWide("output_rail_production_landscape") {
         com.abhi.musicapp.ui.screens.PlayerScreen(onBack = {}, initialOverlay = 3, fixtureFlipped = true, fixtureMuted = false, fixturePrefSpeaker = false,
             fixture = com.abhi.musicapp.playback.PlayerUiState(title = "Malcolm Todd - Earrings", artist = "", isPlaying = true, positionMs = 61_000L, durationMs = 192_000L, hasTrack = true))
