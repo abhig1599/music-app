@@ -287,7 +287,7 @@ class ScreenShotTest {
     // Home scan ring: grey rays stay put, orange cluster advances (phase in ray steps). One row of 6 frames.
     @Test fun scanRingTravel() = shot("scan_ring_travel", 120) {
         androidx.compose.foundation.layout.Row {
-            listOf(0f, 2.5f, 5f, 7.5f, 10f, 12f).forEach { ph -> Box(Modifier.size(64.dp).padding(2.dp)) { com.abhi.musicapp.ui.screens.ScanRays(Modifier.fillMaxSize(), phaseOverride = ph) } }
+            listOf(0f, 2.5f, 5f, 7.5f, 10f, 12f).forEach { ph -> Box(Modifier.size(64.dp).padding(2.dp)) { com.abhi.musicapp.ui.screens.ScanRays(Modifier.size(60.dp), phaseOverride = ph) } }
         }
     }
 
