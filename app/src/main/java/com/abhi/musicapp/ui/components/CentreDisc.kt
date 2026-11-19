@@ -185,7 +185,7 @@ fun ClayBlob(levels: (() -> FloatArray?)?, tick: State<Long>?, beat: (() -> Floa
 
 /** Short-lived drops. Each lives about 0.8 s: out to a peak distance along its angle, then back into the pool, shrinking as it merges. */
 class ClayDrops {
-    private class Drop(val angle: Double, val bornNs: Long, val reach: Float, val size: Float)
+    private class Drop(val angle: Double, val bornNs: Long, val reach: Float, val size: Float, val spikeH: Float)
     private val live = ArrayList<Drop>()
     private var armed = true
     private var lastSpawnNs = Long.MIN_VALUE
@@ -195,8 +195,8 @@ class ClayDrops {
         if (lastSpawnNs != Long.MIN_VALUE && nowNs - lastSpawnNs < 120_000_000L) return
         armed = false; lastSpawnNs = nowNs
         val spread = if (spike % 2 == 0) 0.22 else -0.22
-        live.add(Drop(angle, nowNs, 0.22f + 0.22f * strength.coerceIn(0f, 1f), 0.09f + 0.04f * strength.coerceIn(0f, 1f)))
-        if (beat > 0.7f) live.add(Drop(angle + spread, nowNs + 40_000_000L, 0.12f + 0.2f * strength.coerceIn(0f, 1f), 0.04f))
+        live.add(Drop(angle, nowNs, 0.22f + 0.22f * strength.coerceIn(0f, 1f), 0.09f + 0.04f * strength.coerceIn(0f, 1f), strength))
+        if (beat > 0.7f) live.add(Drop(angle + spread, nowNs + 40_000_000L, 0.12f + 0.2f * strength.coerceIn(0f, 1f), 0.04f, strength * 0.6f))
         while (live.size > 6) live.removeAt(0)
     }
     fun draw(scope: androidx.compose.ui.graphics.drawscope.DrawScope, c: Offset, base: Float, r: Float, nowNs: Long, brush: Brush) {
@@ -208,7 +208,8 @@ class ClayDrops {
             if (life < 0f) continue
             // Distance: leaves the pool edge, peaks mid-life, returns inside it (base * 0.8) so it visibly mixes back.
             val out = kotlin.math.sin(PI * life).toFloat()
-            val dist = base * (0.82f + 0.18f * life) + r * d.reach * out
+            val tipR = base + r * d.spikeH // starts at the top of the spike it pinches off from, so it is not hidden inside the pool
+            val dist = tipR * (0.97f - 0.17f * life) + r * d.reach * out
             val rad = r * d.size * (1f - 0.55f * life)
             val tip = Offset((c.x + dist * cos(d.angle)).toFloat(), (c.y + dist * sin(d.angle)).toFloat())
             val edge = Offset((c.x + base * 0.9f * cos(d.angle)).toFloat(), (c.y + base * 0.9f * sin(d.angle)).toFloat())
