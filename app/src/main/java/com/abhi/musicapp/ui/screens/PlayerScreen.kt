@@ -305,7 +305,7 @@ fun PlayerScreen(onBack: () -> Unit, fixture: PlayerUiState? = null, initialOver
         }
 
         }
-        if (landscape) LandscapeBody(state, progress, seekMod, levelsFn, fixture, fixtureFlipped, flipped, { flipped = !flipped }, scrub, mono, beatBox, fixtureBeat, frame, fixtureLevels, reduced, fixtureRotation, sourceLabel, sleepOn, sleepStrip, outIcon, outLabel, outKind, outNote, overlay, { overlay = it }, onBack, progressInFixture, ctx, { outNote = it })
+        if (landscape) LandscapeBody(state, progress, seekMod, levelsFn, fixture, fixtureFlipped, flipped, { flipped = !flipped }, scrub, mono, beatBox, fixtureBeat, frame, fixtureLevels, reduced, fixtureRotation, sourceLabel, sleepOn, sleepStrip, outIcon, outLabel, outKind, outNote, overlay, { overlay = it }, onBack, progressInFixture, ctx, { outNote = it }, prefSpeaker, muted, outStatus, railTap)
         val sheet = androidx.compose.ui.graphics.Color(0xFFF6F6F4) // estimated popup fill
         val pill = com.abhi.musicapp.ui.theme.GrayLight
         if (overlay != 0) Box(Modifier.fillMaxSize().clickable(indication = null, interactionSource = androidx.compose.runtime.remember { androidx.compose.foundation.interaction.MutableInteractionSource() }) { overlay = 0 })
@@ -382,6 +382,7 @@ private fun LandscapeBody(
     sleepOn: Boolean, sleepStrip: @Composable () -> Unit, outIcon: androidx.compose.ui.graphics.vector.ImageVector, outLabel: String,
     outKind: com.abhi.musicapp.playback.OutputKind, outNote: String?, overlay: Int, setOverlay: (Int) -> Unit, onBack: () -> Unit,
     progressInFixture: Boolean, ctx: android.content.Context, setOutNote: (String?) -> Unit,
+    prefSpeaker: Boolean, muted: Boolean, outStatus: String, railTap: (Boolean, Int) -> Unit,
 ) {
     val circle = com.abhi.musicapp.ui.theme.SurfaceSoft
     val sheet = androidx.compose.ui.graphics.Color(0xFFF6F6F4)
