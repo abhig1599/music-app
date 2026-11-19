@@ -145,13 +145,13 @@ fun ClayBlob(levels: (() -> FloatArray?)?, tick: State<Long>?, beat: (() -> Floa
             while (k < hi.coerceAtLeast(lo + 1)) { m = maxOf(m, lv[k.coerceIn(0, lv.size - 1)]); k++ }
             return m
         }
-        val capL = r * 0.40f
-        val ang = DoubleArray(lobes) { i -> 2.0 * PI * i / lobes - PI / 2 + 0.35 * sin(0.23 * sec + i * 1.7) + FERRO_JITTER[i % FERRO_JITTER.size] * 0.25 }
+        val capL = r * 0.34f
+        val ang = DoubleArray(lobes) { i -> LOBE_BASE[i] + 0.35 * sin(0.23 * sec + i * 1.7) }
         val len = FloatArray(lobes) { i ->
             val l = band(i)
             // A faint idle length keeps the shape irregular and alive-looking only through slow drift; real reach needs real levels.
             val idle = r * (0.05f + 0.03f * FERRO_JITTER[(i + 3) % FERRO_JITTER.size])
-            val live = if (l < 0.02f) 0f else r * 0.62f * l * (1f + 0.6f * b) * (0.7f + 0.3f * FERRO_JITTER[i % FERRO_JITTER.size])
+            val live = if (l < 0.02f) 0f else r * 0.62f * l * LOBE_WEIGHT[i] * (1f + 0.6f * b)
             idle + capL * kotlin.math.tanh(live / capL)
         }
         val clay = Brush.radialGradient(0f to Color(0xFF4A4A4E), 1f to Color(0xFF38383C), center = Offset(c.x - r * 0.06f, c.y - r * 0.08f), radius = r * 0.8f)
@@ -205,8 +205,8 @@ class ClayDrops {
         armed = false; lastSpawnNs = nowNs
         cands.forEachIndexed { i, (angle, strength, _) ->
             val st = strength.coerceIn(0f, 1f)
-            if (i == 0) live.add(Drop(angle, nowNs, 0.12f + 0.14f * st, 0.06f + 0.035f * st, strength))
-            else if (beat > 0.55f) live.add(Drop(angle, nowNs + i * 55_000_000L, 0.09f + 0.11f * st, 0.04f + 0.03f * st, strength))
+            if (i == 0) live.add(Drop(angle, nowNs, 0.14f + 0.14f * st, 0.11f + 0.04f * st, strength))
+            else if (beat > 0.55f) live.add(Drop(angle, nowNs + i * 55_000_000L, 0.10f + 0.10f * st, 0.07f + 0.04f * st, strength))
         }
         while (live.size > 6) live.removeAt(0)
     }
@@ -243,5 +243,8 @@ class ClayDrops {
     }
 }
 
-private const val LOBES = 5
+private const val LOBES = 4
+/** Fixed, deliberately unequal lobe directions (radians) and strength weights: one long, one medium, two shorter, so the shape is never symmetric. */
+private val LOBE_BASE = doubleArrayOf(-1.75, 0.55, 2.35, 3.85)
+private val LOBE_WEIGHT = floatArrayOf(1.0f, 0.62f, 0.8f, 0.45f)
 private val FERRO_JITTER = floatArrayOf(0.2f, 0.9f, 0.5f, 1f, 0.1f, 0.7f, 0.4f, 0.85f, 0.3f, 0.6f, 0.95f, 0.15f, 0.55f)
