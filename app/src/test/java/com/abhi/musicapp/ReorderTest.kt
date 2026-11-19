@@ -85,7 +85,7 @@ class ReorderTest {
         var items by mutableStateOf((1..6).map { QueueEntry("$it", "Song $it", "Artist $it") })
         rule.setContent { MusicAppTheme { QueueSheetContent(items, current = 1, onMove = { f, t -> items = moveItem(items, f, t) }, onPlay = {}, onClose = {}) } }
         rule.onRoot().captureRoboImage("build/outputs/roborazzi/queue_sheet.png")
-        rule.onNodeWithTag("qhandle_4", useUnmergedTree = true).performTouchInput { down(center); moveBy(Offset(0f, -54f * 3f * 1.4f)); up() }
+        rule.onNodeWithTag("qhandle_4", useUnmergedTree = true).performTouchInput { down(center); moveBy(Offset(0f, -62f * 3f * 1.4f)); up() }
         rule.waitForIdle()
         assertEquals(listOf("1", "2", "3", "5", "4", "6"), items.map { it.id })
     }
