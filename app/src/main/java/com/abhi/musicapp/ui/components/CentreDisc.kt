@@ -160,7 +160,8 @@ fun ClayBlob(levels: (() -> FloatArray?)?, tick: State<Long>?, beat: (() -> Floa
                 val x = d / sigma
                 if (kotlin.math.abs(x) < 3.0) add += hs[k] * exp(-x * x).toFloat()
             }
-            val rad = base + add.coerceAtMost(r * 0.34f)
+            val capH = r * 0.34f
+            val rad = base + capH * kotlin.math.tanh(add / capH)
             val pt = Offset((c.x + rad * cos(th)).toFloat(), (c.y + rad * sin(th)).toFloat())
             if (j == 0) path.moveTo(pt.x, pt.y) else path.lineTo(pt.x, pt.y)
         }
