@@ -181,7 +181,17 @@ fun ClayBlob(levels: (() -> FloatArray?)?, tick: State<Long>?, beat: (() -> Floa
         val now = clockNs()
         var loud = 0; var loudH = 0f
         for (k in 0 until n) if (hs[k] > loudH) { loudH = hs[k]; loud = k }
-        if (loudH > r * 0.03f) drops.onBeat(b, now, w * loud - PI / 2, loudH / r, loud)
+        if (loudH > r * 0.03f) {
+            // Candidates: the loudest spike plus up to two other tall spikes that are not neighbours of one already chosen. Quiet beats give one drop.
+            val picks = ArrayList<Int>(); picks.add(loud)
+            for (k in (0 until n).sortedByDescending { hs[it] }) {
+                if (picks.size >= 3) break
+                if (k in picks || hs[k] < loudH * 0.6f || hs[k] < r * 0.06f) continue
+                if (picks.any { pk -> val dd = kotlin.math.abs(pk - k); minOf(dd, n - dd) < 2 }) continue
+                picks.add(k)
+            }
+            drops.onBeat(b, now, picks.map { Triple(w * it - PI / 2, hs[it] / r, it) })
+        }
         drops.draw(this, c, base, r, now, clay)
     }
 }
@@ -192,14 +202,16 @@ class ClayDrops {
     private val live = ArrayList<Drop>()
     private var armed = true
     private var lastSpawnNs = Long.MIN_VALUE
-    fun onBeat(beat: Float, nowNs: Long, angle: Double, strength: Float, spike: Int) {
+    fun onBeat(beat: Float, nowNs: Long, cands: List<Triple<Double, Float, Int>>) {
         if (beat < 0.25f) { armed = true; return }
-        if (!armed || beat < 0.4f) return
+        if (!armed || beat < 0.4f || cands.isEmpty()) return
         if (lastSpawnNs != Long.MIN_VALUE && nowNs - lastSpawnNs < 120_000_000L) return
         armed = false; lastSpawnNs = nowNs
-        val spread = if (spike % 2 == 0) 0.22 else -0.22
-        live.add(Drop(angle, nowNs, 0.22f + 0.22f * strength.coerceIn(0f, 1f), 0.09f + 0.04f * strength.coerceIn(0f, 1f), strength))
-        if (beat > 0.7f) live.add(Drop(angle + spread, nowNs + 40_000_000L, 0.12f + 0.2f * strength.coerceIn(0f, 1f), 0.04f, strength * 0.6f))
+        cands.forEachIndexed { i, (angle, strength, _) ->
+            val st = strength.coerceIn(0f, 1f)
+            if (i == 0) live.add(Drop(angle, nowNs, 0.22f + 0.22f * st, 0.09f + 0.04f * st, strength))
+            else if (beat > 0.55f) live.add(Drop(angle, nowNs + i * 45_000_000L, 0.14f + 0.18f * st, 0.05f + 0.03f * st, strength))
+        }
         while (live.size > 6) live.removeAt(0)
     }
     fun draw(scope: androidx.compose.ui.graphics.drawscope.DrawScope, c: Offset, base: Float, r: Float, nowNs: Long, brush: Brush) {

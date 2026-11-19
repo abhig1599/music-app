@@ -185,6 +185,9 @@ fun SettingsScreen(onBack: () -> Unit, onRowClick: (String) -> Unit = {}, fixtur
             )
             Spacer(Modifier.height(6.dp))
             Text("AutoMix is not available. Crossfade is a plain overlap for a set time. It has not been heard on a real phone yet.", fontFamily = mono, fontSize = 11.sp, color = GrayText)
+            com.abhi.musicapp.playback.Crossfader.lastOffsetMs(androidx.compose.ui.platform.LocalContext.current)?.let {
+                Text("Test info: last hand-over offset $it ms (the two copies of the song, when the swap began).", fontFamily = mono, fontSize = 11.sp, color = GrayText)
+            }
             Spacer(Modifier.height(10.dp))
         }
         Spacer(Modifier.height(6.dp))

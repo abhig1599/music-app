@@ -75,8 +75,12 @@ class Crossfader(private val ctx: Context, private val main: ExoPlayer) {
         val now = SystemClock.uptimeMillis()
         if (handingOff) {
             if (main.playbackState == Player.STATE_READY && main.isPlaying) {
-                if (backStart == 0L) { backStart = now; seekLatencyMs = (now - handOffStart).coerceIn(30L, 600L) }
-                val t = ((now - backStart) / 250f).coerceIn(0f, 1f)
+                if (backStart == 0L) {
+                    backStart = now; seekLatencyMs = (now - handOffStart).coerceIn(30L, 600L)
+                    // Diagnostic: how far apart the two copies are when the swap starts (incoming minus main, ms). Shown in Settings for phone testing.
+                    prefs(ctx).edit().putLong("last_offset_ms", inc.currentPosition - main.currentPosition).apply()
+                }
+                val t = ((now - backStart) / SWAP_MS).coerceIn(0f, 1f)
                 main.volume = base * t; inc.volume = base * (1f - t)
                 if (t >= 1f) finish()
             } else if (now - handOffStart > 3000L) finish()
@@ -137,6 +141,8 @@ class Crossfader(private val ctx: Context, private val main: ExoPlayer) {
     }
 
     companion object {
+        private const val SWAP_MS = 120f // short swap: two offset copies are audible for less time
+        fun lastOffsetMs(c: Context): Long? = if (prefs(c).contains("last_offset_ms")) prefs(c).getLong("last_offset_ms", 0L) else null
         private fun prefs(c: Context) = c.applicationContext.getSharedPreferences("transitions", Context.MODE_PRIVATE)
         /** Start the incoming song when the wall-clock time left (media time / speed) is within the fade plus 1.5 s, and not already over. */
         internal fun shouldBegin(remainingMediaMs: Long, fadeMs: Long, speed: Float): Boolean {
