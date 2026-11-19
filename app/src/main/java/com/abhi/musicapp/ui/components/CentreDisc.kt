@@ -157,7 +157,9 @@ fun ClayBlob(levels: (() -> FloatArray?)?, tick: State<Long>?, beat: (() -> Floa
             val reach = len[i]
             if (reach < r * 0.02f) continue
             val grow = (reach / (r * 0.08f)).coerceIn(0f, 1f)
-            val bulb = core * (0.34f + 0.16f * (reach / capL).coerceIn(0f, 1f)) // longer lobes end in a bigger rounded bulb
+            val x = (reach / capL).coerceIn(0f, 1f)
+            val point = ((x - 0.55f) / 0.45f).coerceIn(0f, 1f) // only the strongest deformations sharpen into points (the star-like peak in his strip)
+            val bulb = core * (0.34f + 0.16f * minOf(x, 0.6f)) * (1f - 0.6f * point) // mid-length lobes end in a rounded bulb, peak ones taper
             val neck = core * 0.62f * grow
             val steps = (reach / (bulb * 0.45f)).toInt().coerceIn(2, 16)
             for (st in 0..steps) {
@@ -178,7 +180,10 @@ fun ClayBlob(levels: (() -> FloatArray?)?, tick: State<Long>?, beat: (() -> Floa
                 if (k in picks || len[k] < loudL * 0.6f || len[k] < r * 0.14f) continue
                 picks.add(k)
             }
-            drops.onBeat(b, now, picks.map { Triple(tipAng[it], len[it] / r, it) })
+            val cands = ArrayList(picks.map { Triple(tipAng[it], len[it] / r, it) })
+            // At a strong peak a few tiny extra droplets scatter between the lobes (his reference strip); weak beats get none.
+            if (loudL > r * 0.26f) picks.forEach { cands.add(Triple(tipAng[it] + 0.55, len[it] / r * 0.7f, 100 + it)) }
+            drops.onBeat(b, now, cands)
         }
         drops.draw(this, c, core, r, now, clay)
     }
@@ -232,12 +237,12 @@ class ClayDrops {
         if (lastSpawnNs != Long.MIN_VALUE && nowNs - lastSpawnNs < 120_000_000L) return
         armed = false; lastSpawnNs = nowNs
         cands.forEachIndexed { i, (angle, strength, spike) ->
-            val jit = FERRO_JITTER[spike % FERRO_JITTER.size]; val sizeK = 0.8f + 0.4f * jit; val lifeNs = 800_000_000.0 * (0.85 + 0.35 * jit)
+            val tiny = spike >= 100; val jit = FERRO_JITTER[spike % FERRO_JITTER.size]; val sizeK = (0.8f + 0.4f * jit) * (if (tiny) 0.55f else 1f); val lifeNs = 800_000_000.0 * (0.85 + 0.35 * jit)
             val st = strength.coerceIn(0f, 1f)
-            if (i == 0) live.add(Drop(angle, nowNs, 0.24f + 0.20f * st, (0.11f + 0.04f * st) * sizeK, strength, lifeNs))
+            if (i == 0 && !tiny) live.add(Drop(angle, nowNs, 0.24f + 0.20f * st, (0.11f + 0.04f * st) * sizeK, strength, lifeNs))
             else if (beat > 0.55f) live.add(Drop(angle, nowNs + i * 55_000_000L, 0.18f + 0.16f * st, (0.07f + 0.04f * st) * sizeK, strength, lifeNs))
         }
-        while (live.size > 6) live.removeAt(0)
+        while (live.size > 9) live.removeAt(0)
     }
     fun draw(scope: androidx.compose.ui.graphics.drawscope.DrawScope, c: Offset, base: Float, r: Float, nowNs: Long, brush: Brush) {
         val it = live.iterator()

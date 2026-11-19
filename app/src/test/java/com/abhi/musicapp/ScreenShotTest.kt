@@ -359,9 +359,9 @@ class ScreenShotTest {
     @Test fun clayReleaseSequence() {
         fun lv(t: Float): FloatArray = if (t in 0.4f..1.0f) FloatArray(48) { i -> if (i % 3 == 0) 1f else 0.7f } else FloatArray(48) { 0.05f }
         fun bt(t: Float): Float = if (t in 0.4f..1.0f) kotlin.math.exp(-(t - 0.4f) / 0.15f) else 0f
-        val times = listOf(0.2f, 0.5f, 0.8f, 1.0f, 1.12f, 1.3f, 1.6f, 2.2f)
+        val times = listOf(0.2f, 0.41f, 0.5f, 0.8f, 1.0f, 1.12f, 1.3f, 1.6f, 2.2f)
         val base = 5_000_000_000L
-        shotWide("clay_release_sequence", 1312, 200) {
+        shotWide("clay_release_sequence", 1476, 200) {
             androidx.compose.foundation.layout.Row {
                 times.forEach { t ->
                     val sm = com.abhi.musicapp.ui.components.ClaySmoother(4)
