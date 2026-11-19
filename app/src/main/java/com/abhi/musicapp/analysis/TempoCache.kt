@@ -41,9 +41,9 @@ object TempoCache {
             val sr = fmt.getInteger(MediaFormat.KEY_SAMPLE_RATE)
             var ch = fmt.getInteger(MediaFormat.KEY_CHANNEL_COUNT).coerceAtLeast(1)
             val codec = MediaCodec.createDecoderByType(fmt.getString(MediaFormat.KEY_MIME)!!)
+            val out = FloatArray(sr * MAX_SECONDS); var n = 0
             try {
             codec.configure(fmt, null, null, 0); codec.start()
-            val out = FloatArray(sr * MAX_SECONDS); var n = 0
             val info = MediaCodec.BufferInfo(); var inDone = false; var outDone = false
             while (!outDone && n < out.size && !cancelled()) {
                 if (!inDone) {

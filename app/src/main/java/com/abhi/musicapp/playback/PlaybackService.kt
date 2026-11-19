@@ -47,7 +47,7 @@ class PlaybackService : MediaSessionService() {
         val item = p.getMediaItemAt(next)
         val uri = item.localConfiguration?.uri ?: return
         val key = item.mediaId
-        tempoPrefetcher.request(key) { cancelled -> com.abhi.musicapp.analysis.TempoCache.analyse(this, uri, key, cancelled) }
+        tempoPrefetcher.request(key, { cancelled -> com.abhi.musicapp.analysis.TempoCache.analyse(this, uri, key, cancelled) })
     }
 
     /** Same sink as the default, plus a pass-through tap that feeds the Player dial's frequency levels. Used for every player this service creates. */
