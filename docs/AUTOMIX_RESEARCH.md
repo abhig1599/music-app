@@ -1,6 +1,7 @@
 # AutoMix research (independent of Apple, not built yet)
 
-Status: research and scope only. Nothing here is implemented or heard on a device. This is NOT Apple's AutoMix and makes no parity claim.
+Status: research plus UNUSED prototype code. The planner and tempo prefetch exist and are unit-tested, but no playback path or UI
+calls them, nothing audible comes from them, and nothing here ran on a device. This is NOT Apple's AutoMix and makes no parity claim.
 The Apple page (support.apple.com/en-in/105067) says AutoMix works only with Apple Music subscription content, so this app cannot offer it. This note covers an independent local-file approximation.
 
 ## Scope of a first prototype (analysis only, no audio change)
@@ -24,3 +25,9 @@ The Apple page (support.apple.com/en-in/105067) says AutoMix works only with App
 ## Planner (experimental, unused)
 `analysis/AutoMixPlanner.kt` maps two tempo estimates to a plan: both known and within 8% (also half/double) means a whole-bar fade inside the user's 1-12 s limit and an incoming speed nudge of at most 6%; anything else falls back to a plain crossfade. Unit-tested on made-up tempos only. Nothing in playback or the UI calls it. Before it can be wired to an opt-in setting a phone test must show: the tempo decode runs on real files without stalling playback, the speed nudge sounds acceptable, and the overlap lands on the beat.
 Crossfade hardening: the fade is abandoned if the incoming player errors, is not ready within 4 s, or if the outgoing song ends before the incoming one is playing.
+
+## Tempo prefetch (experimental, default off)
+`TempoPrefetcher` decodes the next queue item and stores its tempo estimate in `TempoCache`. It runs only when the hidden preference
+`tempo/prefetch_on` is true (default false, no UI), and it is skipped while the system battery saver is on. Cancel never caches an
+"unknown" result, the decoder is always released, and cancellation is checked inside the decode loop. Nothing audible comes from this:
+it only fills the cache the unused planner would read.

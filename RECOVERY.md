@@ -9,6 +9,21 @@
   published. Convention from Inkline: versioned APK on Releases per change.
 
 ## State
+
+### Current (2026-11-20)
+- main is at 5d10844 (screenshots commit on top of code commit 718a383, the
+  last CI-green code). This head carries the combined November batch: queue
+  row sizing/padding, centred clay-blob visual, output picker, right-rail
+  buttons, overflow menu, Settings crossfade (real overlap, default Off),
+  AutoMix research planner (unused), tempo prefetch gate (default off).
+- Latest candidate release: cand-0.1.6 (tag 5f4101e), the build the user
+  installed. No APK or release is approved beyond it.
+- Batch QA limits and the accepted visual direction are in DECISIONS.md under
+  "2026-11-19/20 - Combined batch". NOTHING in the batch ran on a phone.
+- Open user choices (Delete semantics, moon button, APK go-ahead) are listed
+  in DECISIONS.md "PENDING product questions".
+
+### Historical: v1 milestone (2026-11-01, kept for the record)
 - v1 milestone: design-faithful UI skeleton (onboarding 3 steps, home, player,
   search, settings, downloads with his All/Pending/Downloaded tabs, folders,
   playlist detail) + Media3 service skeleton. Demo data only - MediaStore

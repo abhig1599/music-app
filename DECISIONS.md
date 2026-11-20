@@ -45,16 +45,58 @@ PENDING (waiting on the user) / STUB (visible in app, intentionally not function
 
 ## PENDING product questions (already asked via WhatsApp)
 1. Delete semantics: remove-from-library (app-hide) vs system file trash.
-2. Download v1 sources (candidates: direct URLs, Jamendo, Internet Archive,
+   (Re-asked 2026-11-19 and 2026-11-20; unanswered. Delete stays disabled.)
+2. Moon button in the player right rail: proposed sleep-timer action, not
+   assumed (re-asked with #1; unanswered. Moon stays visual only.)
+3. Download v1 sources (candidates: direct URLs, Jamendo, Internet Archive,
    Openverse discovery; SoundCloud requires paid Artist Pro - excluded unless he
    accepts cost; Spotify/YouTube: metadata-match only, no content download).
-3. Telegram playlist-download bot/channel: exact link never supplied.
-4. Backup scope: audio files vs playlists/settings metadata.
-5. "Read Now" reader behavior.
-6. Focus mode meaning + third bottom-right glyph on his player screen.
-7. "Play last one to end" timer semantics + whether it counts while paused.
-8. Hidden-folder songs appearing in playlists: play or skip.
-9. Whether he already has T&C / privacy documents (none seen; needed for store).
+4. Telegram playlist-download bot/channel: exact link never supplied.
+5. Backup scope: audio files vs playlists/settings metadata.
+6. "Read Now" reader behavior.
+7. Focus mode meaning + third bottom-right glyph on his player screen.
+8. "Play last one to end" timer semantics + whether it counts while paused.
+9. Hidden-folder songs appearing in playlists: play or skip.
+10. Whether he already has T&C / privacy documents (none seen; needed for store).
+11. Go-ahead for any APK build/download beyond cand-0.1.6 (never given).
+
+## 2026-11-19/20 - Combined batch (main 5d10844, code 718a383)
+Scope: queue sizing, centred clay blob, output picker, right-rail buttons,
+overflow menu, Settings crossfade, AutoMix research. Batched per his
+"push all the changes in one go". Rendered and unit-tested in CI only;
+NOTHING ran on a phone and nothing here may be claimed as device-verified.
+
+- Queue rows: 64dp rows, 20dp inner padding, 3dp gap. Render-verified only.
+- Clay blob (centre visual): resting plain circle (no idle lobes); sensitivity
+  gate 0.15 and gain 0.34 are agent tuning guesses, not measured; varied lobe
+  directions; ClaySmoother attack ~90 ms / release ~450 ms; pointed tips only
+  at strong peaks (threshold 0.33); scattered tiny droplets at high levels,
+  capped at 9, travel capped inside the disc. The pointed star peak from his
+  reference strip is NOT reached and was deliberately not forced. Outer scan
+  ring unchanged (grey strokes still, orange highlight travels).
+- ACCEPTED visual direction (user, 2026-11-19 17:52 IST, "Ya close enough"):
+  small resting circle that deforms with the music with varied shapes and
+  droplets, much lower sensitivity, smooth return to the circle. Shape
+  iteration frozen pending his feedback (main, 18:05). An optional beat
+  reference recording (Pinterest pin 886716614161218214) never arrived; it
+  would only refine tuning and does not block the accepted direction.
+- Right rail (mute / moon / close X) and output picker (phone vs headphones):
+  coded and rendered in production composables with injected state. Moon is
+  visual only pending question 2 above.
+- Overflow menu: Sleep Time, Add to playlist, Share, Speed, Delete,
+  Equaliser, Lyrics. Lark Player and Apple Music were behaviour references
+  only, not copies. Delete is intentionally DISABLED pending question 1.
+- Crossfade (Settings): switch + 1-12 s slider, real overlapping two-player
+  crossfade, default Off. Hardening: the fade is abandoned if the incoming
+  player errors or is not ready within 4 s; the fade is capped at one third
+  of the incoming song's duration and skipped when that is under 500 ms;
+  unknown/invalid duration keeps the plan. Never heard on a device. Detail:
+  docs/CROSSFADE_HANDOVER.md.
+- AutoMix: docs/AUTOMIX_RESEARCH.md. Planner unit-tested on synthetic tempos
+  and UNUSED by playback/UI; tempo prefetch behind a default-off pref with no
+  UI. No beat alignment, no audible mixing, no Apple parity claim.
+- Preview images/montages were labelled render-only with synthetic levels;
+  every preview carried the "no hardware verification" caveat.
 
 ## NOT verified / do not claim
 - Queue screen: not found in the Figma file (searched twice) - reported as

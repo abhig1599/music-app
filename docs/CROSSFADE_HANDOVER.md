@@ -13,3 +13,7 @@ What this relies on and nobody has heard or tested on a device: the session and 
 after setPlayer, the shared audio session keeps the equaliser attached, and the visualiser keeps getting levels from the new player. Edge
 cases cancel the crossfade instead of swapping: pause, seek, next/previous, queue edits, repeat-one, shuffle on, sleep "finish song".
 Mute and speed changes during the ramp are carried to the incoming player.
+
+Fade-length hardening (effectiveFade): the user's 1-12 s choice is capped at one third of the incoming song's duration, and the fade is
+skipped entirely when that cap comes out under 500 ms; an unknown or invalid incoming duration keeps the requested plan. If the outgoing
+song reaches the next item before the incoming player is ready, playback simply carries on without a swap.
