@@ -55,10 +55,12 @@ class PlaybackService : MediaSessionService() {
         val curUri = cur.localConfiguration?.uri ?: return
         val nextIdx = p.nextMediaItemIndex
         val next = if (nextIdx != androidx.media3.common.C.INDEX_UNSET) p.getMediaItemAt(nextIdx) else null
-        tempoPrefetcher.request(cur.mediaId, { cancelled -> com.abhi.musicapp.analysis.TempoCache.analyse(this, curUri, cur.mediaId, cancelled) }) { _ ->
+        val curKey = com.abhi.musicapp.analysis.TempoCache.keyFor(this, curUri, cur.mediaId)
+        tempoPrefetcher.request(curKey, { cancelled -> com.abhi.musicapp.analysis.TempoCache.analyse(this, curUri, curKey, cancelled) }) { _ ->
             if (!com.abhi.musicapp.analysis.AutoMix.active(this)) return@request
             val u = next?.localConfiguration?.uri ?: return@request
-            tempoPrefetcher.request(next!!.mediaId, { c2 -> com.abhi.musicapp.analysis.TempoCache.analyse(this, u, next!!.mediaId, c2) })
+            val nextKey = com.abhi.musicapp.analysis.TempoCache.keyFor(this, u, next!!.mediaId)
+            tempoPrefetcher.request(nextKey, { c2 -> com.abhi.musicapp.analysis.TempoCache.analyse(this, u, nextKey, c2) })
         }
     }
 
@@ -71,7 +73,7 @@ class PlaybackService : MediaSessionService() {
         if (next == androidx.media3.common.C.INDEX_UNSET) return
         val item = p.getMediaItemAt(next)
         val uri = item.localConfiguration?.uri ?: return
-        val key = item.mediaId
+        val key = com.abhi.musicapp.analysis.TempoCache.keyFor(this, uri, item.mediaId)
         tempoPrefetcher.request(key, { cancelled -> com.abhi.musicapp.analysis.TempoCache.analyse(this, uri, key, cancelled) })
     }
 

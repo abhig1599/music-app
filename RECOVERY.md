@@ -12,7 +12,7 @@
 
 ### Current (2026-11-21)
 - On top of 5d10844: AutoMix is now a real opt-in path ("AutoMix (beta)" under Settings > Song
-  Transitions, default off, acts only while Crossfade is on): beat-matched whole-bar overlap +
+  Transitions, default off, acts only while Crossfade is on): tempo-matched whole-bar overlap (no beat-phase alignment) +
   <=6% incoming tempo nudge + 1.5 s ease-back, plain-crossfade fallback. Code: analysis/AutoMix.kt,
   Crossfader (plannedTransition, restore ease), PlaybackService.analyseForAutoMix.
 - Verified locally this time: JDK 17 + SDK 34 toolchain, FULL unit suite 205 tests green incl. new

@@ -7,7 +7,7 @@ import android.content.Context
  * and the next one both have a detected tempo that is close enough to match (see [AutoMixPlanner]), the overlap
  * is timed to whole bars and the incoming song is nudged (at most [AutoMixPlanner.MAX_NUDGE]) to the playing
  * song's tempo during the overlap, then eased back to the user's speed. When any tempo is unknown or too far
- * apart the transition is the plain crossfade, so AutoMix can never make a transition worse than the default.
+ * apart the transition is exactly the plain crossfade. Tempo rate only: there is no beat-phase or downbeat alignment, so overlaps are tempo-matched, not beat-matched.
  *
  * This is NOT Apple's AutoMix and makes no parity claim: it runs on local files with on-device tempo analysis
  * only. Default OFF. Not heard on a phone yet - the maths is unit tested, the sound is not.

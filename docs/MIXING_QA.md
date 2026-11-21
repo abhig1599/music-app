@@ -3,8 +3,11 @@
 What changed today: AutoMix is now a real, opt-in audible path on top of Crossfade (Settings > Song
 Transitions > "AutoMix (beta)", default off). When both songs have a detected tempo close enough to match,
 the overlap is timed to whole bars and the incoming song runs nudged (max 6%) to the playing song's tempo,
-then eases back to the user's speed over ~1.5 s after the swap. Anything unknown falls back to the plain
-crossfade. Crossfade itself is unchanged in behavior.
+then eases back to the user's speed over ~1.5 s after the swap. Anything unknown falls back to exactly the
+plain crossfade. This is tempo-rate matching ONLY: no beat-phase or downbeat alignment, so the overlap is not
+beat-matched, and a wrong tempo read can sound worse than the plain crossfade (see risk 3). Crossfade itself
+is unchanged in behavior. The tempo cache key includes file size + modified time, so a replaced file that
+keeps its MediaStore id is re-analysed instead of inheriting a stale tempo.
 
 ## Verification done here (CI-class, no device)
 - Unit tests: planner edges, transition planning (fallbacks, caps, 6% nudge bound), speed-ease maths,
@@ -14,8 +17,10 @@ crossfade. Crossfade itself is unchanged in behavior.
 ## Ranked remaining risks (what a phone test must judge, in order)
 1. Session hand-over on a real phone: notification, lock-screen controls and the queue must keep showing the
    right song after MediaSession.setPlayer. Compile-checked only.
-2. Whether a beat-matched overlap actually lands on the beat with real songs: tempo analysis is tested on
-   synthetic click tracks only, and the overlap starts at a fade window, not on a detected downbeat.
+2. No beat-phase alignment exists: the fade start is a wall-clock window (polled every 250 ms), not snapped
+   to a detected beat grid, so even a perfect tempo match can overlap off-beat by any fraction of a beat.
+   Onset-phase estimation with beat-grid-snapped starts is the top candidate for the next iteration. Tempo
+   analysis itself is tested on synthetic click tracks only, never on real songs.
 3. Tempo misdetection on real songs (live drums, rubato, intros): wrong BPM -> wrong nudge. Mitigations:
    confidence gate, half/double-tempo handling, 6% cap, plain-crossfade fallback. A bad read sounds like a
    plain crossfade with a slightly off-speed incoming song for a few seconds.

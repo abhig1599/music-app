@@ -47,7 +47,7 @@ PENDING (waiting on the user) / STUB (visible in app, intentionally not function
 Scope: actual audio behavior for mixing, per his 2026-11-19 "research refine and build it properly" and 2026-11-21 resume.
 - AutoMix (beta) switch added under Settings > Song Transitions (default off; a PROPOSED-addition row, his Figma has only the
   Crossfade switch + slider). Acts only while Crossfade is on.
-- Audible path: beat-matched whole-bar overlap + incoming tempo nudge (max 6%, pitch preserved) when both tempos are detected and
+- Audible path: tempo-matched whole-bar overlap (NO beat-phase/downbeat alignment) + incoming tempo nudge (max 6%, pitch preserved) when both tempos are detected and
   close; ease back to the user's speed over ~1.5 s after the swap. Any unknown -> plain crossfade. Code: analysis/AutoMix.kt,
   Crossfader.plannedTransition, PlaybackService.analyseForAutoMix.
 - Verification: unit tests (planner, transition planning, ease maths, swap/cancel with nudge) + CI compile/render. NOT heard on a

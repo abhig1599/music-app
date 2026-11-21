@@ -31,8 +31,9 @@ import kotlin.math.sin
  *
  * AutoMix (beta, user opt-in on top of Crossfade): when both songs have a detected, close-enough tempo, the fade is timed to whole bars of
  * the playing song and the incoming player runs nudged (at most 6%) to the playing song's tempo during the overlap, then eases back to the
- * user's speed over ~1.5 s after the swap instead of stepping. Unknown or mismatched tempos fall back to the plain crossfade, so AutoMix
- * never makes a transition worse than the default. See analysis/AutoMix.kt and docs/AUTOMIX_RESEARCH.md.
+ * user's speed over ~1.5 s after the swap instead of stepping. Tempo rate only: NO beat-phase or downbeat alignment, so overlaps are
+ * tempo-matched, not beat-matched. Unknown tempos fall back to exactly the plain crossfade; a WRONG tempo can sound worse than plain, which
+ * is the beta risk a phone test must judge. See analysis/AutoMix.kt and docs/AUTOMIX_RESEARCH.md.
  *
  * NOT hardware-verified: there is no way to hear audio in CI. Whether the session hand-over leaves the notification, the controls and the
  * visualiser consistent is only checked by compiling and by the maths tests. Pause, seek, next/previous, repeat-one, shuffle and the
@@ -46,7 +47,9 @@ class Crossfader(
     private val onSwap: (ExoPlayer) -> Unit,
     private val onItemChanged: (ExoPlayer) -> Unit = {},
     private val autoMixActive: () -> Boolean = { AutoMix.active(ctx) },
-    private val tempoOf: (String) -> Float? = { id -> TempoCache.cached(ctx, id)?.takeIf { it > 0f } },
+    private val tempoOf: (androidx.media3.common.MediaItem) -> Float? = { item ->
+        TempoCache.cached(ctx, TempoCache.keyFor(ctx, item.localConfiguration?.uri, item.mediaId))?.takeIf { it > 0f }
+    },
 ) {
     private val handler = Handler(Looper.getMainLooper())
     private var incoming: ExoPlayer? = null
@@ -153,8 +156,8 @@ class Crossfader(
         val dur = main.duration
         if (dur == C.TIME_UNSET || dur <= 0L) return
         val plan = plannedTransition(
-            if (autoMixActive()) main.currentMediaItem?.mediaId?.let(tempoOf) else null,
-            if (autoMixActive()) tempoOf(main.getMediaItemAt(next).mediaId) else null,
+            if (autoMixActive()) main.currentMediaItem?.let(tempoOf) else null,
+            if (autoMixActive()) tempoOf(main.getMediaItemAt(next)) else null,
             seconds(ctx), dur,
         )
         val f = plan.first
@@ -165,7 +168,7 @@ class Crossfader(
         p.setAudioAttributes(AudioAttributes.Builder().setUsage(C.USAGE_MEDIA).setContentType(C.AUDIO_CONTENT_TYPE_MUSIC).build(), false)
         if (main.audioSessionId != C.AUDIO_SESSION_ID_UNSET) p.audioSessionId = main.audioSessionId
         AudioOutput.preferredDevice?.let { d: AudioDeviceInfo -> p.setPreferredAudioDevice(d) }
-        // AutoMix: the incoming song starts at the nudged tempo so the overlap is beat-matched; pitch is preserved (Media3 Sonic).
+        // AutoMix: the incoming song starts at the nudged tempo so the overlap is tempo-matched (beats are NOT phase-aligned); pitch is preserved (Media3 Sonic).
         p.playbackParameters = PlaybackParameters(main.playbackParameters.speed * nudge, main.playbackParameters.pitch)
         p.repeatMode = main.repeatMode
         p.volume = 0f
@@ -243,7 +246,7 @@ class Crossfader(
         }
         /**
          * Fade length and incoming speed factor for one transition. Null tempo on either side (or AutoMix off, handled by the caller
-         * passing null) means the plain crossfade: the user's seconds capped at a third of the PLAYING song. A beat-matched plan is also
+         * passing null) means the plain crossfade: the user's seconds capped at a third of the PLAYING song. A tempo-matched plan is also
          * capped at a third of the playing song, and falls back to plain when that leaves under 500 ms. Pure maths for unit tests.
          */
         internal fun plannedTransition(outBpm: Float?, inBpm: Float?, userSecs: Int, outDurMs: Long): Pair<Long, Float> {

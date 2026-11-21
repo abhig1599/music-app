@@ -15,6 +15,26 @@ object TempoCache {
     const val MAX_SECONDS = 60
     private fun prefs(c: Context) = c.applicationContext.getSharedPreferences("tempo", Context.MODE_PRIVATE)
 
+    /**
+     * Cache key: the MediaStore id plus the file's size and last-modified time, so a replaced file that keeps its id does not
+     * inherit a stale tempo. Falls back to the bare id when the columns cannot be read (missing column, dead uri): a wrong-key
+     * miss just means one more analysis, never a wrong BPM.
+     */
+    fun keyFor(c: Context, uri: android.net.Uri?, mediaId: String): String {
+        if (uri == null) return mediaId
+        return try {
+            c.contentResolver.query(uri, arrayOf(android.provider.OpenableColumns.SIZE, android.provider.MediaStore.MediaColumns.DATE_MODIFIED), null, null, null)?.use { cur ->
+                if (!cur.moveToFirst()) return mediaId
+                val si = cur.getColumnIndex(android.provider.OpenableColumns.SIZE)
+                val mi = cur.getColumnIndex(android.provider.MediaStore.MediaColumns.DATE_MODIFIED)
+                if (si < 0 && mi < 0) return mediaId
+                val sz = if (si >= 0) cur.getLong(si) else -1L
+                val mt = if (mi >= 0) cur.getLong(mi) else -1L
+                "$mediaId:$sz:$mt"
+            } ?: mediaId
+        } catch (e: Exception) { mediaId }
+    }
+
     /** Cached value: null = not analysed yet; bpm < 0 = analysed, unknown. */
     fun cached(c: Context, key: String): Float? = if (prefs(c).contains(key)) prefs(c).getFloat(key, -1f) else null
 

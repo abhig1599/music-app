@@ -186,8 +186,8 @@ fun SettingsScreen(onBack: () -> Unit, onRowClick: (String) -> Unit = {}, fixtur
             Spacer(Modifier.height(13.dp))
             var aOn by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(!fixture && com.abhi.musicapp.analysis.AutoMix.switchedOn(tctx)) }
             ToggleRow("AutoMix (beta)",
-                if (aOn) "Acts while Crossfade is on: when both songs' tempos are detected and close, the overlap lands on whole bars and the next song is nudged to match, then eased back. Otherwise the plain crossfade plays."
-                else "Off. The overlap is a plain crossfade for the set time. Beat-aware mixing needs this switch plus Crossfade.",
+                if (aOn) "Acts while Crossfade is on: when both songs' tempos are detected and close, the overlap is timed to whole bars and the next song's tempo is nudged to match, then eased back. Beats are not aligned yet. Otherwise the plain crossfade plays."
+                else "Off. The overlap is a plain crossfade for the set time. Tempo-based mixing needs this switch plus Crossfade.",
                 aOn) {
                 aOn = !aOn
                 if (!fixture) com.abhi.musicapp.analysis.AutoMix.setSwitchedOn(tctx, aOn)

@@ -373,6 +373,18 @@ class ScreenShotTest {
     }
     @Test fun lyricsEmptyState() = shot("lyrics_empty_state", 600) { Box(Modifier.size(390.dp, 600.dp)) { com.abhi.musicapp.ui.screens.LyricsSheet(-1L, "Malcolm Todd - Earrings") {} } }
     @Test fun settingsTransitions() = shot("settings_transitions", 1500) { SettingsScreen(onBack = {}, onRowClick = {}, startExpanded = true) }
+    @Test fun settingsTransitionsAutoMixOn() {
+        // Enabled state: Crossfade + AutoMix switches ON in the real prefs so the shipped-state rows render as a user sees them.
+        val ctx = androidx.test.core.app.ApplicationProvider.getApplicationContext<android.content.Context>()
+        com.abhi.musicapp.playback.Crossfader.setEnabled(ctx, true)
+        com.abhi.musicapp.analysis.AutoMix.setSwitchedOn(ctx, true)
+        try {
+            shot("settings_transitions_automix_on", 1500) { SettingsScreen(onBack = {}, onRowClick = {}, startExpanded = true) }
+        } finally {
+            com.abhi.musicapp.playback.Crossfader.setEnabled(ctx, false)
+            com.abhi.musicapp.analysis.AutoMix.setSwitchedOn(ctx, false)
+        }
+    }
     @Test fun settingsTransitionsScrolled() {
         composeRule.setContent { MusicAppTheme { Box(Modifier.size(390.dp, 600.dp).background(androidx.compose.material3.MaterialTheme.colorScheme.background)) { SettingsScreen(onBack = {}, onRowClick = {}, startExpanded = true) } } }
         composeRule.onNode(androidx.compose.ui.test.hasScrollAction()).performTouchInput { swipeUp(startY = bottom - 10f, endY = top + 10f) }
