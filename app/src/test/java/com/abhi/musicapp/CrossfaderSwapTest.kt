@@ -72,6 +72,40 @@ class CrossfaderSwapTest {
         inc.release()
     }
 
+    @Test fun swapWithNudgeKeepsNudgedSpeedAndSchedulesTheEaseBack() {
+        val (cf, main, inc) = make()
+        main.playbackParameters = androidx.media3.common.PlaybackParameters(1f)
+        inc.playbackParameters = androidx.media3.common.PlaybackParameters(1.05f)
+        cf.injectIncomingForTest(inc, 1, 1.05f)
+        cf.swapForTest()
+        assertTrue(cf.restorePendingForTest) // ease scheduled, not stepped at the swap moment
+        assertEquals(1.05f, cf.activePlayer.playbackParameters.speed, 0.0001f)
+        inc.release()
+    }
+
+    @Test fun cancelDuringTheEaseSnapsToTheUserSpeed() {
+        val (cf, main, inc) = make()
+        main.playbackParameters = androidx.media3.common.PlaybackParameters(1f)
+        inc.playbackParameters = androidx.media3.common.PlaybackParameters(1.05f)
+        cf.injectIncomingForTest(inc, 1, 1.05f)
+        cf.swapForTest()
+        cf.cancelForTest()
+        assertFalse(cf.restorePendingForTest)
+        assertEquals(1f, cf.activePlayer.playbackParameters.speed, 0.0001f)
+        inc.release()
+    }
+
+    @Test fun swapWithoutNudgeLeavesSpeedAloneAndSchedulesNothing() {
+        val (cf, main, inc) = make()
+        main.playbackParameters = androidx.media3.common.PlaybackParameters(1.4f)
+        inc.playbackParameters = androidx.media3.common.PlaybackParameters(1.4f)
+        cf.injectIncomingForTest(inc, 1)
+        cf.swapForTest()
+        assertFalse(cf.restorePendingForTest)
+        assertEquals(1.4f, cf.activePlayer.playbackParameters.speed, 0.0001f)
+        inc.release()
+    }
+
     @Test fun swapWithNothingIncomingIsANoOp() {
         val (cf, main, inc) = make()
         cf.swapForTest()

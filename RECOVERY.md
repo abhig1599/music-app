@@ -10,7 +10,17 @@
 
 ## State
 
-### Current (2026-11-20)
+### Current (2026-11-21)
+- On top of 5d10844: AutoMix is now a real opt-in path ("AutoMix (beta)" under Settings > Song
+  Transitions, default off, acts only while Crossfade is on): beat-matched whole-bar overlap +
+  <=6% incoming tempo nudge + 1.5 s ease-back, plain-crossfade fallback. Code: analysis/AutoMix.kt,
+  Crossfader (plannedTransition, restore ease), PlaybackService.analyseForAutoMix.
+- Verified locally this time: JDK 17 + SDK 34 toolchain, FULL unit suite 205 tests green incl. new
+  AutoMixTransitionTest and CrossfaderSwapTest nudge/ease cases. Still NOT heard on a device;
+  ranked risks + phone test script in docs/MIXING_QA.md. No version bump (stays 0.1.6/code 6),
+  no APK, no release - cand-0.1.6 remains the latest installable build.
+
+### 2026-11-20
 - main is at 5d10844 (screenshots commit on top of code commit 718a383, the
   last CI-green code). This head carries the combined November batch: queue
   row sizing/padding, centred clay-blob visual, output picker, right-rail

@@ -32,10 +32,35 @@ class PlaybackService : MediaSessionService() {
         exo = player
         val session = MediaSession.Builder(this, player).build()
         mediaSession = session
-        crossfader = Crossfader(this, player, { buildPlayer() }, { p -> session.player = p; exo = p }, { p -> prefetchNext(p) }).also { it.start() }
+        crossfader = Crossfader(this, player, { buildPlayer() }, { p -> session.player = p; exo = p }, { p -> onTrackChanged(p) }).also { it.start() }
     }
 
     private val tempoPrefetcher = com.abhi.musicapp.analysis.TempoPrefetcher()
+
+    private fun onTrackChanged(p: ExoPlayer) {
+        prefetchNext(p)
+        analyseForAutoMix(p)
+    }
+
+    /**
+     * AutoMix needs both tempos cached before the overlap starts. Analyse the PLAYING song first (it sets the target tempo and has a
+     * whole song's length to finish in), then the next queued one. Results land in TempoCache; the Crossfader only reads the cache,
+     * so a song that is not analysed in time simply gets the plain crossfade. Skipped under battery saver, like the prefetch.
+     */
+    private fun analyseForAutoMix(p: ExoPlayer) {
+        if (!com.abhi.musicapp.analysis.AutoMix.active(this)) return
+        val pm = getSystemService(android.os.PowerManager::class.java)
+        if (pm?.isPowerSaveMode == true) return
+        val cur = p.currentMediaItem ?: return
+        val curUri = cur.localConfiguration?.uri ?: return
+        val nextIdx = p.nextMediaItemIndex
+        val next = if (nextIdx != androidx.media3.common.C.INDEX_UNSET) p.getMediaItemAt(nextIdx) else null
+        tempoPrefetcher.request(cur.mediaId, { cancelled -> com.abhi.musicapp.analysis.TempoCache.analyse(this, curUri, cur.mediaId, cancelled) }) { _ ->
+            if (!com.abhi.musicapp.analysis.AutoMix.active(this)) return@request
+            val u = next?.localConfiguration?.uri ?: return@request
+            tempoPrefetcher.request(next!!.mediaId, { c2 -> com.abhi.musicapp.analysis.TempoCache.analyse(this, u, next!!.mediaId, c2) })
+        }
+    }
 
     /** Hidden, off by default: analyse the tempo of the NEXT queued local song in the background and cache it. Nothing audible uses it. */
     private fun prefetchNext(p: ExoPlayer) {

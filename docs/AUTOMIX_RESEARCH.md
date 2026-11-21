@@ -1,8 +1,15 @@
-# AutoMix research (independent of Apple, not built yet)
+# AutoMix research (independent of Apple)
 
-Status: research plus UNUSED prototype code. The planner and tempo prefetch exist and are unit-tested, but no playback path or UI
-calls them, nothing audible comes from them, and nothing here ran on a device. This is NOT Apple's AutoMix and makes no parity claim.
+Status (2026-11-21): WIRED as an opt-in audible path. "AutoMix (beta)" lives in Settings > Song Transitions (default off) and only
+acts while Crossfade is on. When both songs' tempos are cached and close enough, the Crossfader times the overlap to whole bars and
+runs the incoming player nudged (max 6%) to the playing song's tempo, easing back to the user's speed over ~1.5 s after the swap.
+Fallback on any unknown is the plain crossfade. Still NOT heard on a device: the maths and lifecycle are unit-tested, the sound is
+not. QA, ranked risks and the phone test script: docs/MIXING_QA.md. This is NOT Apple's AutoMix and makes no parity claim.
 The Apple page (support.apple.com/en-in/105067) says AutoMix works only with Apple Music subscription content, so this app cannot offer it. This note covers an independent local-file approximation.
+
+How it is wired: PlaybackService analyses the playing song, then the next queued one, into TempoCache (background, one min-priority
+thread, skipped under battery saver). The Crossfader only reads the cache at fade time (plannedTransition), so analysis latency can
+never stall playback. The nudge lives only on the incoming player; every exit path (swap, cancel, error) settles at the user's speed.
 
 ## Scope of a first prototype (analysis only, no audio change)
 1. Decode a local file to mono PCM with MediaExtractor + MediaCodec (platform APIs, no dependency).
@@ -19,8 +26,9 @@ The Apple page (support.apple.com/en-in/105067) says AutoMix works only with App
 - TarsosDSP has onset/beat code but is GPL v3 (https://github.com/JorenSix/TarsosDSP/blob/master/LICENSE). Linking it would put the app under GPL. Do not add it. Write the small analysis code in Kotlin instead.
 
 ## Boundary
-- Current batch: plain Crossfade only (Off by default).
-- AutoMix prototype: separate batch, after the user has heard Crossfade on a phone.
+- AutoMix is shipped as an opt-in beta on top of Crossfade per the user's 2026-11-21 go-ahead ("Do it" on the mixing status).
+- Still pending: the user's ears. Ranked risks and the phone test script are in docs/MIXING_QA.md; feedback decides whether the
+  beta stays, is tuned (downbeat alignment, ease curve) or is reverted to plain Crossfade.
 
 ## Planner (experimental, unused)
 `analysis/AutoMixPlanner.kt` maps two tempo estimates to a plan: both known and within 8% (also half/double) means a whole-bar fade inside the user's 1-12 s limit and an incoming speed nudge of at most 6%; anything else falls back to a plain crossfade. Unit-tested on made-up tempos only. Nothing in playback or the UI calls it. Before it can be wired to an opt-in setting a phone test must show: the tempo decode runs on real files without stalling playback, the speed nudge sounds acceptable, and the overlap lands on the beat.
