@@ -36,6 +36,7 @@ jobs:
           script: bash .github/ci/smoke.sh
       - name: Upload smoke output
         if: always()
+        continue-on-error: true # artifact storage quota can be full; verdict is in the job log
         uses: actions/upload-artifact@v4
         with:
           name: smoke-out
