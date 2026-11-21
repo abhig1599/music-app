@@ -56,11 +56,11 @@ class PlaybackService : MediaSessionService() {
         val nextIdx = p.nextMediaItemIndex
         val next = if (nextIdx != androidx.media3.common.C.INDEX_UNSET) p.getMediaItemAt(nextIdx) else null
         val curKey = com.abhi.musicapp.analysis.TempoCache.keyFor(this, curUri, cur.mediaId)
-        tempoPrefetcher.request(curKey, { cancelled -> com.abhi.musicapp.analysis.TempoCache.analyse(this, curUri, curKey, cancelled) }) { _ ->
+        tempoPrefetcher.request(curKey.value, { cancelled -> com.abhi.musicapp.analysis.TempoCache.analyse(this, curUri, curKey, cancelled) }) { _ ->
             if (!com.abhi.musicapp.analysis.AutoMix.active(this)) return@request
             val u = next?.localConfiguration?.uri ?: return@request
             val nextKey = com.abhi.musicapp.analysis.TempoCache.keyFor(this, u, next!!.mediaId)
-            tempoPrefetcher.request(nextKey, { c2 -> com.abhi.musicapp.analysis.TempoCache.analyse(this, u, nextKey, c2) })
+            tempoPrefetcher.request(nextKey.value, { c2 -> com.abhi.musicapp.analysis.TempoCache.analyse(this, u, nextKey, c2) })
         }
     }
 
@@ -74,7 +74,7 @@ class PlaybackService : MediaSessionService() {
         val item = p.getMediaItemAt(next)
         val uri = item.localConfiguration?.uri ?: return
         val key = com.abhi.musicapp.analysis.TempoCache.keyFor(this, uri, item.mediaId)
-        tempoPrefetcher.request(key, { cancelled -> com.abhi.musicapp.analysis.TempoCache.analyse(this, uri, key, cancelled) })
+        tempoPrefetcher.request(key.value, { cancelled -> com.abhi.musicapp.analysis.TempoCache.analyse(this, uri, key, cancelled) })
     }
 
     /** Same sink as the default, plus a pass-through tap that feeds the Player dial's frequency levels. Used for every player this service creates. */

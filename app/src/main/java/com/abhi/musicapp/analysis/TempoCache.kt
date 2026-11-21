@@ -16,35 +16,44 @@ object TempoCache {
     private fun prefs(c: Context) = c.applicationContext.getSharedPreferences("tempo", Context.MODE_PRIVATE)
 
     /**
-     * Cache key: the MediaStore id plus the file's size and last-modified time, so a replaced file that keeps its id does not
-     * inherit a stale tempo. Falls back to the bare id when the columns cannot be read (missing column, dead uri): a wrong-key
-     * miss just means one more analysis, never a wrong BPM.
+     * Cache key for one song file. [value] is the MediaStore id plus the file's size and last-modified time, so a replaced file
+     * that keeps its id does not inherit a stale tempo. [persistable] is false when no file metadata could be read (dead uri,
+     * missing columns): a bare id CAN go stale across replacement, so such results are kept in memory for the session only and
+     * never written to disk. A non-persistable key therefore costs one analysis per session, never a wrong BPM from disk.
      */
-    fun keyFor(c: Context, uri: android.net.Uri?, mediaId: String): String {
-        if (uri == null) return mediaId
+    class Key(val value: String, val persistable: Boolean)
+
+    fun keyFor(c: Context, uri: android.net.Uri?, mediaId: String): Key {
+        if (uri == null) return Key(mediaId, false)
         return try {
             c.contentResolver.query(uri, arrayOf(android.provider.OpenableColumns.SIZE, android.provider.MediaStore.MediaColumns.DATE_MODIFIED), null, null, null)?.use { cur ->
-                if (!cur.moveToFirst()) return mediaId
+                if (!cur.moveToFirst()) return Key(mediaId, false)
                 val si = cur.getColumnIndex(android.provider.OpenableColumns.SIZE)
                 val mi = cur.getColumnIndex(android.provider.MediaStore.MediaColumns.DATE_MODIFIED)
-                if (si < 0 && mi < 0) return mediaId
+                if (si < 0 && mi < 0) return Key(mediaId, false)
                 val sz = if (si >= 0) cur.getLong(si) else -1L
                 val mt = if (mi >= 0) cur.getLong(mi) else -1L
-                "$mediaId:$sz:$mt"
-            } ?: mediaId
-        } catch (e: Exception) { mediaId }
+                Key("$mediaId:$sz:$mt", true)
+            } ?: Key(mediaId, false)
+        } catch (e: Exception) { Key(mediaId, false) }
     }
 
+    /** Session-only results for keys whose file metadata could not be read; never written to disk. */
+    private val memory = java.util.concurrent.ConcurrentHashMap<String, Float>()
+
     /** Cached value: null = not analysed yet; bpm < 0 = analysed, unknown. */
-    fun cached(c: Context, key: String): Float? = if (prefs(c).contains(key)) prefs(c).getFloat(key, -1f) else null
+    fun cached(c: Context, key: Key): Float? =
+        if (key.persistable) { if (prefs(c).contains(key.value)) prefs(c).getFloat(key.value, -1f) else null }
+        else memory[key.value]
 
     /** Blocking (call off the main thread). Returns the BPM or null when unknown. */
-    fun analyse(c: Context, uri: Uri, key: String, cancelled: () -> Boolean = { false }): Float? {
+    fun analyse(c: Context, uri: Uri, key: Key, cancelled: () -> Boolean = { false }): Float? {
         cached(c, key)?.let { return if (it > 0f) it else null }
         val decoded = try { decode(c, uri, cancelled) } catch (e: Exception) { null }
         if (cancelled()) return null // never cache a cancelled run as "unknown"
         val r = decoded?.let { TempoAnalyzer.analyze(it.first, it.second) }
-        prefs(c).edit().putFloat(key, r?.bpm ?: -1f).apply()
+        val v = r?.bpm ?: -1f
+        if (key.persistable) prefs(c).edit().putFloat(key.value, v).apply() else memory[key.value] = v
         return r?.bpm
     }
 
