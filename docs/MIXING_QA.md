@@ -6,8 +6,10 @@ the overlap is timed to whole bars and the incoming song runs nudged (max 6%) to
 then eases back to the user's speed over ~1.5 s after the swap. Anything unknown falls back to exactly the
 plain crossfade. This is tempo-rate matching ONLY: no beat-phase or downbeat alignment, so the overlap is not
 beat-matched, and a wrong tempo read can sound worse than the plain crossfade (see risk 3). Crossfade itself
-is unchanged in behavior. The tempo cache key includes file size + modified time, so a replaced file that
-keeps its MediaStore id is re-analysed instead of inheriting a stale tempo.
+is unchanged in behavior. The tempo cache key is mediaId + file size + modified time, so a replaced file that
+keeps its MediaStore id is re-analysed. Conservative policy: when that metadata cannot be read (dead/odd
+uri), results live in memory for the session only and are NEVER written to disk, so no stale tempo can
+survive a file replacement.
 
 ## Verification done here (CI-class, no device)
 - Unit tests: planner edges, transition planning (fallbacks, caps, 6% nudge bound), speed-ease maths,
