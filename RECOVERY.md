@@ -10,7 +10,28 @@
 
 ## State
 
-### Current (2026-11-22, morning)
+### Current (2026-11-22, 13:52 IST)
+- User approved publishing the private test APK at 13:29 IST in a direct reply
+  to the publication question. Published cand-0.1.7 at commit
+  8aa92b541f753e717103b2e12625d9f66bc42686, version 0.1.7/code 7.
+- Verified release page and attached APK (18.9 MB):
+  https://github.com/abhig1599/music-app/releases/tag/cand-0.1.7
+  Asset: music-app-cand-0.1.7-debug.apk
+  GitHub asset SHA-256: f22c6ebbd855b56ed1ca1f59c857966ffb392d487fcf7b72663457c77fe95d8a
+- Main CI success record names 8aa92b5. The initial version-bump run failed
+  because SeparateTestAppTest still expected 0.1.6; corrected assertion to
+  0.1.7, then verification passed. No playback code changed in that fix.
+- Release link and inspected release screenshot returned for user delivery.
+  GitHub sign-in required. Select the APK under Assets, not source archives.
+- Prior releases untouched, same signing configuration. No billing settings
+  changed. Do not assert remaining free minutes or zero charges without a
+  billing check; no paid usage was authorized.
+- Real-music audio quality remains unverified. Prior emulator smoke covered
+  basic playback health on older source, not audible mixing or beat phase.
+- Earlier held-candidate instructions below are historical, superseded by
+  this publication. No further release/build authorized by this closeout.
+
+### Historical held candidate (2026-11-22, morning)
 - Held candidate awaiting the user's explicit APK approval (asked 2026-11-21 ~18:48 IST,
   re-asked 2026-11-22 morning; NO approval yet - do not release without it).
 - Candidate head: e6d428a on origin/main = code 551c93e + CI screenshot push-back.
