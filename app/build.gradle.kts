@@ -13,8 +13,8 @@ android {
         applicationId = "com.abhi.musicapp"
         minSdk = 26
         targetSdk = 34
-        versionCode = 6
-        versionName = "0.1.6"
+        versionCode = 7
+        versionName = "0.1.7"
     }
 
     // Fixed debug key (private repo, debug build only) so later debug APKs install over earlier ones.
