@@ -2,7 +2,10 @@ package com.abhi.musicapp
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.ui.test.assertDoesNotExist
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.test.swipeUp
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
@@ -90,5 +93,67 @@ class NarrowPhoneShotTest {
         node.performClick()
         val intent = org.robolectric.Shadows.shadowOf(androidx.test.core.app.ApplicationProvider.getApplicationContext<android.app.Application>()).nextStartedActivity
         org.junit.Assert.assertEquals("https://abhicreative.world", intent.data.toString())
+    }
+
+    private fun libraryFixture(): List<com.abhi.musicapp.library.Song> = (1..30).map { i ->
+        com.abhi.musicapp.library.Song(
+            id = i.toLong(), title = "Track %02d".format(i), artist = "Artist ${(i - 1) / 10 + 1}", durationMs = 200_000L,
+            uri = android.net.Uri.parse("content://media/external/audio/media/$i"),
+            folder = if (i <= 15) "Music/Download" else "Music/Recordings")
+    }
+
+    /** Shipped Home (real library rows, no design fixture): the whole page scrolls, the header leaves, the mini player stays pinned. */
+    @Test fun homeShippedScrolledMiniPlayerPinned() {
+        composeRule.setContent { FitDesignWidth { MusicAppTheme { bg { HomeScreen({}, {}, {}, {}, {}, {}, fixture = track, songsFixture = libraryFixture()) }() } } }
+        composeRule.waitForIdle()
+        composeRule.onNodeWithText("Not checked").assertIsDisplayed() // header pill visible before scrolling
+        repeat(3) { composeRule.onRoot().performTouchInput { swipeUp() }; composeRule.waitForIdle() }
+        composeRule.onNodeWithText("Not checked").assertDoesNotExist() // header scrolled away with the page
+        composeRule.onNodeWithText("Track 30").assertIsDisplayed() // list actually scrolled to the bottom
+        composeRule.onNodeWithText("Tera Naam Japdi Phiran", substring = true).assertIsDisplayed() // mini player stayed pinned
+        composeRule.onRoot().captureRoboImage("build/outputs/roborazzi/narrow360_home_shipped_scrolled.png")
+    }
+
+    /** Shipped folder drill-in: Home passes the picked folder, the screen opens directly inside it. */
+    @Test fun folderDrillInShipped() {
+        composeRule.setContent { FitDesignWidth { MusicAppTheme { bg { com.abhi.musicapp.ui.screens.FoldersScreen(onBack = {}, initialFolder = "Download", songsFixture = libraryFixture()) }() } } }
+        composeRule.waitForIdle()
+        composeRule.onNodeWithText("Track 01").assertIsDisplayed()
+        composeRule.onNodeWithText("Track 10").assertIsDisplayed()
+        composeRule.onRoot().captureRoboImage("build/outputs/roborazzi/narrow360_folder_drill_in.png")
+    }
+
+    /** Tapping a folder in the chooser opens its songs directly - no second chooser step. */
+    @Test fun folderTapDrillsInDirectly() {
+        composeRule.setContent { FitDesignWidth { MusicAppTheme { bg { com.abhi.musicapp.ui.screens.FoldersScreen(onBack = {}, songsFixture = libraryFixture()) }() } } }
+        composeRule.waitForIdle()
+        composeRule.onNodeWithText("Download").performClick()
+        composeRule.waitForIdle()
+        composeRule.onNodeWithText("Track 01").assertIsDisplayed()
+    }
+
+    /** Shipped bin: real removal rows show the removal date and never a countdown; nothing auto-deletes. */
+    @Test fun recycleBinShippedPopulated() {
+        val songs = libraryFixture()
+        val entries = listOf(
+            com.abhi.musicapp.library.BinStore.Entry(3L, 1_763_900_000_000L) to songs[2],
+            com.abhi.musicapp.library.BinStore.Entry(7L, 1_763_800_000_000L) to songs[6],
+        )
+        composeRule.setContent { FitDesignWidth { MusicAppTheme { bg { com.abhi.musicapp.ui.screens.RecycleBinScreen(onBack = {}, fixtureEntries = entries) }() } } }
+        composeRule.waitForIdle()
+        composeRule.onNodeWithText("Track 03").assertIsDisplayed()
+        composeRule.onNodeWithText("days left", substring = true).assertDoesNotExist()
+        composeRule.onNodeWithText("file untouched", substring = true).assertIsDisplayed()
+        composeRule.onNodeWithText("nothing is ever deleted automatically", substring = true).assertIsDisplayed()
+        composeRule.onRoot().captureRoboImage("build/outputs/roborazzi/narrow360_recycle_bin_shipped.png")
+    }
+
+    /** Shipped remove-from-library confirmation (player menu): app-hide wording, file stays on the phone. */
+    @Test fun playerRemoveConfirmShipped() {
+        composeRule.setContent { FitDesignWidth { MusicAppTheme { bg { PlayerScreen(onBack = {}, fixture = track, initialOverlay = 10, progressInFixture = true) }() } } }
+        composeRule.waitForIdle()
+        composeRule.onNodeWithText("Remove from library?").assertIsDisplayed()
+        composeRule.onNodeWithText("The file stays on your phone untouched", substring = true).assertIsDisplayed()
+        composeRule.onRoot().captureRoboImage("build/outputs/roborazzi/narrow360_player_remove_confirm.png")
     }
 }
