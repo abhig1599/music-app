@@ -24,8 +24,10 @@ object ContentEndDetector {
     const val FRAME_MS = 50
     const val MIN_TRIM_MS = 200L
     const val MAX_TRIM_MS = 10_000L
-    const val COVER_TOLERANCE_MS = 150L
-
+    /** Quiet audio always kept inside the boundary as a safety margin: the blend never ends at the exact first-quiet frame. */
+    const val RETAINED_QUIET_MS = 250L
+    /** Declared duration may exceed the EOS-established stream end by at most this much; more means a broken file. */
+    const val MAX_DECLARED_OVERHANG_MS = 1_000L
     data class Result(val contentEndMs: Long?, val trimMs: Long, val frames: Int, val reason: String)
 
     private val ABSTAIN = { frames: Int, why: String -> Result(null, 0, frames, why) }
@@ -51,18 +53,33 @@ object ContentEndDetector {
      * on the song timeline (NOT the requested end - the actual decoded coverage); [durationMs] is the file's
      * current duration. Returns the content end in song ms, or null with a reason to abstain.
      */
+    /**
+     * Coverage rule: [windowCoverEndMs] beyond the declared [durationMs] is clamped. ANY undercoverage abstains
+     * unless [eosReached] - a signaled end-of-stream establishes the decoded end as the ACTUAL media end from
+     * sample timestamps - and even then a mismatch over [MAX_DECLARED_OVERHANG_MS] means a broken file. There is
+     * no tolerance window: unobserved samples never count as quiet. [RETAINED_QUIET_MS] of the quiet tail is
+     * always kept inside the boundary as a safety margin.
+     */
     fun detect(
         framePeaks: FloatArray,
         windowStartMs: Long,
         windowCoverEndMs: Long,
         durationMs: Long,
+        eosReached: Boolean,
         cancelled: () -> Boolean = { false },
     ): Result {
         val frames = framePeaks.size
         if (frames < 2) return ABSTAIN(frames, "window too short to judge")
         if (durationMs <= 0 || windowStartMs < 0 || windowStartMs >= durationMs) return ABSTAIN(frames, "inconsistent duration")
-        if (windowCoverEndMs < durationMs - COVER_TOLERANCE_MS) return ABSTAIN(frames, "decode does not cover the file end")
         if (cancelled()) return ABSTAIN(frames, "cancelled")
+        val mediaEndMs: Long
+        if (windowCoverEndMs >= durationMs) {
+            mediaEndMs = durationMs
+        } else {
+            if (!eosReached) return ABSTAIN(frames, "decode does not cover the file end")
+            if (durationMs - windowCoverEndMs > MAX_DECLARED_OVERHANG_MS) return ABSTAIN(frames, "declared duration far exceeds decoded stream")
+            mediaEndMs = windowCoverEndMs
+        }
 
         for (p in framePeaks) if (p.isNaN() || p.isInfinite()) return ABSTAIN(frames, "non-finite sample")
 
@@ -76,10 +93,10 @@ object ContentEndDetector {
         if (firstSilent == frames) return ABSTAIN(frames, "no quiet tail")
         if (firstSilent == 0) return ABSTAIN(frames, "whole window quiet")
 
-        val overhangMs = (windowCoverEndMs - durationMs).coerceAtLeast(0L)
-        val trimMs = (frames - firstSilent) * FRAME_MS.toLong() - overhangMs
+        val overhangMs = (windowCoverEndMs - mediaEndMs).coerceAtLeast(0L)
+        val trimMs = (frames - firstSilent) * FRAME_MS.toLong() - overhangMs - RETAINED_QUIET_MS
         if (trimMs < MIN_TRIM_MS) return ABSTAIN(frames, "quiet tail shorter than minimum")
         if (trimMs > MAX_TRIM_MS) return ABSTAIN(frames, "quiet tail longer than maximum")
-        return Result(durationMs - trimMs, trimMs, frames, "trailing near-zero samples")
+        return Result(mediaEndMs - trimMs, trimMs, frames, "trailing near-zero samples")
     }
 }
