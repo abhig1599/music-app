@@ -38,4 +38,9 @@ class TransitionStartTimerTest {
         c.fire(2000); assertEquals(1,starts)
         assertFalse(c.timer.arm(1000,valid={true},start={},fallback={}))
     }
+    @Test fun stalePlayerReadFailureFallsBackWithoutCrashingCallback() {
+        val c=Clock(); var fallbacks=0
+        c.timer.arm(2000,valid={throw IllegalStateException("released")},start={fail("must not start")},fallback={fallbacks++})
+        c.fire(2000); assertEquals(1,fallbacks)
+    }
 }

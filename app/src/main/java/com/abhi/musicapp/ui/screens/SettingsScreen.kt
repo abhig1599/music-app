@@ -188,7 +188,7 @@ fun SettingsScreen(onBack: () -> Unit, onRowClick: (String) -> Unit = {}, fixtur
             )
             Spacer(Modifier.height(13.dp))
             ToggleRow("AutoMix (beta)",
-                if (aOn) "Acts while Crossfade is on: when both songs' tempos are detected and close, the overlap is timed to whole bars and the next song's tempo is nudged to match, then eased back. Beats are not aligned yet. Otherwise the plain crossfade plays."
+                if (aOn) "Acts while Crossfade is on: reliable beat positions and close tempos can guide overlap timing and a small tempo adjustment. Both songs keep their full content. Uncertain or late results use ordinary crossfade."
                 else "Off. The overlap is a plain crossfade for the set time. Turning this on also turns Crossfade on.",
                 aOn) {
                 aOn = !aOn
@@ -196,7 +196,7 @@ fun SettingsScreen(onBack: () -> Unit, onRowClick: (String) -> Unit = {}, fixtur
                 if (aOn && !xOn) { xOn = true; if (!fixture) com.abhi.musicapp.playback.Crossfader.setEnabled(tctx, true) }
             }
             Spacer(Modifier.height(6.dp))
-            Text("Crossfade and AutoMix are experimental and have not been heard on a real phone yet. AutoMix is this app's own tempo matching for local files, not Apple's feature.", fontFamily = mono, fontSize = 11.sp, color = GrayText)
+            Text("AutoMix uses best-effort beat-aware timing for local files, not Apple's feature. Phone listening is still needed; audible beat alignment is not guaranteed.", fontFamily = mono, fontSize = 11.sp, color = GrayText)
             Spacer(Modifier.height(10.dp))
         }
         Spacer(Modifier.height(6.dp))

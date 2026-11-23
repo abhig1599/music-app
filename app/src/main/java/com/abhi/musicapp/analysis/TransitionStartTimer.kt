@@ -25,7 +25,8 @@ class TransitionStartTimer(
                     return
                 }
                 pending = null
-                if (actual - deadlineMs <= toleranceMs && valid()) start() else fallback()
+                val safe = try { actual - deadlineMs <= toleranceMs && valid() } catch (_: Exception) { false }
+                if (safe) start() else fallback()
             }
         }
         pending = task

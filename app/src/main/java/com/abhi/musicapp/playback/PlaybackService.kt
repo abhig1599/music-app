@@ -51,7 +51,7 @@ class PlaybackService : MediaSessionService() {
     }
     private fun currentPhasePlan(): com.abhi.musicapp.analysis.PhaseTransitionPlanner.Plan? {
         val p=exo ?: return null
-        return phaseResult?.plan?.takeIf { phaseSignature!=null && phaseSignature==signature(p) }
+        return phaseResult?.plan?.takeIf { phaseSignature!=null && phaseSignature==analysisKey(p) }
     }
 
 
