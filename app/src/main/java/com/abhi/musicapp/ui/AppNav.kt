@@ -38,6 +38,7 @@ object Routes {
     const val BACKUP = "backup"
     const val DOWNLOADS = "downloads"
     const val FOLDERS = "folders"
+    fun folders(name: String?) = "folders" + (name?.let { "?folder=" + android.net.Uri.encode(it) } ?: "")
     const val RECYCLE = "recycle"
     const val READ_NOW = "readnow"
     const val PLAYLIST_DETAIL = "playlist/{name}"
@@ -75,7 +76,7 @@ fun AppNav() {
                 onOpenSearch = { nav.navigate(Routes.SEARCH) },
                 onOpenSettings = { nav.navigate(Routes.SETTINGS) },
                 onOpenDownloads = { nav.navigate(Routes.DOWNLOADS) },
-                onOpenFolders = { nav.navigate(Routes.FOLDERS) },
+                onOpenFolders = { name -> nav.navigate(Routes.folders(name)) },
                 onOpenPlaylist = { name -> nav.navigate(Routes.playlistDetail(name)) },
             )
         }
@@ -118,7 +119,16 @@ fun AppNav() {
         }
         composable(Routes.BACKUP) { BackupScreen(onBack = { nav.popBackStack() }) }
         composable(Routes.DOWNLOADS) { DownloadsScreen(onBack = { nav.popBackStack() }) }
-        composable(Routes.FOLDERS) { FoldersScreen(onBack = { nav.popBackStack() }, onOpenPlayer = { nav.navigate(Routes.PLAYER) }) }
+        composable(
+            "folders?folder={folder}",
+            arguments = listOf(androidx.navigation.navArgument("folder") { nullable = true; defaultValue = null }),
+        ) { entry ->
+            FoldersScreen(
+                onBack = { nav.popBackStack() },
+                onOpenPlayer = { nav.navigate(Routes.PLAYER) },
+                initialFolder = entry.arguments?.getString("folder"),
+            )
+        }
         composable(Routes.PLAYLIST_DETAIL) { entry ->
             PlaylistDetailScreen(
                 name = entry.arguments?.getString("name") ?: "Playlist",
