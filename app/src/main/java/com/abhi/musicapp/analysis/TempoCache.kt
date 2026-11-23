@@ -142,6 +142,91 @@ object TempoCache {
             return DecodedWindow(out.copyOf(n), sr, (firstSampleUs ?: startUs) / 1000L)
         } finally { ex.release() }
     }
+    /** Decoded tail window for content-end detection: interleaved per-channel samples plus actual coverage bounds. */
+    data class TailWindow(val interleaved: FloatArray, val sampleRate: Int, val channels: Int, val windowStartMs: Long, val coverEndMs: Long)
+
+    /**
+     * Decodes the last [seconds] of [uri] (file duration [durationMs]) WITHOUT downmixing, so quiet-content
+     * analysis sees every channel. Returns null - and the caller abstains - on ANY irregularity: discontinuity,
+     * unsupported format, cancellation, deadline, or the buffer filling before end-of-stream (incomplete tail
+     * coverage can never count as quiet). [TailWindow.coverEndMs] is the end of the last decoded sample on the
+     * file timeline, derived from codec timestamps - not the requested end.
+     */
+    fun decodeTailWindow(c: Context, uri: Uri, durationMs: Long, seconds: Int, cancelled: () -> Boolean = { false }): TailWindow? {
+        if (durationMs <= 0 || seconds <= 0) return null
+        val startMs = (durationMs - seconds * 1000L).coerceAtLeast(0L)
+        val ex = MediaExtractor()
+        try {
+            ex.setDataSource(c, uri, null)
+            val idx = (0 until ex.trackCount).firstOrNull { ex.getTrackFormat(it).getString(MediaFormat.KEY_MIME)?.startsWith("audio/") == true } ?: return null
+            ex.selectTrack(idx)
+            val fmt = ex.getTrackFormat(idx)
+            val startUs = Math.multiplyExact(startMs, 1000L)
+            if (startUs > 0L) ex.seekTo(startUs, MediaExtractor.SEEK_TO_PREVIOUS_SYNC)
+            var sr = fmt.getInteger(MediaFormat.KEY_SAMPLE_RATE)
+            if (sr !in 8000..192000) return null
+            var encoding = android.media.AudioFormat.ENCODING_PCM_16BIT
+            var ch = fmt.getInteger(MediaFormat.KEY_CHANNEL_COUNT).coerceAtLeast(1)
+            if (ch !in 1..32) return null
+            val codec = MediaCodec.createDecoderByType(fmt.getString(MediaFormat.KEY_MIME)!!)
+            var out = FloatArray(sr * (seconds + 2) * ch); var n = 0 // headroom for sync-seek landing early
+            val deadline = android.os.SystemClock.elapsedRealtime() + 30_000L
+            var firstSampleUs: Long? = null
+            var coverEndUs: Long? = null
+            var outDone = false
+            try {
+            codec.configure(fmt, null, null, 0); codec.start()
+            val info = MediaCodec.BufferInfo(); var inDone = false
+            while (!outDone && !cancelled() && android.os.SystemClock.elapsedRealtime() < deadline) {
+                if (!inDone) {
+                    val i = codec.dequeueInputBuffer(10_000)
+                    if (i >= 0) {
+                        val sz = ex.readSampleData(codec.getInputBuffer(i)!!, 0)
+                        if (sz < 0) { codec.queueInputBuffer(i, 0, 0, 0, MediaCodec.BUFFER_FLAG_END_OF_STREAM); inDone = true }
+                        else { codec.queueInputBuffer(i, 0, sz, ex.sampleTime, 0); ex.advance() }
+                    }
+                }
+                val o = codec.dequeueOutputBuffer(info, 10_000)
+                if (o >= 0) {
+                    val buffer = codec.getOutputBuffer(o)
+                    if (buffer != null && info.size > 0) {
+                        val raw = PcmWindow.interleaved(buffer, info.offset, info.size, ch, encoding)
+                        val frames = raw.size / ch
+                        val skip = skipFramesBeforeStart(info.presentationTimeUs, startUs, sr, frames)
+                        val takeFrames = minOf(frames - skip, (out.size - n) / ch)
+                        if (takeFrames > 0) {
+                            val sampleUs = info.presentationTimeUs + skip * 1_000_000L / sr
+                            val first = firstSampleUs
+                            if (sampleUs < 0 || (first != null && !PcmTimeline.isContinuous(first, n / ch, sampleUs, sr))) return null
+                            if (first == null) firstSampleUs = sampleUs
+                            raw.copyInto(out, n, skip * ch, skip * ch + takeFrames * ch); n += takeFrames * ch
+                        }
+                        coverEndUs = info.presentationTimeUs + frames.toLong() * 1_000_000L / sr
+                    }
+                    codec.releaseOutputBuffer(o, false)
+                    if (info.flags and MediaCodec.BUFFER_FLAG_END_OF_STREAM != 0) outDone = true
+                } else if (o == MediaCodec.INFO_OUTPUT_FORMAT_CHANGED) {
+                    val actual = codec.outputFormat
+                    ch = actual.getInteger(MediaFormat.KEY_CHANNEL_COUNT)
+                    if (ch !in 1..32) return null
+                    val actualRate = actual.getInteger(MediaFormat.KEY_SAMPLE_RATE)
+                    if (actualRate !in 8000..192000 || (n > 0 && actualRate != sr)) return null
+                    if (actualRate != sr) { sr = actualRate; out = FloatArray(sr * (seconds + 2) * ch) }
+                    encoding = if (actual.containsKey(MediaFormat.KEY_PCM_ENCODING)) actual.getInteger(MediaFormat.KEY_PCM_ENCODING) else android.media.AudioFormat.ENCODING_PCM_16BIT
+                    if (encoding != PcmWindow.PCM16 && encoding != PcmWindow.FLOAT32) return null
+                }
+            }
+            } finally { try { codec.stop() } catch (e: Exception) {}; codec.release() } // always freed, also on error or cancel
+            if (cancelled() || android.os.SystemClock.elapsedRealtime() >= deadline || n == 0 || !outDone) return null
+            val first = firstSampleUs ?: return null
+            val cover = coverEndUs ?: return null
+            // outDone is the coverage proof: the codec signaled end-of-stream, so [coverEndUs] (last sample
+            // timestamp + its frames) IS the actual media end. The detector decides whether that end matches
+            // the declared duration closely enough; nothing here excuses an unseen tail.
+            return TailWindow(out.copyOf(n), sr, ch, first / 1000L, cover / 1000L)
+        } finally { ex.release() }
+    }
+
     internal fun skipFramesBeforeStart(bufferUs: Long, requestedUs: Long, rate: Int, frames: Int): Int {
         if (bufferUs >= requestedUs) return 0
         val delta = requestedUs - bufferUs
