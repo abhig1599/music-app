@@ -101,7 +101,7 @@ fun RecycleBinScreen(onBack: () -> Unit, fixture: List<BinRow> = emptyList(),
     }) {
         Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
             if (isFixture) fixture.forEach { row ->
-                Row(Modifier.fillMaxWidth().height(72.dp).clip(RoundedCornerShape(10.dp)).background(com.abhi.musicapp.ui.theme.FigmaWhite).border(1.dp, androidx.compose.ui.graphics.Color(0xFFD9D9D9), RoundedCornerShape(10.dp)).padding(10.dp),
+                Row(Modifier.fillMaxWidth().heightIn(min = 72.dp).clip(RoundedCornerShape(10.dp)).background(com.abhi.musicapp.ui.theme.FigmaWhite).border(1.dp, androidx.compose.ui.graphics.Color(0xFFD9D9D9), RoundedCornerShape(10.dp)).padding(10.dp),
                     verticalAlignment = Alignment.CenterVertically) {
                     Box(Modifier.size(50.dp).clip(RoundedCornerShape(8.dp)).background(SurfaceSoft))
                     Spacer(Modifier.width(13.dp))
@@ -114,7 +114,7 @@ fun RecycleBinScreen(onBack: () -> Unit, fixture: List<BinRow> = emptyList(),
             } else {
                 real.forEach { (entry, song) ->
                     val date = java.text.SimpleDateFormat("d MMM yyyy", java.util.Locale.getDefault()).format(java.util.Date(entry.removedAtMs))
-                    Row(Modifier.fillMaxWidth().height(72.dp).clip(RoundedCornerShape(10.dp)).background(com.abhi.musicapp.ui.theme.FigmaWhite).border(1.dp, androidx.compose.ui.graphics.Color(0xFFD9D9D9), RoundedCornerShape(10.dp)).padding(10.dp),
+                    Row(Modifier.fillMaxWidth().heightIn(min = 72.dp).clip(RoundedCornerShape(10.dp)).background(com.abhi.musicapp.ui.theme.FigmaWhite).border(1.dp, androidx.compose.ui.graphics.Color(0xFFD9D9D9), RoundedCornerShape(10.dp)).padding(10.dp),
                         verticalAlignment = Alignment.CenterVertically) {
                         Box(Modifier.size(50.dp).clip(RoundedCornerShape(8.dp)).background(SurfaceSoft))
                         Spacer(Modifier.width(13.dp))
