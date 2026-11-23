@@ -1,10 +1,10 @@
 package com.abhi.musicapp
 
-import androidx.compose.ui.test.hasAnyDescendant
-import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.abhi.musicapp.ui.screens.SettingsScreen
 import com.abhi.musicapp.ui.theme.MusicAppTheme
@@ -28,7 +28,7 @@ class TransitionSwitchesCoherenceTest {
     private val aOffCopy = "Off. The overlap is a plain crossfade for the set time. Turning this on also turns Crossfade on."
 
     private fun toggle(title: String) =
-        rule.onNode(hasClickAction() and hasAnyDescendant(hasText(title))).performClick()
+        rule.onNodeWithText(title).performScrollTo().performClick()
 
     @Test fun autoMixOnForcesCrossfadeOn() {
         rule.setContent { MusicAppTheme { SettingsScreen(onBack = {}, fixture = true, startExpanded = true) } }
