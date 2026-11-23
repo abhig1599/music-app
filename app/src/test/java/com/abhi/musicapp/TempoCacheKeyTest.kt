@@ -22,6 +22,12 @@ import org.robolectric.annotation.Config
 class TempoCacheKeyTest {
     private val ctx: Context get() = ApplicationProvider.getApplicationContext()
 
+    @Test fun legacyBpmOnlyEntryIsNotTreatedAsConfidentAnalysis() {
+        val key = TempoCache.Key("legacy-regression", true)
+        ctx.getSharedPreferences("tempo", Context.MODE_PRIVATE).edit().putFloat(key.value, 120f).commit()
+        assertEquals(null, TempoCache.cachedResult(ctx, key))
+    }
+
     @Test fun nullUriIsNotPersistable() {
         val k = TempoCache.keyFor(ctx, null, "42")
         assertEquals("42", k.value); assertFalse(k.persistable)
