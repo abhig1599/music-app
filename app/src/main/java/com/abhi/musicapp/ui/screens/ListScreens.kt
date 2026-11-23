@@ -28,7 +28,9 @@ import com.abhi.musicapp.ui.theme.GrayText
 import com.abhi.musicapp.ui.theme.InkBlack
 
 @Composable
-fun FoldersScreen(onBack: () -> Unit, onOpenPlayer: () -> Unit = {}, initialFolder: String? = null) {
+fun FoldersScreen(onBack: () -> Unit, onOpenPlayer: () -> Unit = {}, initialFolder: String? = null,
+    /** Render-only: supply library contents so the shipped folder flow renders in tests without MediaStore. */
+    songsFixture: List<com.abhi.musicapp.library.Song>? = null) {
     // A folder picked on Home arrives as initialFolder so its songs show directly; picking a folder here
     // drills into the same list. (Before, Home's tap reopened this same chooser and a tap played blind.)
     var selected by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(initialFolder) }
@@ -37,7 +39,7 @@ fun FoldersScreen(onBack: () -> Unit, onOpenPlayer: () -> Unit = {}, initialFold
         val context = androidx.compose.ui.platform.LocalContext.current
         var folders by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf<List<Pair<String, List<com.abhi.musicapp.library.Song>>>>(emptyList()) }
         androidx.compose.runtime.LaunchedEffect(Unit) {
-            folders = com.abhi.musicapp.library.LibraryRepository.folders(com.abhi.musicapp.library.LibraryRepository.querySongs(context))
+            folders = com.abhi.musicapp.library.LibraryRepository.folders(songsFixture ?: com.abhi.musicapp.library.LibraryRepository.querySongs(context))
         }
         if (folders.isEmpty()) {
             Text(if (!com.abhi.musicapp.library.LibraryRepository.hasAudioPermission(context)) "Music permission is off, so folders can't be read. Enable it in system settings." else "No folders found on this device.",
