@@ -166,7 +166,7 @@ class ContentEndDetectorTest {
     @Test fun framePeaksTakesMaxAcrossChannels() {
         val stereo = floatArrayOf(0.001f, -0.5f, 0.002f, 0.4f)
         val p = ContentEndDetector.framePeaks(stereo, 2, 1)
-        assertEquals(0.5f, p[0], 1e-6)
-        assertEquals(0.4f, p[1], 1e-6)
+        assertEquals(0.5f, p[0], 1e-6f)
+        assertEquals(0.4f, p[1], 1e-6f)
     }
 }
