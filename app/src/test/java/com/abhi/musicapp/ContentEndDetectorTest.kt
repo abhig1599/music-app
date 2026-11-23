@@ -125,8 +125,8 @@ class ContentEndDetectorTest {
     }
 
     @Test fun shortSilenceBelowMinimumAbstains() {
-        // 500 ms of quiet minus the 250 ms retained margin is below MIN_TRIM: not worth trimming.
-        val p = peaks(pcm(10) { t, _ -> if (t < 9.5) 0.5 else 0.0 })
+        // 400 ms of quiet minus the 250 ms retained margin leaves 150 ms, below MIN_TRIM: not worth trimming.
+        val p = peaks(pcm(10) { t, _ -> if (t < 9.6) 0.5 else 0.0 })
         assertNull(detect(p).contentEndMs)
     }
 
