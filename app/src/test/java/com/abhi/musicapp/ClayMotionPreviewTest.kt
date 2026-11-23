@@ -55,7 +55,7 @@ class ClayMotionPreviewTest {
         return kick * gap
     }
 
-    private fun run(name: String, tuning: ClayTuning, droplet: Boolean = false) {
+    private fun run(name: String, tuning: ClayTuning, droplet: Boolean = false, reactive: Boolean = false) {
         rule.mainClock.autoAdvance = false
         val shown = FloatArray(48); val target = FloatArray(48); val beatBox = FloatArray(1)
         val tick = mutableLongStateOf(0L)
@@ -65,7 +65,7 @@ class ClayMotionPreviewTest {
             rule.setContent {
                 MusicAppTheme {
                     Box(Modifier.background(androidx.compose.material3.MaterialTheme.colorScheme.background).padding(8.dp)) {
-                        Box(Modifier.size(164.dp).testTag("blob")) { if (droplet) DropletBlob(levels = { tick.longValue; shown }, tick = tick, beat = { beatBox[0] }) else ClayBlob(levels = { tick.longValue; shown }, tick = tick, beat = { beatBox[0] }, tuning = tuning) }
+                        Box(Modifier.size(164.dp).testTag("blob")) { if (droplet) DropletBlob(levels = { tick.longValue; shown }, tick = tick, beat = { beatBox[0] }, reactive = reactive) else ClayBlob(levels = { tick.longValue; shown }, tick = tick, beat = { beatBox[0] }, tuning = tuning) }
                     }
                 }
             }
@@ -87,6 +87,7 @@ class ClayMotionPreviewTest {
 
     @Test fun a_current() = run("A_current", ClayTuning.CURRENT)
     @Test fun b_early() = run("B_early", ClayTuning.EARLY)
+    @Test fun e_sensitiveDrop() = run("E_sensitiveDrop", ClayTuning.CURRENT, droplet = true, reactive = true)
     @Test fun d_droplet() = run("D_droplet", ClayTuning.CURRENT, droplet = true)
     @Test fun c_smooth() = run("C_smooth", ClayTuning.SMOOTH)
 }
