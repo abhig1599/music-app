@@ -102,7 +102,7 @@ object LibraryRepository {
     }
 
     /** Songs the app shows: everything MediaStore lists minus folders hidden in Settings > Visibility. Every list, search and queue uses this. */
-    fun querySongs(context: Context): List<Song> = VisibilityStore.filterVisible(queryAllSongs(context), VisibilityStore(context).hidden())
+    fun querySongs(context: Context): List<Song> = BinStore.filterRemoved(VisibilityStore.filterVisible(queryAllSongs(context), VisibilityStore(context).hidden()), BinStore(context).removedIds())
 
     /** Unfiltered library, only for Settings > Visibility (so a hidden folder stays listed and can be shown again). */
     fun queryAllSongs(context: Context): List<Song> {
