@@ -84,3 +84,7 @@ Verification here:
 
 Still NOT proven: real-song sound on his phone (the final verdict), session/notification continuity on his device, AutoMix tempo
 reads on real music. His manual phone script above still applies; step 1 should now show the "Mixing" label exactly during overlaps.
+
+## 2026-11-23 selected visualizer
+
+User chose size-matched D after comparing D with E. CentreDisc now calls DropletBlob with its default reactive=false. No E sensitivity boost or separated droplets are active. Timer, flip gesture, dial size, colors and light gradient Mixing label are unchanged. D motion was inspected with synthetic input only; phone frame pacing and real-song sensitivity/jitter remain unverified. Version/release unchanged. Audio smoke 8 remains incomplete, not a pass; media-session ERROR cannot be attributed from its unscoped dump summary. No more smoke retries.

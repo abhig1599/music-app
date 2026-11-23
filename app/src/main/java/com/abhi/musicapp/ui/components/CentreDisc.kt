@@ -109,7 +109,7 @@ fun CentreDisc(
             }
         } else {
             // Back face is mirrored by the 180 deg turn; turn it back so the blob reads normally.
-            Box(Modifier.fillMaxSize().graphicsLayer { rotationY = 180f }) { ClayBlob(levels, tick, beat) }
+            Box(Modifier.fillMaxSize().graphicsLayer { rotationY = 180f }) { DropletBlob(levels, tick, beat) }
         }
     }
 }

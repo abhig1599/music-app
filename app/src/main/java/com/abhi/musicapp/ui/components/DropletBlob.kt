@@ -20,7 +20,8 @@ import kotlin.math.tanh
  * whose mode follows the pitch (https://fyfluiddynamics.com/2014/05/vibrating-a-liquid-droplet-produces-some-awesome/).
  * Radius(theta) = resting drop + a bass "breath" in every direction + three low standing-wave modes (3, 5, 8 lobes) driven by low, mid and high bands.
  * Every amplitude is a damped spring, so it swells, overshoots a little and settles back to the round drop. Same colour and a smaller
- * maximum reach than the current clay blob, so the size stays. Preview only until he picks it; not wired into the Player.
+ * maximum reach than the current clay blob, so the size stays. Size-matched D selected by the user on 2026-11-23. The Player uses the default (reactive=false).
+ * The optional reactive variant E is preview-only and was not selected.
  */
 class DropletState(private val response: Float = 11f) {
     val x = FloatArray(N)
