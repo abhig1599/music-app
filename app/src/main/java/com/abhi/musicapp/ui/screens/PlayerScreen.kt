@@ -347,7 +347,7 @@ fun PlayerScreen(onBack: () -> Unit, fixture: PlayerUiState? = null, initialOver
         val pill = com.abhi.musicapp.ui.theme.GrayLight
         if (overlay != 0) Box(Modifier.fillMaxSize().clickable(indication = null, interactionSource = androidx.compose.runtime.remember { androidx.compose.foundation.interaction.MutableInteractionSource() }) { overlay = 0 })
         if (overlay == 1) Column((if (landscape) Modifier.align(Alignment.TopEnd).padding(top = 56.dp, end = 24.dp).heightIn(max = maxHeight - 64.dp).verticalScroll(rememberScrollState()) else Modifier.offset(134.dp, 94.dp)).width(232.dp).clip(androidx.compose.foundation.shape.RoundedCornerShape(8.dp)).background(sheet)) {
-            // Equaliser is drawn greyed out in the Figma menu: kept disabled (no EQ exists). Add to playlist is wired (shipped path, PlaylistStore); other entries only close the menu until wired.
+            // All seven entries are wired to real behaviour. "Delete" means remove-from-library only (Recycle Bin): the audio file is never touched.
             listOf("Sleep Time", "Add to playlist", "Share", "Speed", "Delete", "Equaliser", "Lyrics").forEach { t ->
                 val off = false
                 Row(Modifier.fillMaxWidth().height(if (landscape) 40.dp else 51.dp).testTag("menu_" + t).then(if (off) Modifier else Modifier.clickable {
@@ -356,7 +356,7 @@ fun PlayerScreen(onBack: () -> Unit, fixture: PlayerUiState? = null, initialOver
                         "Add to playlist" -> 4
                         "Speed" -> 6
                         "Share" -> { shareCurrent(ctx, state.mediaId, state.title); 0 }
-                        "Delete" -> { menuNote = "Delete is not built yet. It stays off so no song is removed by accident."; 7 }
+                        "Delete" -> 10
                         "Lyrics" -> 9
                         "Equaliser" -> { onOpenEqualiser(); 0 }
                         else -> 0
@@ -375,6 +375,24 @@ fun PlayerScreen(onBack: () -> Unit, fixture: PlayerUiState? = null, initialOver
         if (overlay == 9) LyricsSheet(state.mediaId, state.title) { overlay = 0 }
         if (overlay == 7) Box(Modifier.align(Alignment.Center).padding(horizontal = 40.dp).clip(androidx.compose.foundation.shape.RoundedCornerShape(12.dp)).background(sheet).padding(20.dp)) {
             Text(menuNote, fontSize = 14.sp, color = InkBlack)
+        }
+        // Remove-from-library confirmation. Scope is stated plainly: the file stays on the phone, only this app stops showing the song.
+        if (overlay == 10) Box(Modifier.align(Alignment.Center).padding(horizontal = 40.dp).clip(androidx.compose.foundation.shape.RoundedCornerShape(12.dp)).background(sheet).padding(20.dp)) {
+            Column {
+                Text("Remove from library?", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = InkBlack)
+                androidx.compose.foundation.layout.Spacer(Modifier.height(8.dp))
+                Text("\"" + state.title + "\" stops showing in this app. The file stays on your phone untouched. Restore it anytime from Settings > Recycle Bin.", fontSize = 13.sp, color = InkBlack)
+                androidx.compose.foundation.layout.Spacer(Modifier.height(14.dp))
+                Row {
+                    Text("Remove", fontSize = 14.sp, color = Orangs, modifier = Modifier.clickable(enabled = state.mediaId >= 0) {
+                        com.abhi.musicapp.library.BinStore(ctx).add(state.mediaId)
+                        menuNote = "Removed from the library. The file is untouched; restore it from Settings > Recycle Bin."
+                        overlay = 7
+                    })
+                    androidx.compose.foundation.layout.Spacer(Modifier.width(24.dp))
+                    Text("Cancel", fontSize = 14.sp, color = InkBlack, modifier = Modifier.clickable { overlay = 0 })
+                }
+            }
         }
         if (overlay == 4) AddToPlaylistSheet(state.mediaId) { overlay = 0 } // shipped path only (menu sets 4 only when fixture == null)
         if (!landscape && (overlay == 2 || overlay == 3)) {
