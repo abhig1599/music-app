@@ -94,6 +94,8 @@ fun HomeScreen(
     onOpenFolders: (String?) -> Unit,
     onOpenPlaylist: (String) -> Unit,
     fixture: com.abhi.musicapp.playback.PlayerUiState? = null,
+    /** Render-only: supply library contents so the shipped layout (not the design fixture) renders in tests without MediaStore. */
+    songsFixture: List<Song>? = null,
     /** Render-only: Figma 'Home page- update avilable' shows an orange header pill. No updater exists, so the app never sets this. */
     updateAvailableFixture: Boolean = false,
     /** Render-only: Figma 'Download add in the home page' draws an orange progress arc around the Download button. No download engine exists. */
@@ -102,7 +104,7 @@ fun HomeScreen(
     var chip by remember { mutableIntStateOf(0) }
     var showSort by remember { mutableStateOf(false) }
     val context = LocalContext.current
-    var songs by remember { mutableStateOf<List<Song>>(emptyList()) }
+    var songs by remember { mutableStateOf<List<Song>>(songsFixture ?: emptyList()) }
     val livePlayerState by PlayerManager.state.collectAsState()
     val playerState = fixture ?: livePlayerState
     var reload by remember { mutableIntStateOf(0) }
@@ -118,14 +120,16 @@ fun HomeScreen(
     val scope = androidx.compose.runtime.rememberCoroutineScope()
     LaunchedEffect(scanNotice) { if (scanNotice != null) { kotlinx.coroutines.delay(3500); scanNotice = null } }
     LaunchedEffect(reload) {
-        songs = LibraryRepository.querySongs(context)
+        songs = songsFixture ?: LibraryRepository.querySongs(context)
     }
 
     Box(Modifier.fillMaxSize()) {
     // One LazyColumn for the whole page (user request 2026-11-23, marked screenshot: swiping the tabs/list area
     // must scroll the whole Home page). The mini player stays pinned below; visuals and list behaviour are unchanged.
+        // Design-fixture mode only when the Figma player fixture drives the frame alone; a songsFixture renders the shipped layout.
+        val designFixture = fixture != null && songsFixture == null
         // Filter chips
-        val chips = if (fixture != null) listOf("All" to "20", "Folders" to "02", "Playlist" to "06", "Artists" to null) // Figma sample numbers (fixture only)
+        val chips = if (designFixture) listOf("All" to "20", "Folders" to "02", "Playlist" to "06", "Artists" to null) // Figma sample numbers (fixture only)
         else listOf(
             "All" to songs.size.toString().padStart(2, '0'),
             "Folders" to LibraryRepository.folders(songs).size.toString().padStart(2, '0'),
@@ -136,8 +140,7 @@ fun HomeScreen(
         // chips; it overflows the 390 frame, so "Artists" is clipped there too (kept as reference).
         // User confirmed (2026-11-03): this bar slides horizontally to reveal further categories.
 
-            // Figma sample rows (DemoData) only in design fixtures (fixture != null). Shipped state shows real data or an honest empty state.
-            val designFixture = fixture != null
+            // Figma sample rows (DemoData) only in design fixtures. Shipped state shows real data or an honest empty state.
             val realFolders = LibraryRepository.folders(songs).map { it.first to "${it.second.size} songs" }
             val rows: List<Pair<String, String>> = if (designFixture) when (chip) {
                 1 -> DemoData.folders
@@ -164,9 +167,9 @@ fun HomeScreen(
             Text("Playlist", fontSize = 28.sp, fontWeight = FontWeight.Bold, color = InkBlack)
             Spacer(Modifier.weight(1f))
             Text(
-                when { updateAvailableFixture -> "Update available"; fixture != null -> "Up to date"; else -> "Not checked" }, fontFamily = monoFont, fontSize = 15.sp, color = InkBlack, // shipped: no update check exists, so no "Up to date" claim (design fixtures keep Figma text)
+                when { updateAvailableFixture -> "Update available"; designFixture -> "Up to date"; else -> "Not checked" }, fontFamily = monoFont, fontSize = 15.sp, color = InkBlack, // shipped: no update check exists, so no "Up to date" claim (design fixtures keep Figma text)
                 modifier = Modifier
-                    .alpha(if (fixture == null && !updateAvailableFixture) 0.5f else 1f)
+                    .alpha(if (!designFixture && !updateAvailableFixture) 0.5f else 1f)
                     .clip(androidx.compose.foundation.shape.RoundedCornerShape(8.dp))
                     .background(if (updateAvailableFixture) com.abhi.musicapp.ui.theme.Orangs else blockBg)
                     .padding(horizontal = 10.dp, vertical = 8.dp),
@@ -247,7 +250,7 @@ fun HomeScreen(
                     .width(162.dp).fillMaxHeight()
                     .clip(androidx.compose.foundation.shape.RoundedCornerShape(24.dp))
                     .background(blockBg)
-                    .then(if (fixture != null) Modifier.clickable { } else Modifier), // shipped: Read Now is unavailable, no inert click target
+                    .then(if (designFixture) Modifier.clickable { } else Modifier), // shipped: Read Now is unavailable, no inert click target
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Spacer(Modifier.height(32.dp))
@@ -255,7 +258,7 @@ fun HomeScreen(
                 Spacer(Modifier.weight(1f))
                 Box(
                     modifier = Modifier.size(64.dp)
-                        .then(if (fixture == null) Modifier.alpha(0.5f).semantics { disabled() } else Modifier) // shipped: unavailable (no Reader exists)
+                        .then(if (!designFixture) Modifier.alpha(0.5f).semantics { disabled() } else Modifier) // shipped: unavailable (no Reader exists)
                         .clip(CircleShape).background(InkBlack),
                     contentAlignment = Alignment.Center,
                 ) {
@@ -276,8 +279,8 @@ fun HomeScreen(
             ) {
                 // His frame shows two brand-style circular buttons here; brand marks are not bundled,
                 // so generic icons stand in until his assets are exported.
-                CircleTile(Icons.Filled.ChatBubbleOutline, if (fixture == null) "Lyrics (unavailable)" else "Lyrics", {}, circleBg, Modifier.size(63.dp).then(if (fixture == null) Modifier.alpha(0.5f).semantics { disabled() } else Modifier))
-                CircleTile(Icons.Filled.Videocam, if (fixture == null) "Video (unavailable)" else "Video", {}, circleBg, Modifier.size(63.dp).then(if (fixture == null) Modifier.alpha(0.5f).semantics { disabled() } else Modifier))
+                CircleTile(Icons.Filled.ChatBubbleOutline, if (!designFixture) "Lyrics (unavailable)" else "Lyrics", {}, circleBg, Modifier.size(63.dp).then(if (!designFixture) Modifier.alpha(0.5f).semantics { disabled() } else Modifier))
+                CircleTile(Icons.Filled.Videocam, if (!designFixture) "Video (unavailable)" else "Video", {}, circleBg, Modifier.size(63.dp).then(if (!designFixture) Modifier.alpha(0.5f).semantics { disabled() } else Modifier))
             }
         }
         Spacer(Modifier.height(16.dp))
