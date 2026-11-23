@@ -13,8 +13,8 @@ android {
         applicationId = "com.abhi.musicapp"
         minSdk = 26
         targetSdk = 34
-        versionCode = 7
-        versionName = "0.1.7"
+        versionCode = 8
+        versionName = "0.1.8"
         // The per-deck PCM capture tap exists ONLY in builds invoked with -PpcmTap=true (the emulator transition
         // smoke). Every candidate APK is built without it: no tap in the audio chain, nothing to arm, nothing to inherit.
         buildConfigField("boolean", "PCM_TAP", project.hasProperty("pcmTap").toString())

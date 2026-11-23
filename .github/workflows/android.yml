@@ -83,6 +83,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           cp app/build/outputs/apk/debug/app-debug.apk "music-app-${GITHUB_REF_NAME}-debug.apk"
+          sha256sum "music-app-${GITHUB_REF_NAME}-debug.apk" | tee SHA256SUMS.txt
           gh release create "$GITHUB_REF_NAME" --prerelease --title "$GITHUB_REF_NAME (experimental debug build)" \
-            --notes "Debug APK built by CI from commit ${GITHUB_SHA}. Private repo release. Experimental: CI ran unit tests and Robolectric render tests only. No emulator or physical-device test, so hardware behaviour (playback, seeking, audio output, scan) is unverified. Known limits are in DECISIONS.md." \
-            "music-app-${GITHUB_REF_NAME}-debug.apk"
+            --notes "Debug APK built by CI from commit ${GITHUB_SHA}. Private repo release. Final phone-listening candidate: full-song overlapping crossfade and conservative beat-aware AutoMix for reliable close-tempo pairs, ordinary crossfade otherwise. Selected D visualizer and light gradient Mixing label retained. CI unit tests and Robolectric renders passed, but actual audible overlap, sink latency and beat alignment are not verified on a phone. No Apple parity or sample-synchronization claim. Install as Music App Test; enable Crossfade and AutoMix under Song Transitions for the listening check. Both song timelines are preserved." \
+            "music-app-${GITHUB_REF_NAME}-debug.apk" SHA256SUMS.txt
