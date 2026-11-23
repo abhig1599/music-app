@@ -91,7 +91,7 @@ fun HomeScreen(
     onOpenSearch: () -> Unit,
     onOpenSettings: () -> Unit,
     onOpenDownloads: () -> Unit,
-    onOpenFolders: () -> Unit,
+    onOpenFolders: (String?) -> Unit,
     onOpenPlaylist: (String) -> Unit,
     fixture: com.abhi.musicapp.playback.PlayerUiState? = null,
     /** Render-only: Figma 'Home page- update avilable' shows an orange header pill. No updater exists, so the app never sets this. */
@@ -346,7 +346,7 @@ fun HomeScreen(
                         },
                         onClick = {
                             when (chip) {
-                                1 -> onOpenFolders()
+                                1 -> onOpenFolders(title)
                                 2 -> onOpenPlaylist(title)
                                 else -> onOpenPlayer()
                             }
