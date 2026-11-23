@@ -35,7 +35,7 @@ object TempoCache {
                 if (si < 0 && mi < 0) return Key(mediaId, false)
                 val sz = if (si >= 0) cur.getLong(si) else -1L
                 val mt = if (mi >= 0) cur.getLong(mi) else -1L
-                Key("$mediaId:$sz:$mt", true)
+                Key("$mediaId:$sz:$mt", sz >= 0L && mt > 0L)
             } ?: Key(mediaId, false)
         } catch (e: Exception) { Key(mediaId, false) }
     }
@@ -117,7 +117,10 @@ object TempoCache {
                         val skip = skipFramesBeforeStart(info.presentationTimeUs, startUs, sr, mono.size)
                         val count = minOf(mono.size - skip, out.size - n)
                         if (count > 0) {
-                            if (firstSampleUs == null) firstSampleUs = info.presentationTimeUs + skip * 1_000_000L / sr
+                            val sampleUs = info.presentationTimeUs + skip * 1_000_000L / sr
+                            val first = firstSampleUs
+                            if (sampleUs < 0 || (first != null && !PcmTimeline.isContinuous(first, n, sampleUs, sr))) return null
+                            if (first == null) firstSampleUs = sampleUs
                             mono.copyInto(out, n, skip, skip + count); n += count
                         }
                     }
