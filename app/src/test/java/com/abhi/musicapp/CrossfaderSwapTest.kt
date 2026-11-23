@@ -125,10 +125,23 @@ class CrossfaderSwapTest {
         assertEquals(0,starts); assertFalse(cf.phasePendingForTest); assertTrue(inc.isReleased)
         main.release()
     }
-    @Test fun experimentalPhaseRequiresExplicitDevelopmentGate() {
+    @Test fun phaseRequiresExistingAutoMixOptIn() {
         val plan=com.abhi.musicapp.analysis.PhaseTransitionPlanner.Plan(true,26000,4000,1f,0f,"test")
-        assertEquals(null,Crossfader.selectPhase(plan,true,false))
-        assertEquals(null,Crossfader.selectPhase(plan,false,true))
-        assertSame(plan,Crossfader.selectPhase(plan,true,true))
+        assertEquals(null,Crossfader.selectPhase(plan,false))
+        assertEquals(null,Crossfader.selectPhase(plan.copy(aligned=false),true))
+        assertSame(plan,Crossfader.selectPhase(plan,true))
+    }
+    @Test fun phaseFallbackRestoresPlainSpeedWithoutSkippingIncoming() {
+        val (cf, main, inc)=make()
+        main.playbackParameters=androidx.media3.common.PlaybackParameters(1.25f)
+        inc.playbackParameters=androidx.media3.common.PlaybackParameters(1.3f)
+        cf.injectIncomingForTest(inc,1,1.04f)
+        val position=inc.currentPosition
+        cf.dropPhaseForTest()
+        assertEquals(position,inc.currentPosition)
+        assertEquals(main.playbackParameters,inc.playbackParameters)
+        assertEquals(1f,cf.nudgeForTest,0f)
+        assertFalse(cf.phasePendingForTest)
+        cf.cancelForTest(); main.release()
     }
 }

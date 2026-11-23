@@ -61,9 +61,6 @@ class Crossfader(
     private val onItemChanged: (ExoPlayer) -> Unit = {},
     private val phasePlanOf: () -> PhaseTransitionPlanner.Plan? = { null },
     private val autoMixActive: () -> Boolean = { AutoMix.active(ctx) },
-    private val tempoOf: (androidx.media3.common.MediaItem) -> TempoResult? = { item ->
-        TempoCache.cachedResult(ctx, TempoCache.keyFor(ctx, item.localConfiguration?.uri, item.mediaId))
-    },
 ) {
     private val handler = Handler(Looper.getMainLooper())
     private val startTimer = TransitionStartTimer({ SystemClock.uptimeMillis() }, { r,t -> handler.postAtTime(r,t); Unit }, { handler.removeCallbacks(it) })
@@ -151,6 +148,8 @@ class Crossfader(
         phasePlan=plan; phaseTimerArmed=true
         startTimer.arm(atMs,valid={phasePlan===plan},start=onStart,fallback={})
     }
+    internal fun dropPhaseForTest() = dropPhase("test")
+    internal val nudgeForTest: Float get() = nudge
     internal fun swapForTest() = swap()
     internal fun cancelForTest() = cancel("test")
 
@@ -162,6 +161,7 @@ class Crossfader(
     private fun step() {
         val inc = incoming
         if (inc == null) { stepRestore(); maybeBegin(); return }
+        if (!transitionsAllowed(ctx)) { cancel("transitions disabled"); return }
         val now = SystemClock.uptimeMillis()
         if (rampStart == 0L) { // incoming not audibly started yet; main keeps playing at full volume
             if (!incomingPrepared) {
@@ -218,17 +218,14 @@ class Crossfader(
         val dur = main.duration
         if (dur == C.TIME_UNSET || dur <= 0L) return
         val speed = main.playbackParameters.speed
-        val plan = plannedMeasuredTransition(
-            if (autoMixActive()) main.currentMediaItem?.let(tempoOf) else null,
-            if (autoMixActive()) tempoOf(main.getMediaItemAt(next)) else null,
-            seconds(ctx), dur,
-        )
-        val phase = selectPhase(phasePlanOf(),autoMixActive(),prefs(ctx).getBoolean("phase_playback",false))
-        val f = phase?.let { (it.fadeMs / speed.toDouble()).toLong() } ?: plan.first
+        // Inconclusive pair evidence always means plain overlap, not an unphased BPM-only nudge.
+        val plain = min(seconds(ctx)*1000L,dur/3)
+        val phase = selectPhase(phasePlanOf(),autoMixActive())
+        val f = phase?.let { (it.fadeMs / speed.toDouble()).toLong() } ?: plain
         val remaining = dur - main.currentPosition
         if (!shouldBegin(remaining, f, speed)) return
         phasePlan = phase; phaseTimerArmed = false; phaseSpeed = speed
-        fadeMs = f; nudge = phase?.incomingSpeedRatio ?: plan.second; toIndex = next
+        fadeMs = f; nudge = phase?.incomingSpeedRatio ?: 1f; toIndex = next
         val sp = if (speed > 0f) speed else 1f
         val now = SystemClock.uptimeMillis()
         deadlineMs = now + (remaining / sp).toLong()
@@ -325,8 +322,8 @@ class Crossfader(
     }
 
     companion object {
-        internal fun selectPhase(plan: PhaseTransitionPlanner.Plan?, autoMix: Boolean, devEnabled: Boolean): PhaseTransitionPlanner.Plan? =
-            plan?.takeIf { autoMix && devEnabled && it.aligned }
+        internal fun selectPhase(plan: PhaseTransitionPlanner.Plan?, autoMix: Boolean): PhaseTransitionPlanner.Plan? =
+            plan?.takeIf { autoMix && it.aligned }
         private const val TAG = "XFADE"
         private fun prefs(c: Context) = c.applicationContext.getSharedPreferences("transitions", Context.MODE_PRIVATE)
         /** Start preparing the incoming deck when the wall-clock time left (media time / speed) is within the fade plus 1.5 s, and not already over. */

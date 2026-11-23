@@ -32,81 +32,68 @@ class PlaybackService : MediaSessionService() {
         exo = player
         val session = MediaSession.Builder(this, player).build()
         mediaSession = session
-        crossfader = Crossfader(this, player, { buildPlayer() }, { p -> session.player = p; exo = p }, { p -> onTrackChanged(p) }, phasePlanOf = { currentShadowPlan() }).also { it.start() }
+        crossfader = Crossfader(this, player, { buildPlayer() }, { p -> session.player = p; exo = p }, { p -> onTrackChanged(p) }, phasePlanOf = { currentPhasePlan() }).also { it.start() }
+        playbackHandler.post(analysisReconcile)
     }
 
     private val tempoPrefetcher = com.abhi.musicapp.analysis.TempoPrefetcher()
     private val phaseWorker = com.abhi.musicapp.analysis.TransitionWorker()
     private val playbackHandler = android.os.Handler(android.os.Looper.getMainLooper())
-    private var phaseGeneration = 0L
+    private val phaseGate = com.abhi.musicapp.analysis.AnalysisRequestGate()
     private var destroyed = false
-    /** Shadow evidence only. No audible path reads this until the timing/output gate is met. */
-    private var shadowPhase: com.abhi.musicapp.analysis.TransitionAnalysisResult? = null
-    private var shadowSignature: String? = null
+    /** Conservative pair evidence, consumed only under the existing AutoMix opt-in. */
+    private var phaseResult: com.abhi.musicapp.analysis.TransitionAnalysisResult? = null
+    private var phaseSignature: String? = null
     private fun signature(p: ExoPlayer): String? {
         val n=p.nextMediaItemIndex
         if (n==androidx.media3.common.C.INDEX_UNSET) return null
         return "${p.currentMediaItem?.localConfiguration?.uri}|${p.getMediaItemAt(n).localConfiguration?.uri}|$n|${p.duration}|${Crossfader.seconds(this)}"
     }
-    private fun currentShadowPlan(): com.abhi.musicapp.analysis.PhaseTransitionPlanner.Plan? {
+    private fun currentPhasePlan(): com.abhi.musicapp.analysis.PhaseTransitionPlanner.Plan? {
         val p=exo ?: return null
-        return shadowPhase?.plan?.takeIf { shadowSignature!=null && shadowSignature==signature(p) }
+        return phaseResult?.plan?.takeIf { phaseSignature!=null && phaseSignature==signature(p) }
     }
 
 
     private fun onTrackChanged(p: ExoPlayer) {
         prefetchNext(p)
-        analyseForAutoMix(p)
-        analyzePhaseShadow(p)
+        refreshPhaseAnalysis(p)
     }
 
-    /**
-     * AutoMix needs both tempos cached before the overlap starts. Analyse the PLAYING song first (it sets the target tempo and has a
-     * whole song's length to finish in), then the next queued one. Results land in TempoCache; the Crossfader only reads the cache,
-     * so a song that is not analysed in time simply gets the plain crossfade. Skipped under battery saver, like the prefetch.
-     */
-    private fun analyseForAutoMix(p: ExoPlayer) {
-        if (!com.abhi.musicapp.analysis.AutoMix.active(this)) return
-        val pm = getSystemService(android.os.PowerManager::class.java)
-        if (pm?.isPowerSaveMode == true) return
-        val cur = p.currentMediaItem ?: return
-        val curUri = cur.localConfiguration?.uri ?: return
-        val nextIdx = p.nextMediaItemIndex
-        val next = if (nextIdx != androidx.media3.common.C.INDEX_UNSET) p.getMediaItemAt(nextIdx) else null
-        val curKey = com.abhi.musicapp.analysis.TempoCache.keyFor(this, curUri, cur.mediaId)
-        tempoPrefetcher.request(curKey.value, { cancelled -> com.abhi.musicapp.analysis.TempoCache.analyse(this, curUri, curKey, cancelled) }) { _ ->
-            if (!com.abhi.musicapp.analysis.AutoMix.active(this)) return@request
-            val u = next?.localConfiguration?.uri ?: return@request
-            val nextKey = com.abhi.musicapp.analysis.TempoCache.keyFor(this, u, next!!.mediaId)
-            tempoPrefetcher.request(nextKey.value, { c2 -> com.abhi.musicapp.analysis.TempoCache.analyse(this, u, nextKey, c2) })
-        }
+    private fun analysisKey(p: ExoPlayer): String? {
+        if (destroyed || !com.abhi.musicapp.analysis.AutoMix.active(this)) return null
+        if (getSystemService(android.os.PowerManager::class.java)?.isPowerSaveMode == true || p.duration <= 0) return null
+        return signature(p)
     }
 
-    private fun analyzePhaseShadow(p: ExoPlayer) {
-        val generation = ++phaseGeneration
-        phaseWorker.cancel(); shadowPhase = null; shadowSignature = null
-        // Development evidence only, disabled in ordinary installs to avoid duplicate decoding.
-        if (!getSharedPreferences("transitions", Context.MODE_PRIVATE).getBoolean("phase_shadow", false)) return
-        if (!com.abhi.musicapp.analysis.AutoMix.active(this)) return
-        if (getSystemService(android.os.PowerManager::class.java)?.isPowerSaveMode == true) return
+    /** Reconciles duration becoming known, queue edits and settings while a track is already playing. */
+    private fun refreshPhaseAnalysis(p: ExoPlayer) {
+        val key = analysisKey(p)
+        if (!phaseGate.update(key)) return
+        phaseWorker.cancel(); phaseResult = null; phaseSignature = null
+        if (key == null) return
+        val generation = phaseGate.generation
         val out = p.currentMediaItem?.localConfiguration?.uri ?: return
         val nextIndex = p.nextMediaItemIndex
         if (nextIndex == androidx.media3.common.C.INDEX_UNSET) return
         val into = p.getMediaItemAt(nextIndex).localConfiguration?.uri ?: return
         val duration = p.duration
-        if (duration <= 0) return
         val fade = Crossfader.seconds(this) * 1000L
-        phaseWorker.request("$generation", { cancelled ->
+        phaseWorker.request(key, { cancelled ->
             com.abhi.musicapp.analysis.TransitionAnalysis.analyze(applicationContext,out,into,duration,fade,cancelled)
         }) { result ->
             playbackHandler.post {
-                if (destroyed || generation != phaseGeneration || exo !== p ||
-                    !com.abhi.musicapp.analysis.AutoMix.active(this) || p.duration != duration ||
-                    p.currentMediaItem?.localConfiguration?.uri != out || p.nextMediaItemIndex != nextIndex ||
-                    p.getMediaItemAt(nextIndex).localConfiguration?.uri != into || Crossfader.seconds(this)*1000L != fade) return@post
-                shadowPhase = result; shadowSignature = signature(p)
-                android.util.Log.i("PhaseShadow", "analysis only: aligned=${result.plan.aligned}, reason=${result.plan.reason}")
+                if (destroyed || !phaseGate.accepts(key,generation) || exo !== p || analysisKey(p) != key) return@post
+                phaseResult = result; phaseSignature = signature(p)
             }
+        }
+    }
+
+    private val analysisReconcile = object : Runnable {
+        override fun run() {
+            if (destroyed) return
+            exo?.let { refreshPhaseAnalysis(it) }
+            playbackHandler.postDelayed(this,1000L)
         }
     }
 
@@ -145,14 +132,14 @@ class PlaybackService : MediaSessionService() {
         mediaSession
 
     override fun onDestroy() {
-        destroyed = true; phaseGeneration++; phaseWorker.shutdown(); shadowPhase = null
+        destroyed = true; phaseGate.clear(); phaseWorker.shutdown(); phaseResult = null
         playbackHandler.removeCallbacksAndMessages(null)
+        crossfader?.stop(); crossfader = null
         mediaSession?.let { session ->
             session.player.release()
             session.release()
         }
         mediaSession = null
-        crossfader?.stop(); crossfader = null
         tempoPrefetcher.shutdown()
         exo = null
         super.onDestroy()
