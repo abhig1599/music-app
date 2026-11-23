@@ -49,10 +49,10 @@ internal fun dropletTargets(lv: FloatArray?, b: Float): FloatArray {
     }
     fun knee(l: Float) = l * l / (l + 0.12f) // soft knee, no hard gate
     return floatArrayOf(
-        0.10f * tanh(1.8f * knee(avg(0, 9))) + 0.03f * b,
-        0.055f * tanh(2f * knee(avg(8, 20))),
-        0.045f * tanh(2f * knee(avg(20, 33))),
-        0.035f * tanh(2f * knee(avg(33, 48))),
+        0.095f * tanh(1.8f * knee(avg(0, 9))) + 0.02f * b,
+        0.05f * tanh(2f * knee(avg(8, 20))),
+        0.04f * tanh(2f * knee(avg(20, 33))),
+        0.03f * tanh(2f * knee(avg(33, 48))),
     )
 }
 
@@ -73,7 +73,7 @@ fun DropletBlob(levels: (() -> FloatArray?)?, tick: State<Long>?, beat: (() -> F
         val steps = 200
         for (j in 0 until steps) {
             val th = 2.0 * PI * j / steps
-            var rad = 0.24f + x[0]
+            var rad = 0.21f + x[0]
             for (k in 0 until 3) rad += x[k + 1] * cos(modes[k] * th + (if (k % 2 == 0) 1 else -1) * (0.5 + 0.25 * k) * sec).toFloat()
             rad = rad.coerceIn(0.16f, 0.5f) * r
             val p = Offset((c.x + rad * cos(th)).toFloat(), (c.y + rad * kotlin.math.sin(th)).toFloat())
