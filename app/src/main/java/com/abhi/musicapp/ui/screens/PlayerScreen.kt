@@ -348,7 +348,7 @@ fun PlayerScreen(onBack: () -> Unit, fixture: PlayerUiState? = null, initialOver
         if (overlay != 0) Box(Modifier.fillMaxSize().clickable(indication = null, interactionSource = androidx.compose.runtime.remember { androidx.compose.foundation.interaction.MutableInteractionSource() }) { overlay = 0 })
         if (overlay == 1) Column((if (landscape) Modifier.align(Alignment.TopEnd).padding(top = 56.dp, end = 24.dp).heightIn(max = maxHeight - 64.dp).verticalScroll(rememberScrollState()) else Modifier.offset(134.dp, 94.dp)).width(232.dp).clip(androidx.compose.foundation.shape.RoundedCornerShape(8.dp)).background(sheet)) {
             // All seven entries are wired to real behaviour. "Delete" means remove-from-library only (Recycle Bin): the audio file is never touched.
-            listOf("Sleep Time", "Add to playlist", "Share", "Speed", "Delete", "Equaliser", "Lyrics").forEach { t ->
+            listOf("Sleep Time", "Add to playlist", "Share", "Speed", "Remove from library", "Equaliser", "Lyrics").forEach { t ->
                 val off = false
                 Row(Modifier.fillMaxWidth().height(if (landscape) 40.dp else 51.dp).testTag("menu_" + t).then(if (off) Modifier else Modifier.clickable {
                     overlay = if (fixture != null) 0 else when (t) {
@@ -356,7 +356,7 @@ fun PlayerScreen(onBack: () -> Unit, fixture: PlayerUiState? = null, initialOver
                         "Add to playlist" -> 4
                         "Speed" -> 6
                         "Share" -> { shareCurrent(ctx, state.mediaId, state.title); 0 }
-                        "Delete" -> 10
+                        "Remove from library" -> 10
                         "Lyrics" -> 9
                         "Equaliser" -> { onOpenEqualiser(); 0 }
                         else -> 0
