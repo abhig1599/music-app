@@ -113,6 +113,30 @@ class CrossfaderSwapTest {
         assertSame(main, cf.activePlayer)
         main.release(); inc.release()
     }
+    @Test fun labelCoherenceAcrossArmSwapAndAbort() {
+        // mixing drives the Player "Mixing..." label and when song details advance: it must be true for the whole
+        // armed/overlap window and clear exactly when the hand-over completes (details and normal label switch together).
+        val (cf, main, inc) = make()
+        assertFalse(cf.mixing) // idle: normal source label
+        cf.injectIncomingForTest(inc, 1)
+        assertTrue(cf.mixing) // armed/overlap: Mixing label, outgoing details still shown
+        cf.swapForTest()
+        assertFalse(cf.mixing) // hand-over complete: label and details switch together
+        assertSame(inc, cf.activePlayer)
+        inc.release()
+    }
+
+    @Test fun abortRestoresNormalLabelWithoutAdvancingDetails() {
+        val (cf, main, inc) = make()
+        cf.injectIncomingForTest(inc, 1)
+        assertTrue(cf.mixing)
+        cf.cancelForTest()
+        assertFalse(cf.mixing) // abort: normal label restored
+        assertSame(main, cf.activePlayer) // outgoing song still the current one
+        assertFalse(main.isReleased)
+        main.release()
+    }
+
     @Test fun cancelledPhaseCallbackCannotStartReleasedDeck() {
         val (cf, main, inc)=make()
         cf.injectIncomingForTest(inc,1)
