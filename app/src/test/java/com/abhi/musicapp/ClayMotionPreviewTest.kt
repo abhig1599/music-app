@@ -13,6 +13,7 @@ import androidx.compose.ui.unit.dp
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.abhi.musicapp.ui.components.ClayBlob
 import com.abhi.musicapp.ui.components.ClayTuning
+import com.abhi.musicapp.ui.components.DropletBlob
 import com.abhi.musicapp.ui.components.clayClockOverride
 import com.abhi.musicapp.ui.theme.MusicAppTheme
 import com.github.takahirom.roborazzi.captureRoboImage
@@ -54,7 +55,7 @@ class ClayMotionPreviewTest {
         return kick * gap
     }
 
-    private fun run(name: String, tuning: ClayTuning) {
+    private fun run(name: String, tuning: ClayTuning, droplet: Boolean = false) {
         rule.mainClock.autoAdvance = false
         val shown = FloatArray(48); val target = FloatArray(48); val beatBox = FloatArray(1)
         val tick = mutableLongStateOf(0L)
@@ -64,7 +65,7 @@ class ClayMotionPreviewTest {
             rule.setContent {
                 MusicAppTheme {
                     Box(Modifier.background(androidx.compose.material3.MaterialTheme.colorScheme.background).padding(8.dp)) {
-                        Box(Modifier.size(164.dp).testTag("blob")) { ClayBlob(levels = { tick.longValue; shown }, tick = tick, beat = { beatBox[0] }, tuning = tuning) }
+                        Box(Modifier.size(164.dp).testTag("blob")) { if (droplet) DropletBlob(levels = { tick.longValue; shown }, tick = tick, beat = { beatBox[0] }) else ClayBlob(levels = { tick.longValue; shown }, tick = tick, beat = { beatBox[0] }, tuning = tuning) }
                     }
                 }
             }
@@ -86,5 +87,6 @@ class ClayMotionPreviewTest {
 
     @Test fun a_current() = run("A_current", ClayTuning.CURRENT)
     @Test fun b_early() = run("B_early", ClayTuning.EARLY)
+    @Test fun d_droplet() = run("D_droplet", ClayTuning.CURRENT, droplet = true)
     @Test fun c_smooth() = run("C_smooth", ClayTuning.SMOOTH)
 }
