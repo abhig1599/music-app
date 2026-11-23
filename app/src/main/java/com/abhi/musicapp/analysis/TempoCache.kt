@@ -95,11 +95,11 @@ object TempoCache {
             var ch = fmt.getInteger(MediaFormat.KEY_CHANNEL_COUNT).coerceAtLeast(1)
             val codec = MediaCodec.createDecoderByType(fmt.getString(MediaFormat.KEY_MIME)!!)
             var out = FloatArray(sr * seconds); var n = 0
+            val deadline = android.os.SystemClock.elapsedRealtime() + 30_000L
+            var firstSampleUs: Long? = null
             try {
             codec.configure(fmt, null, null, 0); codec.start()
             val info = MediaCodec.BufferInfo(); var inDone = false; var outDone = false
-            val deadline = android.os.SystemClock.elapsedRealtime() + 30_000L
-            var firstSampleUs: Long? = null
             while (!outDone && n < out.size && !cancelled() && android.os.SystemClock.elapsedRealtime() < deadline) {
                 if (!inDone) {
                     val i = codec.dequeueInputBuffer(10_000)
