@@ -68,6 +68,9 @@ class PlaybackService : MediaSessionService() {
 
     /** Reconciles duration becoming known, queue edits and settings while a track is already playing. */
     private fun refreshPhaseAnalysis(p: ExoPlayer) {
+        // Never start or churn the MediaCodec decode + DSP while two decks are live: the transition window needs
+        // every codec/audio resource, and an in-flight plan stays valid for the arm it was computed for.
+        if (crossfader?.mixing == true) return
         val key = analysisKey(p)
         if (!phaseGate.update(key)) return
         phaseWorker.cancel(); phaseResult = null; phaseSignature = null
