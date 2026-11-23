@@ -2,7 +2,6 @@ package com.abhi.musicapp
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.ui.test.assertDoesNotExist
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.swipeUp
