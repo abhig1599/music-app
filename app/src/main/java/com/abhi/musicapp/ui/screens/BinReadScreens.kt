@@ -24,6 +24,8 @@ import androidx.compose.material.icons.filled.Undo
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -69,31 +71,60 @@ data class BinRow(val name: String, val daysLeft: Int)
 
 /**
  * Recycle Bin. List rows: 351x72, white, r10, pad 10, left group 292x50 gap 13 (50x50 thumb + text), undo icon 24x24; list gap 6.
- * Delete semantics are still an open decision (DECISIONS.md), so the real app has no rows; [fixture] rows are design samples.
+ * Shipped meaning (settled 2026-11-23, main): "removed from library" - an app-only hide via BinStore. The audio file is NEVER
+ * touched, nothing is auto-purged, and there is no permanent-deletion path in the app, so Empty Bin stays disabled and the
+ * design's "N days left" countdown (which would imply auto-deletion) is replaced by the removal date. Restore shows the song again.
+ * [fixture] rows remain design samples for render tests only.
  */
 @Composable
 fun RecycleBinScreen(onBack: () -> Unit, fixture: List<BinRow> = emptyList()) {
+    val ctx = androidx.compose.ui.platform.LocalContext.current
+    var tick by androidx.compose.runtime.remember { androidx.compose.runtime.mutableIntStateOf(0) }
+    val isFixture = fixture.isNotEmpty()
+    var real by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf<List<Pair<com.abhi.musicapp.library.BinStore.Entry, com.abhi.musicapp.library.Song?>>>(emptyList()) }
+    androidx.compose.runtime.LaunchedEffect(tick) {
+        if (!isFixture) {
+            val byId = com.abhi.musicapp.library.LibraryRepository.queryAllSongs(ctx).associateBy { it.id }
+            real = com.abhi.musicapp.library.BinStore(ctx).entries().map { it to byId[it.mediaId] }
+        }
+    }
     FigmaPage("Recycle Bin", onBack, titleSize = 30.sp, chevronBack = true, trailing = {
-        // "Empty Bin" pill: size/fill are estimates. Disabled: nothing can be binned yet.
-        Box(Modifier.alpha(if (fixture.isEmpty()) 0.5f else 1f).clip(RoundedCornerShape(8.dp)).background(SurfaceSoft).padding(horizontal = 10.dp, vertical = 6.dp)) {
+        // "Empty Bin" pill from the design: stays disabled - permanently deleting files is not a shipped action.
+        Box(Modifier.alpha(0.5f).clip(RoundedCornerShape(8.dp)).background(SurfaceSoft).padding(horizontal = 10.dp, vertical = 6.dp)) {
             Text("Empty Bin", fontFamily = GeistMono, fontSize = 14.sp, color = InkBlack)
         }
     }) {
         Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            fixture.forEach { row ->
+            if (isFixture) fixture.forEach { row ->
                 Row(Modifier.fillMaxWidth().height(72.dp).clip(RoundedCornerShape(10.dp)).background(com.abhi.musicapp.ui.theme.FigmaWhite).border(1.dp, androidx.compose.ui.graphics.Color(0xFFD9D9D9), RoundedCornerShape(10.dp)).padding(10.dp),
                     verticalAlignment = Alignment.CenterVertically) {
-                    // Thumb is a photo in the design; photo assets are not shipped, neutral tile instead.
                     Box(Modifier.size(50.dp).clip(RoundedCornerShape(8.dp)).background(SurfaceSoft))
                     Spacer(Modifier.width(13.dp))
                     Column(Modifier.weight(1f)) {
-                        Text(row.name, fontSize = 18.sp, color = InkBlack) // Figma read: Helvetica Neue Regular 18
-                        Text("${row.daysLeft} days left", fontFamily = GeistMono, fontSize = 15.sp, /* DERIVED, not panel-verified */ color = InkBlack)
+                        Text(row.name, fontSize = 18.sp, color = InkBlack)
+                        Text("${row.daysLeft} days left", fontFamily = GeistMono, fontSize = 15.sp, color = InkBlack)
                     }
                     Icon(Icons.Filled.Undo, "Restore", tint = InkBlack, modifier = Modifier.size(24.dp))
                 }
+            } else {
+                real.forEach { (entry, song) ->
+                    val date = java.text.SimpleDateFormat("d MMM yyyy", java.util.Locale.getDefault()).format(java.util.Date(entry.removedAtMs))
+                    Row(Modifier.fillMaxWidth().height(72.dp).clip(RoundedCornerShape(10.dp)).background(com.abhi.musicapp.ui.theme.FigmaWhite).border(1.dp, androidx.compose.ui.graphics.Color(0xFFD9D9D9), RoundedCornerShape(10.dp)).padding(10.dp),
+                        verticalAlignment = Alignment.CenterVertically) {
+                        Box(Modifier.size(50.dp).clip(RoundedCornerShape(8.dp)).background(SurfaceSoft))
+                        Spacer(Modifier.width(13.dp))
+                        Column(Modifier.weight(1f)) {
+                            Text(song?.title ?: "Song no longer on this phone", fontSize = 18.sp, color = InkBlack, maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
+                            Text("Removed $date - file untouched", fontFamily = GeistMono, fontSize = 13.sp, color = GrayText)
+                        }
+                        Icon(Icons.Filled.Undo, "Restore", tint = InkBlack, modifier = Modifier.size(24.dp).clickable {
+                            com.abhi.musicapp.library.BinStore(ctx).restore(entry.mediaId); tick++
+                        })
+                    }
+                }
+                if (real.isEmpty()) Text("Nothing in the bin", fontFamily = GeistMono, fontSize = 13.sp, color = GrayText, modifier = Modifier.padding(top = 8.dp))
+                else Text("Removed songs only stop showing in this app. Their files stay on your phone; nothing is ever deleted automatically.", fontFamily = GeistMono, fontSize = 11.sp, color = GrayText, modifier = Modifier.padding(top = 8.dp))
             }
-            if (fixture.isEmpty()) Text("Nothing in the bin", fontFamily = GeistMono, fontSize = 13.sp, color = GrayText, modifier = Modifier.padding(top = 8.dp))
         }
     }
 }
