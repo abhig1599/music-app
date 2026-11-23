@@ -80,7 +80,15 @@ PY
 ); [ -n "$c" ] && { set -- $c; adb shell input tap $1 $2; sleep 3; }
 GR=$(adb shell dumpsys package $PKG | grep -c 'READ_MEDIA_AUDIO: granted=true')
 [ "$GR" = "0" ] && adb shell pm grant $PKG android.permission.READ_MEDIA_AUDIO
-tap_exact "Next" && say "onboarding: Next(2) tapped"; sleep 2; tap_exact "Get Started" && say "onboarding: Get Started tapped"; sleep 4
+# Onboarding finisher: run 5 showed the app still on the language page (so onboarding never completed and the library never showed).
+# Walk forward with whatever button is on screen, up to 10 steps, until "Get Started" has been tapped.
+DONE_OB=0
+for step in $(seq 1 10); do
+  if tap_exact "Get Started"; then say "onboarding step $step: Get Started tapped"; DONE_OB=1; break; fi
+  if tap_exact "Next"; then say "onboarding step $step: Next tapped"; else say "onboarding step $step: no Next/Get Started on screen"; fi
+  sleep 3
+done
+say "onboarding finished: $DONE_OB"; sleep 4
 
 # Arm transitions + PCM capture, then restart so the process re-reads prefs
 adb shell run-as $PKG sh -c "mkdir -p /data/data/$PKG/shared_prefs && printf '%s' '<?xml version=\"1.0\" encoding=\"utf-8\" standalone=\"yes\" ?><map><boolean name=\"on\" value=\"true\" /><int name=\"secs\" value=\"4\" /><boolean name=\"pcm_capture\" value=\"true\" /></map>' > /data/data/$PKG/shared_prefs/transitions.xml" && say "prefs armed via run-as"
