@@ -13,6 +13,9 @@ import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
 import com.abhi.musicapp.analysis.AutoMix
+import com.abhi.musicapp.analysis.PhaseTransitionPlanner
+import com.abhi.musicapp.analysis.PhaseSchedule
+import com.abhi.musicapp.analysis.TransitionStartTimer
 import com.abhi.musicapp.analysis.AutoMixPlanner
 import com.abhi.musicapp.analysis.TempoCache
 import com.abhi.musicapp.analysis.TempoResult
@@ -56,12 +59,17 @@ class Crossfader(
     private val newPlayer: () -> ExoPlayer,
     private val onSwap: (ExoPlayer) -> Unit,
     private val onItemChanged: (ExoPlayer) -> Unit = {},
+    private val phasePlanOf: () -> PhaseTransitionPlanner.Plan? = { null },
     private val autoMixActive: () -> Boolean = { AutoMix.active(ctx) },
     private val tempoOf: (androidx.media3.common.MediaItem) -> TempoResult? = { item ->
         TempoCache.cachedResult(ctx, TempoCache.keyFor(ctx, item.localConfiguration?.uri, item.mediaId))
     },
 ) {
     private val handler = Handler(Looper.getMainLooper())
+    private val startTimer = TransitionStartTimer({ SystemClock.uptimeMillis() }, { r,t -> handler.postAtTime(r,t); Unit }, { handler.removeCallbacks(it) })
+    private var phasePlan: PhaseTransitionPlanner.Plan? = null
+    private var phaseTimerArmed = false
+    private var phaseSpeed = 1f
     private var incoming: ExoPlayer? = null
     private var incomingReady: Player.Listener? = null
     private var incomingPrepared = false
@@ -118,6 +126,7 @@ class Crossfader(
                 if (abs(p.speed - r.last) > 0.0005f) restore = null
                 return
             }
+            if (phasePlan != null) dropPhase("user speed changed")
             incoming?.playbackParameters = PlaybackParameters(p.speed * nudge, p.pitch)
             // A speed change while the incoming deck waits moves the natural end; re-aim the boundary so the fade still lands on it.
             if (incoming != null && rampStart == 0L) {
@@ -153,6 +162,11 @@ class Crossfader(
             if (!incomingPrepared) {
                 if (shouldGiveUp(now - beganAt)) cancel("incoming not ready in 4s")
                 return
+            }
+            if (phasePlan != null && (!autoMixActive() || !transitionsAllowed(ctx) || phasePlanOf()!=phasePlan)) dropPhase("phase evidence changed")
+            if (phasePlan != null) {
+                preparePhaseStart(inc)
+                if (phasePlan != null) return
             }
             if (!fadeChecked) { // now that the incoming song is decoded its length is known: never fade longer than a third of it
                 fadeChecked = true
@@ -204,10 +218,12 @@ class Crossfader(
             if (autoMixActive()) tempoOf(main.getMediaItemAt(next)) else null,
             seconds(ctx), dur,
         )
-        val f = plan.first
+        val phase = if (autoMixActive() && prefs(ctx).getBoolean("phase_playback",false)) phasePlanOf()?.takeIf { it.aligned } else null
+        val f = phase?.let { (it.fadeMs / speed.toDouble()).toLong() } ?: plan.first
         val remaining = dur - main.currentPosition
         if (!shouldBegin(remaining, f, speed)) return
-        fadeMs = f; nudge = plan.second; toIndex = next
+        phasePlan = phase; phaseTimerArmed = false; phaseSpeed = speed
+        fadeMs = f; nudge = phase?.incomingSpeedRatio ?: plan.second; toIndex = next
         val sp = if (speed > 0f) speed else 1f
         val now = SystemClock.uptimeMillis()
         deadlineMs = now + (remaining / sp).toLong()
@@ -231,9 +247,39 @@ class Crossfader(
         Log.i(TAG, "armed: fade=${fadeMs}ms, boundary in ${(remaining / sp).toLong()}ms, next index $next")
     }
 
+    private fun preparePhaseStart(inc: ExoPlayer) {
+        if (phaseTimerArmed) return
+        val p = phasePlan ?: return
+        val timing = PhaseSchedule.prepare(p,main.currentPosition,main.duration,inc.duration,phaseSpeed,seconds(ctx)*1000L)
+        if (timing == null) { dropPhase("phase no longer schedulable"); return }
+        val target = SystemClock.uptimeMillis() + timing.delayMs
+        phaseTimerArmed = true
+        if (!startTimer.arm(target,valid={
+            incoming === inc && incomingPrepared && main.isPlaying && transitionsAllowed(ctx) && autoMixActive() && phasePlanOf()==p &&
+            !SleepTimer.isFinishingSong && main.repeatMode != Player.REPEAT_MODE_ONE && !main.shuffleModeEnabled &&
+            abs(main.playbackParameters.speed-phaseSpeed)<.0005f &&
+            PhaseSchedule.canStart(main.currentPosition,p.startOutgoingMs,phaseSpeed)
+        },start={
+            fadeMs = ((main.duration-main.currentPosition)/phaseSpeed).toLong()
+            if (fadeMs < 500) { dropPhase("phase remaining too short") }
+            else { inc.playWhenReady=true; rampStart=SystemClock.uptimeMillis(); phasePlan=null; phaseTimerArmed=false
+                Log.i(TAG,"experimental phase start request, output alignment unverified") }
+        },fallback={dropPhase("phase late or stale")})) dropPhase("phase target missed")
+    }
+
+    private fun dropPhase(reason: String) {
+        startTimer.cancel(); phaseTimerArmed=false; phasePlan=null
+        nudge=1f
+        incoming?.playbackParameters=main.playbackParameters
+        fadeMs=min(seconds(ctx)*1000L,main.duration.coerceAtLeast(0)/3)
+        plannedStartMs=deadlineMs-fadeMs; fadeChecked=false
+        Log.i(TAG,"plain fallback: $reason")
+    }
+
     /** The incoming player becomes the active one: point the session at it and release the old player. No seek, no replay. */
     private fun swap() {
         val inc = incoming ?: return
+        startTimer.cancel(); phasePlan=null; phaseTimerArmed=false
         val old = main
         old.removeListener(mainListener)
         incomingReady?.let { inc.removeListener(it) }
@@ -259,6 +305,7 @@ class Crossfader(
 
     /** Abort: drop the incoming player, put the main player back at normal volume and settle any speed ease at the user's speed. */
     private fun cancel(reason: String) {
+        startTimer.cancel(); phasePlan=null; phaseTimerArmed=false
         val inc = incoming
         if (inc != null) {
             incomingReady?.let { inc.removeListener(it) }

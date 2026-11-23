@@ -32,7 +32,7 @@ class PlaybackService : MediaSessionService() {
         exo = player
         val session = MediaSession.Builder(this, player).build()
         mediaSession = session
-        crossfader = Crossfader(this, player, { buildPlayer() }, { p -> session.player = p; exo = p }, { p -> onTrackChanged(p) }).also { it.start() }
+        crossfader = Crossfader(this, player, { buildPlayer() }, { p -> session.player = p; exo = p }, { p -> onTrackChanged(p) }, phasePlanOf = { currentShadowPlan() }).also { it.start() }
     }
 
     private val tempoPrefetcher = com.abhi.musicapp.analysis.TempoPrefetcher()
@@ -42,6 +42,16 @@ class PlaybackService : MediaSessionService() {
     private var destroyed = false
     /** Shadow evidence only. No audible path reads this until the timing/output gate is met. */
     private var shadowPhase: com.abhi.musicapp.analysis.TransitionAnalysisResult? = null
+    private var shadowSignature: String? = null
+    private fun signature(p: ExoPlayer): String? {
+        val n=p.nextMediaItemIndex
+        if (n==androidx.media3.common.C.INDEX_UNSET) return null
+        return "${p.currentMediaItem?.localConfiguration?.uri}|${p.getMediaItemAt(n).localConfiguration?.uri}|$n|${p.duration}|${Crossfader.seconds(this)}"
+    }
+    private fun currentShadowPlan(): com.abhi.musicapp.analysis.PhaseTransitionPlanner.Plan? {
+        val p=exo ?: return null
+        return shadowPhase?.plan?.takeIf { shadowSignature!=null && shadowSignature==signature(p) }
+    }
 
 
     private fun onTrackChanged(p: ExoPlayer) {
@@ -74,7 +84,7 @@ class PlaybackService : MediaSessionService() {
 
     private fun analyzePhaseShadow(p: ExoPlayer) {
         val generation = ++phaseGeneration
-        phaseWorker.cancel(); shadowPhase = null
+        phaseWorker.cancel(); shadowPhase = null; shadowSignature = null
         // Development evidence only, disabled in ordinary installs to avoid duplicate decoding.
         if (!getSharedPreferences("transitions", Context.MODE_PRIVATE).getBoolean("phase_shadow", false)) return
         if (!com.abhi.musicapp.analysis.AutoMix.active(this)) return
@@ -94,7 +104,7 @@ class PlaybackService : MediaSessionService() {
                     !com.abhi.musicapp.analysis.AutoMix.active(this) || p.duration != duration ||
                     p.currentMediaItem?.localConfiguration?.uri != out || p.nextMediaItemIndex != nextIndex ||
                     p.getMediaItemAt(nextIndex).localConfiguration?.uri != into || Crossfader.seconds(this)*1000L != fade) return@post
-                shadowPhase = result
+                shadowPhase = result; shadowSignature = signature(p)
                 android.util.Log.i("PhaseShadow", "analysis only: aligned=${result.plan.aligned}, reason=${result.plan.reason}")
             }
         }
