@@ -247,8 +247,8 @@ class Crossfader(
         incomingReady = l; p.addListener(l)
         p.volume = 0f
         incoming = p; rampStart = 0L; fadeChecked = false; incomingPrepared = false; beganAt = now
-        p.prepare() // Assign ownership before preparation: synchronous READY/error callbacks must not be overwritten.
         mixing = true
+        p.prepare() // Assign ownership and indicator before preparation: synchronous errors may cancel both.
         Log.i(TAG, "armed: fade=${fadeMs}ms, boundary in ${(remaining / sp).toLong()}ms, next index $next")
     }
 
