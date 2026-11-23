@@ -32,12 +32,17 @@ class PlaybackService : MediaSessionService() {
         exo = player
         val session = MediaSession.Builder(this, player).build()
         mediaSession = session
-        crossfader = Crossfader(this, player, { buildPlayer() }, { p -> session.player = p; exo = p }, { p -> onTrackChanged(p) }, phasePlanOf = { currentPhasePlan() }).also { it.start() }
+        crossfader = Crossfader(this, player, { buildPlayer() }, { p -> session.player = p; exo = p }, { p -> onTrackChanged(p) }, phasePlanOf = { currentPhasePlan() }).also { f -> f.contentEndOf = { uri, dur -> currentTailIdentity?.takeIf { it.uri == uri && it.durationMs == dur && it == tailRevalidatedFor }?.let { validatedContentEnd } }; f.start() }
         playbackHandler.post(analysisReconcile)
     }
 
     private val tempoPrefetcher = com.abhi.musicapp.analysis.TempoPrefetcher()
     private val phaseWorker = com.abhi.musicapp.analysis.TransitionWorker()
+    private val tailWorker = com.abhi.musicapp.analysis.TransitionWorker()
+    private var tailKey: String? = null
+    @Volatile private var currentTailIdentity: com.abhi.musicapp.analysis.TailCache.FileIdentity? = null
+    private var tailRevalidatedFor: com.abhi.musicapp.analysis.TailCache.FileIdentity? = null
+    @Volatile private var validatedContentEnd: Long? = null
     private val playbackHandler = android.os.Handler(android.os.Looper.getMainLooper())
     private val phaseGate = com.abhi.musicapp.analysis.AnalysisRequestGate()
     private var destroyed = false
@@ -57,7 +62,58 @@ class PlaybackService : MediaSessionService() {
 
     private fun onTrackChanged(p: ExoPlayer) {
         prefetchNext(p)
+        tailRevalidatedFor = null; validatedContentEnd = null
+        refreshTailAnalysis(p)
         refreshPhaseAnalysis(p)
+    }
+
+    /**
+     * One-shot identity revalidation shortly before a cached trim can be consumed. The crossfader only sees the
+     * trim after the provider identity is confirmed fresh (a file replaced during playback abstains); the
+     * provider is queried once per song near the transition, never on the 40 ms audio tick.
+     */
+    private fun revalidateTailIdentity(p: ExoPlayer) {
+        val id = currentTailIdentity ?: return
+        if (tailRevalidatedFor == id) return
+        val dur = p.duration
+        if (dur == androidx.media3.common.C.TIME_UNSET || dur <= 0L) return
+        if (dur - p.currentPosition > 20_000L) return
+        tailRevalidatedFor = id
+        val fresh = com.abhi.musicapp.analysis.TailCache.fileIdentity(applicationContext, android.net.Uri.parse(id.uri), dur)
+        validatedContentEnd = if (fresh == id) com.abhi.musicapp.analysis.TailCache.contentEndMs(id) else null
+    }
+
+    /**
+     * Decodes the current song's last seconds on the background worker and records a conservative content end,
+     * which the crossfader uses to end the outgoing song at the start of a near-zero-sample tail instead of the
+     * file end. Skips during transitions (decode resources belong to the live decks), for short files, and when
+     * a valid entry already exists. Cancellation carries into the codec loop; any irregularity abstains.
+     */
+    private fun refreshTailAnalysis(p: ExoPlayer) {
+        if (destroyed || crossfader?.mixing == true) return
+        val uri = p.currentMediaItem?.localConfiguration?.uri ?: return
+        val duration = p.duration
+        if (duration == androidx.media3.common.C.TIME_UNSET || duration < 30_000L) return
+        // File identity = uri + provider version metadata + duration: a replaced file (even same length) never
+        // reuses a stale content end. No metadata available means no trimming for that file.
+        val identity = com.abhi.musicapp.analysis.TailCache.fileIdentity(applicationContext, uri, duration) ?: return
+        currentTailIdentity = identity
+        if (com.abhi.musicapp.analysis.TailCache.contentEndMs(identity) != null) return
+        val jobKey = identity.toString()
+        if (tailKey == jobKey) return
+        tailKey = jobKey
+        tailWorker.request(jobKey, { cancelled ->
+            val w = com.abhi.musicapp.analysis.TempoCache.decodeTailWindow(applicationContext, uri, duration, 15, cancelled) ?: return@request null
+            val peaks = com.abhi.musicapp.analysis.ContentEndDetector.framePeaks(w.interleaved, w.channels, w.sampleRate / 20)
+            // eosReached = true: decodeTailWindow above returns null unless the codec signaled end-of-stream.
+            val r = com.abhi.musicapp.analysis.ContentEndDetector.detect(peaks, w.windowStartMs, w.coverEndMs, duration, true, cancelled)
+            if (cancelled()) return@request null
+            // Re-validate identity AFTER the decode: a file replaced during analysis must not keep the old reading.
+            if (com.abhi.musicapp.analysis.TailCache.fileIdentity(applicationContext, uri, duration) == identity) {
+                r.contentEndMs?.let { com.abhi.musicapp.analysis.TailCache.put(identity, it) }
+            }
+            null
+        }) { }
     }
 
     private fun analysisKey(p: ExoPlayer): String? {
@@ -95,7 +151,7 @@ class PlaybackService : MediaSessionService() {
     private val analysisReconcile = object : Runnable {
         override fun run() {
             if (destroyed) return
-            exo?.let { refreshPhaseAnalysis(it) }
+            exo?.let { revalidateTailIdentity(it); refreshPhaseAnalysis(it) }
             playbackHandler.postDelayed(this,1000L)
         }
     }
@@ -135,7 +191,7 @@ class PlaybackService : MediaSessionService() {
         mediaSession
 
     override fun onDestroy() {
-        destroyed = true; phaseGate.clear(); phaseWorker.shutdown(); phaseResult = null
+        destroyed = true; phaseGate.clear(); phaseWorker.shutdown(); tailWorker.shutdown(); phaseResult = null
         playbackHandler.removeCallbacksAndMessages(null)
         crossfader?.stop(); crossfader = null
         mediaSession?.let { session ->
