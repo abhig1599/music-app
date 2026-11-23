@@ -122,12 +122,40 @@ fun HomeScreen(
     }
 
     Box(Modifier.fillMaxSize()) {
-    Column(modifier = Modifier.fillMaxSize()) {
+    // One LazyColumn for the whole page (user request 2026-11-23, marked screenshot: swiping the tabs/list area
+    // must scroll the whole Home page). The mini player stays pinned below; visuals and list behaviour are unchanged.
+        // Filter chips
+        val chips = if (fixture != null) listOf("All" to "20", "Folders" to "02", "Playlist" to "06", "Artists" to null) // Figma sample numbers (fixture only)
+        else listOf(
+            "All" to songs.size.toString().padStart(2, '0'),
+            "Folders" to LibraryRepository.folders(songs).size.toString().padStart(2, '0'),
+            "Playlist" to remember(reload) { com.abhi.musicapp.library.PlaylistStore(context).load().size }.toString().padStart(2, '0'),
+            "Artists" to null, // no artists view exists; chip is visual only
+        )
+        // Figma Frame 4: one white 475x46 pill (r10, 1px D3D3D1 stroke, pad 6, gap 12) holding the
+        // chips; it overflows the 390 frame, so "Artists" is clipped there too (kept as reference).
+        // User confirmed (2026-11-03): this bar slides horizontally to reveal further categories.
+
+            // Figma sample rows (DemoData) only in design fixtures (fixture != null). Shipped state shows real data or an honest empty state.
+            val designFixture = fixture != null
+            val realFolders = LibraryRepository.folders(songs).map { it.first to "${it.second.size} songs" }
+            val rows: List<Pair<String, String>> = if (designFixture) when (chip) {
+                1 -> DemoData.folders
+                2 -> DemoData.playlists
+                else -> DemoData.songs
+            } else when (chip) {
+                1 -> realFolders
+                2 -> remember(reload, chip) { com.abhi.musicapp.library.PlaylistStore(context).load().map { it.name to "${it.songIds.count { id -> songs.any { s -> s.id == id } }} songs" } }
+                else -> emptyList()
+            }
+
+    LazyColumn(modifier = Modifier.fillMaxSize()) {
         // Measured from his Figma home frame (390x844 dp, 68%-zoom crop rescaled 1:1):
         // header centre y~65, mosaic y 110-272 / 289-450, chips y 471-507, list from y 528.
         val blockBg = com.abhi.musicapp.ui.theme.GrayLight
         val circleBg = com.abhi.musicapp.ui.theme.FigmaWhite // Figma per-use fill style "White" READ on Search circle (63x63 r31.5 pad 20/19); other circles ASSUMED same
         val monoFont = com.abhi.musicapp.ui.theme.GeistMono
+        item {
         Spacer(Modifier.height(46.dp))
         Row(
             modifier = Modifier.fillMaxWidth().height(37.dp).padding(horizontal = 26.dp),
@@ -146,6 +174,8 @@ fun HomeScreen(
         }
         Spacer(Modifier.height(26.dp))
 
+        }
+        item {
         Row(Modifier.padding(horizontal = 26.dp).height(162.dp)) {
             Box(
                 modifier = Modifier
@@ -208,6 +238,8 @@ fun HomeScreen(
                 }
             }
         }
+        }
+        item {
         Spacer(Modifier.height(16.dp))
         Row(Modifier.padding(horizontal = 26.dp).height(162.dp)) {
             Column(
@@ -250,17 +282,8 @@ fun HomeScreen(
         }
         Spacer(Modifier.height(16.dp))
 
-        // Filter chips
-        val chips = if (fixture != null) listOf("All" to "20", "Folders" to "02", "Playlist" to "06", "Artists" to null) // Figma sample numbers (fixture only)
-        else listOf(
-            "All" to songs.size.toString().padStart(2, '0'),
-            "Folders" to LibraryRepository.folders(songs).size.toString().padStart(2, '0'),
-            "Playlist" to remember(reload) { com.abhi.musicapp.library.PlaylistStore(context).load().size }.toString().padStart(2, '0'),
-            "Artists" to null, // no artists view exists; chip is visual only
-        )
-        // Figma Frame 4: one white 475x46 pill (r10, 1px D3D3D1 stroke, pad 6, gap 12) holding the
-        // chips; it overflows the 390 frame, so "Artists" is clipped there too (kept as reference).
-        // User confirmed (2026-11-03): this bar slides horizontally to reveal further categories.
+        }
+        item {
         Row(
             Modifier.fillMaxWidth().testTag("categoryBar")
                 .horizontalScroll(rememberScrollState()),
@@ -283,11 +306,12 @@ fun HomeScreen(
 
         Spacer(Modifier.height(16.dp))
 
+        }
+
         // List content follows the active chip. "All" shows the real on-device
         // library (empty -> demo placeholder rows until permission/scan lands).
         if (chip == 0 && songs.isNotEmpty()) {
-            LazyColumn(modifier = Modifier.weight(1f)) {
-                items(songs.size) { i ->
+            items(songs.size) { i ->
                     val song = songs[i]
                     SongRow(
                         title = song.title,
@@ -305,21 +329,9 @@ fun HomeScreen(
                         },
                     )
                 }
-            }
         } else {
-            // Figma sample rows (DemoData) only in design fixtures (fixture != null). Shipped state shows real data or an honest empty state.
-            val designFixture = fixture != null
-            val realFolders = LibraryRepository.folders(songs).map { it.first to "${it.second.size} songs" }
-            val rows: List<Pair<String, String>> = if (designFixture) when (chip) {
-                1 -> DemoData.folders
-                2 -> DemoData.playlists
-                else -> DemoData.songs
-            } else when (chip) {
-                1 -> realFolders
-                2 -> remember(reload, chip) { com.abhi.musicapp.library.PlaylistStore(context).load().map { it.name to "${it.songIds.count { id -> songs.any { s -> s.id == id } }} songs" } }
-                else -> emptyList()
-            }
             if (rows.isEmpty()) {
+                item {
                 Text(
                     when (chip) {
                         2 -> "No playlists yet. Use Add to playlist in the player menu."
@@ -330,9 +342,9 @@ fun HomeScreen(
                     modifier = Modifier.padding(horizontal = 26.dp).then(
                         if (chip != 2 && !audioGranted) Modifier.clickable { LibraryRepository.openAppSettings(context) } else Modifier),
                 )
+                }
             }
-            LazyColumn(modifier = Modifier.weight(1f)) {
-                items(rows.size) { i ->
+            items(rows.size) { i ->
                     val (title, sub) = rows[i]
                     SongRow(
                         title = title,
@@ -353,12 +365,14 @@ fun HomeScreen(
                         },
                     )
                 }
-            }
         }
 
+    }
         // Figma base Home (36-12141) has no player bar; it appears only in "Home page - song playing". Show only when a track is loaded.
-        androidx.compose.animation.AnimatedVisibility(
-            visible = playerState.hasTrack,
+    // Pinned below the scrolling page: the now-playing bar does not scroll away.
+    androidx.compose.animation.AnimatedVisibility(
+        modifier = Modifier.align(Alignment.BottomCenter),
+        visible = playerState.hasTrack,
             enter = if (com.abhi.musicapp.ui.reducedMotion()) androidx.compose.animation.EnterTransition.None else
                 androidx.compose.animation.slideInVertically(androidx.compose.animation.core.spring(dampingRatio = 0.8f, stiffness = androidx.compose.animation.core.Spring.StiffnessMediumLow)) { it / 2 } + androidx.compose.animation.fadeIn(),
         ) {
@@ -369,7 +383,6 @@ fun HomeScreen(
                 onClick = onOpenPlayer,
             )
         }
-    }
     scanNotice?.let { msg ->
         Box(
             Modifier.align(Alignment.BottomCenter).padding(bottom = if (playerState.hasTrack) 110.dp else 40.dp)
@@ -377,7 +390,6 @@ fun HomeScreen(
                 .padding(horizontal = 18.dp, vertical = 12.dp)
                 .semantics { liveRegion = androidx.compose.ui.semantics.LiveRegionMode.Polite }.testTag("scanNotice"),
         ) { Text(msg, color = androidx.compose.ui.graphics.Color.White, fontSize = 15.sp, fontFamily = com.abhi.musicapp.ui.theme.GeistMono) }
-    }
     }
 
     if (showSort) {
@@ -387,6 +399,7 @@ fun HomeScreen(
         ) {
             SortSheetContent(onDone = { showSort = false })
         }
+    }
     }
 }
 
