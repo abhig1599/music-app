@@ -75,15 +75,20 @@ data class BinRow(val name: String, val daysLeft: Int)
  * touched, nothing is auto-purged, and there is no permanent-deletion path in the app, so Empty Bin stays disabled and the
  * design's "N days left" countdown (which would imply auto-deletion) is replaced by the removal date. Restore shows the song again.
  * [fixture] rows remain design samples for render tests only.
+ * [fixtureEntries] is render-only: it supplies the SHIPPED row path (real BinStore entries + resolved songs)
+ * so the production bin renders in tests without MediaStore; rows show the removal date, never a countdown.
  */
 @Composable
-fun RecycleBinScreen(onBack: () -> Unit, fixture: List<BinRow> = emptyList()) {
+fun RecycleBinScreen(onBack: () -> Unit, fixture: List<BinRow> = emptyList(),
+    fixtureEntries: List<Pair<com.abhi.musicapp.library.BinStore.Entry, com.abhi.musicapp.library.Song?>>? = null) {
     val ctx = androidx.compose.ui.platform.LocalContext.current
     var tick by androidx.compose.runtime.remember { androidx.compose.runtime.mutableIntStateOf(0) }
     val isFixture = fixture.isNotEmpty()
-    var real by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf<List<Pair<com.abhi.musicapp.library.BinStore.Entry, com.abhi.musicapp.library.Song?>>>(emptyList()) }
+    var real by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf<List<Pair<com.abhi.musicapp.library.BinStore.Entry, com.abhi.musicapp.library.Song?>>>(fixtureEntries ?: emptyList()) }
     androidx.compose.runtime.LaunchedEffect(tick) {
-        if (!isFixture) {
+        if (fixtureEntries != null) {
+            real = fixtureEntries
+        } else if (!isFixture) {
             val byId = com.abhi.musicapp.library.LibraryRepository.queryAllSongs(ctx).associateBy { it.id }
             real = com.abhi.musicapp.library.BinStore(ctx).entries().map { it to byId[it.mediaId] }
         }
