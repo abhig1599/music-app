@@ -75,6 +75,23 @@ class ScreenShotTest {
 
     private fun landscapeState() = com.abhi.musicapp.playback.PlayerUiState(title = "Malcolm Todd - Earrings", artist = "", isPlaying = true, positionMs = 61_000L, durationMs = 192_000L, hasTrack = true)
 
+    // TEST RENDERS (software, fixture state, NOT live audio): the "Mixing" source label in each state the user asked to see.
+    private fun mixState(mixing: Boolean) = com.abhi.musicapp.playback.PlayerUiState(title = "Malcolm Todd - Earrings", artist = "", isPlaying = true, positionMs = 61_000L, durationMs = 192_000L, hasTrack = true, mixing = mixing)
+    private fun mixShot(name: String, dots: Int?, mixing: Boolean) {
+        com.abhi.musicapp.ui.screens.mixingDotsOverrideForRender = dots
+        try { shot(name) { PlayerScreen(onBack = {}, fixture = mixState(mixing), progressInFixture = true) } }
+        finally { com.abhi.musicapp.ui.screens.mixingDotsOverrideForRender = null }
+    }
+    @Test fun mixingIdle() = mixShot("mixing_state_0_idle_source_label", null, false)
+    @Test fun mixingDots1() = mixShot("mixing_state_1_dot", 1, true)
+    @Test fun mixingDots2() = mixShot("mixing_state_2_dots", 2, true)
+    @Test fun mixingDots3() = mixShot("mixing_state_3_dots", 3, true)
+    @Test fun mixingLandscapeDots2() {
+        com.abhi.musicapp.ui.screens.mixingDotsOverrideForRender = 2
+        try { shotWide("mixing_state_landscape_2_dots") { PlayerScreen(onBack = {}, fixture = mixState(true), progressInFixture = true) } }
+        finally { com.abhi.musicapp.ui.screens.mixingDotsOverrideForRender = null }
+    }
+
     // TEST RENDERS (software, synthetic levels): landscape 844x390 split, timer face and ferrofluid face.
     @Test fun landscapeTimer() = shotWide("landscape_timer") { PlayerScreen(onBack = {}, fixture = landscapeState(), progressInFixture = true) }
     @Test fun landscapeFerro() = shotWide("landscape_ferrofluid") {

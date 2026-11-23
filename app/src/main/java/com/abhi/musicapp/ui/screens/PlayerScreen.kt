@@ -84,6 +84,9 @@ internal const val DIAL_DP = 301f
  * indicator for exactly the transition window. Reduced motion: static three dots. Fixtures (design snapshots, screenshot tests)
  * also draw the static three dots so they stay deterministic. Otherwise the slot is byte-identical to before.
  */
+/** Render-test seam only: when non-null the Mixing label draws exactly this many dots (1..3) instead of animating. Never set by app code. */
+internal var mixingDotsOverrideForRender: Int? = null
+
 @Composable
 private fun SourceOrMixing(mixing: Boolean, label: String, fontSize: androidx.compose.ui.unit.TextUnit, color: androidx.compose.ui.graphics.Color, animate: Boolean = true) {
     if (!mixing) { Text(label, fontSize = fontSize, fontWeight = FontWeight.Medium, color = color); return }
@@ -94,7 +97,7 @@ private fun SourceOrMixing(mixing: Boolean, label: String, fontSize: androidx.co
         while (true) { dots = dots % 3 + 1; kotlinx.coroutines.delay(450) }
     }
     Text(
-        "Mixing" + ".".repeat(if (reduced) 3 else dots),
+        "Mixing" + ".".repeat(mixingDotsOverrideForRender ?: if (reduced) 3 else dots),
         fontSize = fontSize, fontWeight = FontWeight.Medium,
         style = androidx.compose.ui.text.TextStyle(
             brush = androidx.compose.ui.graphics.Brush.horizontalGradient(
