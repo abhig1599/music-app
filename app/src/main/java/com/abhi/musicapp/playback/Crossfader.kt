@@ -146,6 +146,11 @@ class Crossfader(
     internal val activePlayer: ExoPlayer get() = main
     internal val restorePendingForTest: Boolean get() = restore != null
     internal fun injectIncomingForTest(p: ExoPlayer, toIdx: Int, nudgeFactor: Float = 1f) { incoming = p; toIndex = toIdx; rampStart = 0L; nudge = nudgeFactor; mixing = true }
+    internal val phasePendingForTest: Boolean get() = phasePlan != null || phaseTimerArmed
+    internal fun armPhaseTimerForTest(plan: PhaseTransitionPlanner.Plan, atMs: Long, onStart: () -> Unit) {
+        phasePlan=plan; phaseTimerArmed=true
+        startTimer.arm(atMs,valid={phasePlan===plan},start=onStart,fallback={})
+    }
     internal fun swapForTest() = swap()
     internal fun cancelForTest() = cancel("test")
 
@@ -218,7 +223,7 @@ class Crossfader(
             if (autoMixActive()) tempoOf(main.getMediaItemAt(next)) else null,
             seconds(ctx), dur,
         )
-        val phase = if (autoMixActive() && prefs(ctx).getBoolean("phase_playback",false)) phasePlanOf()?.takeIf { it.aligned } else null
+        val phase = selectPhase(phasePlanOf(),autoMixActive(),prefs(ctx).getBoolean("phase_playback",false))
         val f = phase?.let { (it.fadeMs / speed.toDouble()).toLong() } ?: plan.first
         val remaining = dur - main.currentPosition
         if (!shouldBegin(remaining, f, speed)) return
@@ -241,8 +246,8 @@ class Crossfader(
         }
         incomingReady = l; p.addListener(l)
         p.volume = 0f
-        p.prepare() // decoded and paused at 0; audible start waits for the boundary-aligned ramp
         incoming = p; rampStart = 0L; fadeChecked = false; incomingPrepared = false; beganAt = now
+        p.prepare() // Assign ownership before preparation: synchronous READY/error callbacks must not be overwritten.
         mixing = true
         Log.i(TAG, "armed: fade=${fadeMs}ms, boundary in ${(remaining / sp).toLong()}ms, next index $next")
     }
@@ -320,6 +325,8 @@ class Crossfader(
     }
 
     companion object {
+        internal fun selectPhase(plan: PhaseTransitionPlanner.Plan?, autoMix: Boolean, devEnabled: Boolean): PhaseTransitionPlanner.Plan? =
+            plan?.takeIf { autoMix && devEnabled && it.aligned }
         private const val TAG = "XFADE"
         private fun prefs(c: Context) = c.applicationContext.getSharedPreferences("transitions", Context.MODE_PRIVATE)
         /** Start preparing the incoming deck when the wall-clock time left (media time / speed) is within the fade plus 1.5 s, and not already over. */

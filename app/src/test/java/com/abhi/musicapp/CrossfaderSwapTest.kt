@@ -113,4 +113,22 @@ class CrossfaderSwapTest {
         assertSame(main, cf.activePlayer)
         main.release(); inc.release()
     }
+    @Test fun cancelledPhaseCallbackCannotStartReleasedDeck() {
+        val (cf, main, inc)=make()
+        cf.injectIncomingForTest(inc,1)
+        val plan=com.abhi.musicapp.analysis.PhaseTransitionPlanner.Plan(true,26000,4000,1f,0f,"test")
+        var starts=0
+        cf.armPhaseTimerForTest(plan,android.os.SystemClock.uptimeMillis()+1000) { starts++ }
+        assertTrue(cf.phasePendingForTest)
+        cf.cancelForTest()
+        org.robolectric.Shadows.shadowOf(android.os.Looper.getMainLooper()).idleFor(java.time.Duration.ofSeconds(2))
+        assertEquals(0,starts); assertFalse(cf.phasePendingForTest); assertTrue(inc.isReleased)
+        main.release()
+    }
+    @Test fun experimentalPhaseRequiresExplicitDevelopmentGate() {
+        val plan=com.abhi.musicapp.analysis.PhaseTransitionPlanner.Plan(true,26000,4000,1f,0f,"test")
+        assertEquals(null,Crossfader.selectPhase(plan,true,false))
+        assertEquals(null,Crossfader.selectPhase(plan,false,true))
+        assertSame(plan,Crossfader.selectPhase(plan,true,true))
+    }
 }
