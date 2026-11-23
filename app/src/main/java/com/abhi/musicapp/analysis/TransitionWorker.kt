@@ -18,9 +18,20 @@ class TransitionWorker(private val exec: ExecutorService = Executors.newSingleTh
         token = current; key = id
         try {
             exec.execute {
-                // Throwable, not Exception: the native decode + DSP can fail with an Error (e.g. OOM on long songs);
-                // any failure just means no plan, and the pair falls back to the plain crossfade.
-                val value = try { job { current.get() || Thread.currentThread().isInterrupted } } catch (_: Throwable) { null }
+                // OOM is the one Error worth recovering from: the native decode + DSP can run out of memory
+                // on long songs, and the right outcome is no plan - the pair falls back to the plain crossfade.
+                // Fatal Errors (ThreadDeath, LinkageError, ...) are NOT caught: hiding them would leave the
+                // daemon thread dead and every later pair silently unanalyzed.
+                val value = try {
+                    job { current.get() || Thread.currentThread().isInterrupted }
+                } catch (e: OutOfMemoryError) {
+                    e.printStackTrace()
+                    null
+                } catch (e: Exception) {
+                    // Ordinary failures likewise mean no plan; stderr keeps the cause visible in logcat.
+                    e.printStackTrace()
+                    null
+                }
                 synchronized(this) {
                     // Serializes cancellation with delivery. UI delivery still needs its own generation check.
                     if (token === current && !current.get() && value != null) onResult(value)
