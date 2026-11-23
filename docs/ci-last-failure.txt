@@ -1,0 +1,80 @@
+> Task :app:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :app:checkKotlinGradlePluginConfigurationErrors SKIPPED
+e: The daemon has terminated unexpectedly on startup attempt #1 with error code: 0. The daemon process output:
+CategoryBarScrollTest > categoryBarSwipesToRevealArtists FAILED
+    java.lang.AssertionError at MavenArtifactFetcher.java:129
+        Caused by: java.util.concurrent.ExecutionException at AbstractFuture.java:594
+            Caused by: java.io.IOException at HttpURLConnection.java:2059
+CentreDiscMotionTest > swipeFlipMotion FAILED
+    java.lang.AssertionError at MavenArtifactFetcher.java:129
+        Caused by: java.util.concurrent.ExecutionException at AbstractFuture.java:594
+            Caused by: java.io.IOException at HttpURLConnection.java:2059
+CentreDiscMotionTest > discSitsInsideRingDragZone FAILED
+    java.lang.AssertionError at MavenArtifactFetcher.java:129
+        Caused by: java.util.concurrent.ExecutionException at AbstractFuture.java:594
+            Caused by: java.io.IOException at HttpURLConnection.java:2059
+CentreDiscMotionTest > pausedBackFace FAILED
+    java.lang.AssertionError at MavenArtifactFetcher.java:129
+        Caused by: java.util.concurrent.ExecutionException at AbstractFuture.java:594
+            Caused by: java.io.IOException at HttpURLConnection.java:2059
+CentreDiscMotionTest > swipeFlipReducedMotion FAILED
+    java.lang.AssertionError at MavenArtifactFetcher.java:129
+        Caused by: java.util.concurrent.ExecutionException at AbstractFuture.java:594
+            Caused by: java.io.IOException at HttpURLConnection.java:2059
+CentreDiscTest > facingAndSwipeLogic FAILED
+    java.lang.AssertionError at MavenArtifactFetcher.java:129
+        Caused by: java.util.concurrent.ExecutionException at AbstractFuture.java:594
+            Caused by: java.io.IOException at HttpURLConnection.java:2059
+CentreDiscTest > flipFilmstrip FAILED
+    java.lang.AssertionError at MavenArtifactFetcher.java:129
+        Caused by: java.util.concurrent.ExecutionException at AbstractFuture.java:594
+            Caused by: java.io.IOException at HttpURLConnection.java:2059
+CrossfaderSwapTest > cancelAfterSwapDoesNotTouchTheReleasedPlayer FAILED
+    java.lang.AssertionError at MavenArtifactFetcher.java:129
+        Caused by: java.util.concurrent.ExecutionException at AbstractFuture.java:594
+            Caused by: java.io.IOException at HttpURLConnection.java:2059
+CrossfaderSwapTest > swapMakesIncomingActiveAndReleasesOldAfterTellingTheSession FAILED
+    java.lang.AssertionError at MavenArtifactFetcher.java:129
+        Caused by: java.util.concurrent.ExecutionException at AbstractFuture.java:594
+            Caused by: java.io.IOException at HttpURLConnection.java:2059
+CrossfaderSwapTest > cancelReleasesIncomingAndKeepsMain FAILED
+    java.lang.AssertionError at MavenArtifactFetcher.java:129
+        Caused by: java.util.concurrent.ExecutionException at AbstractFuture.java:594
+            Caused by: java.io.IOException at HttpURLConnection.java:2059
+CrossfaderSwapTest > swapWithoutNudgeLeavesSpeedAloneAndSchedulesNothing FAILED
+    java.lang.AssertionError at MavenArtifactFetcher.java:129
+        Caused by: java.util.concurrent.ExecutionException at AbstractFuture.java:594
+            Caused by: java.io.IOException at HttpURLConnection.java:2059
+CrossfaderSwapTest > muteCarriesIntoTheNewActivePlayer FAILED
+    java.lang.AssertionError at MavenArtifactFetcher.java:129
+        Caused by: java.util.concurrent.ExecutionException at AbstractFuture.java:594
+            Caused by: java.io.IOException at HttpURLConnection.java:2059
+CrossfaderSwapTest > swapWithNudgeKeepsNudgedSpeedAndSchedulesTheEaseBack FAILED
+    java.lang.AssertionError at MavenArtifactFetcher.java:129
+        Caused by: java.util.concurrent.ExecutionException at AbstractFuture.java:594
+            Caused by: java.io.IOException at HttpURLConnection.java:2059
+CrossfaderSwapTest > swapWithNothingIncomingIsANoOp FAILED
+    java.lang.AssertionError at MavenArtifactFetcher.java:129
+        Caused by: java.util.concurrent.ExecutionException at AbstractFuture.java:594
+            Caused by: java.io.IOException at HttpURLConnection.java:2059
+CrossfaderSwapTest > cancelDuringTheEaseSnapsToTheUserSpeed FAILED
+<failure message="java.lang.AssertionError: Failed to fetch maven artifact org.robolectric:android-all-instrumented:14-robolectric-10818077-i6
+<failure message="java.lang.AssertionError: Failed to fetch maven artifact org.robolectric:android-all-instrumented:14-robolectric-10818077-i6
+<failure message="java.lang.AssertionError: Failed to fetch maven artifact org.robolectric:android-all-instrumented:14-robolectric-10818077-i6
+<failure message="java.lang.AssertionError: Failed to fetch maven artifact org.robolectric:android-all-instrumented:14-robolectric-10818077-i6
+<failure message="java.lang.AssertionError: Failed to fetch maven artifact org.robolectric:android-all-instrumented:14-robolectric-10818077-i6
+<failure message="java.lang.AssertionError: Failed to fetch maven artifact org.robolectric:android-all-instrumented:14-robolectric-10818077-i6
+<failure message="java.lang.AssertionError: Failed to fetch maven artifact org.robolectric:android-all-instrumented:14-robolectric-10818077-i6
+<failure message="java.lang.AssertionError: Failed to fetch maven artifact org.robolectric:android-all-instrumented:14-robolectric-10818077-i6
+<failure message="java.lang.AssertionError: Failed to fetch maven artifact org.robolectric:android-all-instrumented:14-robolectric-10818077-i6
+<failure message="java.lang.AssertionError: Failed to fetch maven artifact org.robolectric:android-all-instrumented:14-robolectric-10818077-i6
+<failure message="java.lang.AssertionError: Failed to fetch maven artifact org.robolectric:android-all-instrumented:14-robolectric-10818077-i6
+<failure message="java.lang.AssertionError: Failed to fetch maven artifact org.robolectric:android-all-instrumented:14-robolectric-10818077-i6
+<failure message="java.lang.AssertionError: Failed to fetch maven artifact org.robolectric:android-all-instrumented:14-robolectric-10818077-i6
+<failure message="java.lang.AssertionError: Failed to fetch maven artifact org.robolectric:android-all-instrumented:14-robolectric-10818077-i6
+<failure message="java.lang.AssertionError: Failed to fetch maven artifact org.robolectric:android-all-instrumented:14-robolectric-10818077-i6
+<failure message="java.lang.AssertionError: Failed to fetch maven artifact org.robolectric:android-all-instrumented:14-robolectric-10818077-i6
+<failure message="java.lang.AssertionError: Failed to fetch maven artifact org.robolectric:android-all-instrumented:14-robolectric-10818077-i6
+<failure message="java.lang.AssertionError: Failed to fetch maven artifact org.robolectric:android-all-instrumented:14-robolectric-10818077-i6
+<failure message="java.lang.AssertionError: Failed to fetch maven artifact org.robolectric:android-all-instrumented:14-robolectric-10818077-i6
+<failure message="java.lang.AssertionError: Failed to fetch maven artifact org.robolectric:android-all-instrumented:14-robolectric-10818077-i6
