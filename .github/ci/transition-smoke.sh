@@ -94,7 +94,10 @@ done
 say "onboarding finished: $DONE_OB"; sleep 4
 
 # Arm transitions + PCM capture, then restart so the process re-reads prefs
-adb shell run-as $PKG sh -c "mkdir -p /data/data/$PKG/shared_prefs && printf '%s' '<?xml version=\"1.0\" encoding=\"utf-8\" standalone=\"yes\" ?><map><boolean name=\"on\" value=\"true\" /><int name=\"secs\" value=\"4\" /><boolean name=\"pcm_capture\" value=\"true\" /></map>' > /data/data/$PKG/shared_prefs/transitions.xml" && say "prefs armed via run-as"
+printf '%s' '<?xml version="1.0" encoding="utf-8" standalone="yes" ?><map><boolean name="on" value="true" /><int name="secs" value="4" /><boolean name="pcm_capture" value="true" /></map>' > /tmp/transitions.xml
+adb push /tmp/transitions.xml /data/local/tmp/transitions.xml >/dev/null 2>&1; adb shell chmod 644 /data/local/tmp/transitions.xml
+PREF_OUT=$(adb shell "run-as $PKG sh -c 'mkdir -p shared_prefs && cp /data/local/tmp/transitions.xml shared_prefs/transitions.xml && cat shared_prefs/transitions.xml'" 2>&1)
+say "prefs write result: $PREF_OUT"
 adb shell run-as $PKG rm -rf /data/data/$PKG/files/xfade_pcm
 adb shell am force-stop $PKG; sleep 2
 adb shell am start -n $PKG/com.abhi.musicapp.MainActivity >/dev/null; sleep 6
