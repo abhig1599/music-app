@@ -5,18 +5,19 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
-import kotlin.math.pow
 import kotlin.math.sin
 
 /**
- * The tail detector acts only on near-zero SAMPLE evidence (per-frame peak over all channels).
- * Quiet music, reverb, hiss, sparse transients, out-of-phase content, broken input and truncated
- * decodes must all abstain, so the transition keeps the real file end.
+ * The tail detector acts only on near-zero SAMPLE evidence (per-frame peak over all channels), requires
+ * complete coverage of the media end (clamped overhang; undercoverage only via EOS proof), and always
+ * retains [ContentEndDetector.RETAINED_QUIET_MS] of quiet inside the boundary. Quiet music, reverb, hiss,
+ * sparse transients, out-of-phase content, broken input and truncated decodes must all abstain.
  */
 class ContentEndDetectorTest {
     private val sr = 44100
     private val durMs = 200_000L
     private val frameLen = sr * ContentEndDetector.FRAME_MS / 1000
+    private val retain = ContentEndDetector.RETAINED_QUIET_MS
 
     /** Interleaved PCM for a [windowSec] window; [peakAt] gives the sine amplitude (linear) per second, per channel. */
     private fun pcm(windowSec: Int, channels: Int = 1, peakAt: (Double, Int) -> Double): FloatArray {
@@ -28,16 +29,17 @@ class ContentEndDetectorTest {
         }
     }
 
-    private fun peaks(samples: FloatArray, channels: Int = 1) = ContentEndDetector.framePeaks(samples, channels, frameLen * channels / channels)
-    private fun detect(p: FloatArray, startMs: Long = durMs - 10_000, coverEndMs: Long = durMs, dur: Long = durMs) =
-        ContentEndDetector.detect(p, startMs, coverEndMs, dur)
+    private fun peaks(samples: FloatArray, channels: Int = 1) = ContentEndDetector.framePeaks(samples, channels, frameLen)
+    // Production always passes eos = true: decodeTailWindow returns null unless the codec signaled end-of-stream.
+    private fun detect(p: FloatArray, startMs: Long = durMs - 10_000, coverEndMs: Long = durMs, dur: Long = durMs, eos: Boolean = true) =
+        ContentEndDetector.detect(p, startMs, coverEndMs, dur, eos)
 
-    @Test fun nearZeroTailIsTrimmed() {
+    @Test fun nearZeroTailIsTrimmedWithRetainedMargin() {
         val p = peaks(pcm(10) { t, _ -> if (t < 7.0) 0.5 else 0.0 })
         val r = detect(p)
         assertEquals("trailing near-zero samples", r.reason)
-        assertEquals(3000L, r.trimMs)
-        assertEquals(durMs - 3000L, r.contentEndMs)
+        assertEquals(3000L - retain, r.trimMs) // 250 ms of quiet stays inside the boundary
+        assertEquals(durMs - (3000L - retain), r.contentEndMs)
     }
 
     @Test fun quietMusicalTailAbstains() {
@@ -53,13 +55,12 @@ class ContentEndDetectorTest {
     @Test fun belowThresholdNoiseIsTrimmed_andThatIsTheDocumentedBehavior() {
         // -85 dBFS peak: near-zero sample evidence. Trimmed by design; NOT a claim of inaudibility.
         val p = peaks(pcm(10) { t, _ -> if (t < 7.0) 0.5 else 5.6e-5 })
-        assertEquals(3000L, detect(p).trimMs)
+        assertEquals(3000L - retain, detect(p).trimMs)
     }
 
     @Test fun sparseTransientIsNotTrimmed() {
         // One -20 dBFS click half a second before the end: per-frame PEAK evidence catches it (an RMS frame
-        // could have averaged it away). The click and everything before it survive; only the 450 ms of
-        // near-zero samples after it may trim.
+        // could have averaged it away). The click and 250 ms of the quiet after it survive.
         val p = peaks(pcm(10) { t, _ ->
             when {
                 t < 7.0 -> 0.5
@@ -68,8 +69,8 @@ class ContentEndDetectorTest {
             }
         })
         val r = detect(p)
-        assertEquals(450L, r.trimMs)
-        assertEquals(durMs - 450L, r.contentEndMs) // the click at ~9.5 s into the window is well inside the kept part
+        assertEquals(450L - retain, r.trimMs)
+        assertEquals(durMs - (450L - retain), r.contentEndMs)
     }
 
     @Test fun outOfPhaseStereoTailIsNotCancelledToSilence() {
@@ -92,14 +93,24 @@ class ContentEndDetectorTest {
 
     @Test fun truncatedDecodeAbstains() {
         val p = peaks(pcm(10) { t, _ -> if (t < 7.0) 0.5 else 0.0 })
-        // Decoder gave up 2 s before the file end: the quiet tail cannot be proven.
-        assertNull(detect(p, coverEndMs = durMs - 2_000).contentEndMs)
+        // Decoder gave up 2 s before the file end (no EOS): the quiet tail cannot be proven.
+        assertNull(detect(p, coverEndMs = durMs - 2_000, eos = false).contentEndMs)
+        // ANY undercoverage without EOS abstains - even 20 ms.
+        assertNull(detect(p, coverEndMs = durMs - 20, eos = false).contentEndMs)
+        // With EOS, the decoded end IS the actual media end: 100 ms of container overstatement is accepted
+        // and the boundary lands on the actual end minus the trim.
+        val r = detect(p, coverEndMs = durMs - 100, eos = true)
+        assertEquals(3000L - retain, r.trimMs)
+        assertEquals(durMs - 100 - (3000L - retain), r.contentEndMs)
+        // With EOS but the declared duration far exceeding the stream, the file is broken: abstain.
+        assertNull(detect(p, coverEndMs = durMs - 2_000, eos = true).contentEndMs)
     }
 
-    @Test fun overhangBeyondFileEndIsSubtracted() {
+    @Test fun overhangBeyondFileEndIsClampedAndSubtracted() {
         val p = peaks(pcm(10) { t, _ -> if (t < 7.0) 0.5 else 0.0 })
-        val r = detect(p, coverEndMs = durMs + 500) // decoder padded 500 ms past the file end
-        assertEquals(2500L, r.trimMs)
+        val r = detect(p, coverEndMs = durMs + 500, eos = false) // decoder padded 500 ms past the file end
+        assertEquals(2500L - retain, r.trimMs)
+        assertEquals(durMs - (2500L - retain), r.contentEndMs)
     }
 
     @Test fun staleDurationAbstains() {
@@ -110,11 +121,12 @@ class ContentEndDetectorTest {
 
     @Test fun cancellationAbstains() {
         val p = peaks(pcm(10) { t, _ -> if (t < 7.0) 0.5 else 0.0 })
-        assertNull(ContentEndDetector.detect(p, durMs - 10_000, durMs, durMs) { true }.contentEndMs)
+        assertNull(ContentEndDetector.detect(p, durMs - 10_000, durMs, durMs, true) { true }.contentEndMs)
     }
 
     @Test fun shortSilenceBelowMinimumAbstains() {
-        val p = peaks(pcm(10) { t, _ -> if (t < 9.9) 0.5 else 0.0 }) // 100 ms
+        // 500 ms of quiet minus the 250 ms retained margin is below MIN_TRIM: not worth trimming.
+        val p = peaks(pcm(10) { t, _ -> if (t < 9.5) 0.5 else 0.0 })
         assertNull(detect(p).contentEndMs)
     }
 
@@ -144,11 +156,11 @@ class ContentEndDetectorTest {
             (if (t < 7.0) 0.5 * sin(2 * Math.PI * 220 * t) else 0.0).toFloat()
         }
         val p = ContentEndDetector.framePeaks(samples, 1, fl)
-        assertEquals(3000L, ContentEndDetector.detect(p, durMs - 10_000, durMs, durMs).trimMs)
+        assertEquals(3000L - retain, ContentEndDetector.detect(p, durMs - 10_000, durMs, durMs, true).trimMs)
     }
 
     @Test fun emptyInputAbstains() {
-        assertNull(ContentEndDetector.detect(FloatArray(0), 0, 1000, 1000).contentEndMs)
+        assertNull(ContentEndDetector.detect(FloatArray(0), 0, 1000, 1000, true).contentEndMs)
     }
 
     @Test fun framePeaksTakesMaxAcrossChannels() {
