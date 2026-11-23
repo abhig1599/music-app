@@ -104,7 +104,7 @@ for i in $(seq 1 16); do
   grep -q 'ramp start:' $OUT/xfade_log.txt && RAMP=1
   grep -q 'swap:' $OUT/xfade_log.txt && SWAP=1
   if [ "$RAMP" = "1" ] && [ "$SWAP" = "0" ] && [ "$SAW_MIXING" = "0" ]; then
-    refresh; grep -q 'Mixing' /tmp/ui.xml && { SAW_MIXING=1; say "UI shows Mixing label during ramp: yes"; }
+    refresh; grep -q 'Mixing' /tmp/ui.xml && { SAW_MIXING=1; say "UI shows Mixing label during ramp: yes"; adb exec-out screencap -p > $OUT/mixing_label.png 2>/dev/null && say "screenshot: mixing_label.png captured during the ramp"; }
   fi
   [ "$SWAP" = "1" ] && break
 done
@@ -181,6 +181,9 @@ PY
 
 NF=$(adb logcat -d | grep -c 'FATAL EXCEPTION')
 say "FATAL EXCEPTION count: $NF"
+# Disarm the capture pref and wipe the tap dir: the PCM tap is for controlled synthetic-tone fixtures only, never user music.
+adb shell run-as $PKG sh -c "printf '%s' '<?xml version=\"1.0\" encoding=\"utf-8\" standalone=\"yes\" ?><map><boolean name=\"on\" value=\"true\" /><int name=\"secs\" value=\"4\" /><boolean name=\"pcm_capture\" value=\"false\" /></map>' > /data/data/$PKG/shared_prefs/transitions.xml; rm -rf /data/data/$PKG/files/xfade_pcm" 2>/dev/null
+say "pcm_capture disarmed and tap dir wiped"
 if [ "$ARMED" = "1" ] && [ "$RAMP" = "1" ] && [ "$SAW_SWAP" = "1" ] && [ "${BOTH:-0}" -gt 8 ] && [ "$SAW_MIXING" = "1" ] && [ "$NF" = "0" ]; then
   say "TRANSITION VERDICT: OVERLAP CONFIRMED (log gains + per-deck PCM + UI label; emulator, synthetic tones)"
   exit 0

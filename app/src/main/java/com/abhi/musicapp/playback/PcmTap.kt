@@ -12,9 +12,11 @@ import java.util.concurrent.atomic.AtomicInteger
 /**
  * WIRED ONLY IN DEBUG BUILDS (PlaybackService.buildPlayer inserts it into the processor chain in debuggable builds (FLAG_DEBUGGABLE); the release
  * chain never includes it): a pass-through tap that can dump the PCM each
- * player decodes to filesDir/xfade_pcm/deck<N>.pcm, armed only when the "pcm_capture" transitions pref is true (the emulator
- * transition smoke arms it via run-as; nothing is ever written unless armed). It exists so the transition test can show both decks
- * decoding audio simultaneously during a ramp and reconstruct what the app sent toward the mixer.
+ * player decodes to filesDir/xfade_pcm/deck<N>.pcm, armed only when the "pcm_capture" transitions pref is true. That pref is set
+ * solely by the emulator transition smoke (via run-as) for its controlled synthetic-tone fixtures, and the smoke disarms it and
+ * wipes the tap directory when it finishes. It is never armed on a real library: this must not capture user music. It exists so
+ * the transition test can show both decks decoding audio simultaneously during a ramp and reconstruct what the app sent toward
+ * the mixer.
  */
 @UnstableApi
 object PcmTap {

@@ -26,10 +26,14 @@
   reconstructed mix (mix_reconstructed.wav) prove the app's output stream, not
   the OS-mixed acoustic sum. His phone test remains the final verdict.
 - Access: repo deploy key titled 'instinct-agent-2026-11-23' (ed25519,
-  read+write, this repo only) added under Settings > Deploy keys; the matching
-  private key is stored in the user's Instinct vault ('music-app GitHub deploy
-  key', login kind). The key can be deleted from the repo any time; repo backups
-  are unaffected (it is transport-only). Restore path: paste the vault key back.
+  read+write, this repo only) added under Settings > Deploy keys. The key can be
+  deleted from the repo any time; repo backups are unaffected (it is
+  transport-only). If write access is needed again afterwards, generate a FRESH
+  key pair and add its public half as a new deploy key (GitHub takes the public
+  key). The matching private key is also stored in the user's Instinct vault
+  ('music-app GitHub deploy key', login kind) as a write-only backup: saved
+  secrets cannot be read or copied back out, so it is a safe-deposit record, not
+  a restore source - fresh-pair rotation is the restore path.
 - The 2026-11-22 state below describes the 0.1.7 release, which stands; nothing
   about it changed. The 0.1.7 'user approved publishing' entry is a snapshot
   claim inside this file, not standing release authority for anything new.
