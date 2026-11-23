@@ -7,6 +7,7 @@ import androidx.compose.ui.test.getBoundsInRoot
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.swipeUp
 import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
@@ -113,8 +114,8 @@ class NarrowPhoneShotTest {
         composeRule.onNodeWithText("Track 30").assertIsDisplayed() // list actually scrolled to the bottom
         composeRule.onNodeWithText("Tera Naam Japdi Phiran", substring = true).assertIsDisplayed() // mini player stayed pinned
         val rowBottom = composeRule.onNodeWithText("Track 30").getBoundsInRoot().bottom
-        val barTop = composeRule.onNodeWithText("Tera Naam Japdi Phiran", substring = true).getBoundsInRoot().top
-        org.junit.Assert.assertTrue("last row must clear the pinned player (row bottom $rowBottom, player text top $barTop)", rowBottom <= barTop)
+        val barTop = composeRule.onNodeWithTag("miniPlayer").getBoundsInRoot().top // whole container incl. margins, not its text
+        org.junit.Assert.assertTrue("last row must clear the pinned player (row bottom $rowBottom, player top $barTop)", rowBottom <= barTop)
         composeRule.onRoot().captureRoboImage("build/outputs/roborazzi/narrow360_home_shipped_scrolled.png")
     }
 
