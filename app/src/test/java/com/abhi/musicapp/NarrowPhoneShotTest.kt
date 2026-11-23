@@ -3,6 +3,7 @@ package com.abhi.musicapp
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.getBoundsInRoot
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.swipeUp
 import androidx.compose.ui.test.onAllNodesWithText
@@ -107,10 +108,13 @@ class NarrowPhoneShotTest {
         composeRule.setContent { FitDesignWidth { MusicAppTheme { bg { HomeScreen({}, {}, {}, {}, {}, {}, fixture = track, songsFixture = libraryFixture()) }() } } }
         composeRule.waitForIdle()
         composeRule.onNodeWithText("Not checked").assertIsDisplayed() // header pill visible before scrolling
-        repeat(3) { composeRule.onRoot().performTouchInput { swipeUp() }; composeRule.waitForIdle() }
+        repeat(4) { composeRule.onRoot().performTouchInput { swipeUp() }; composeRule.waitForIdle() }
         composeRule.onNodeWithText("Not checked").assertDoesNotExist() // header scrolled away with the page
         composeRule.onNodeWithText("Track 30").assertIsDisplayed() // list actually scrolled to the bottom
         composeRule.onNodeWithText("Tera Naam Japdi Phiran", substring = true).assertIsDisplayed() // mini player stayed pinned
+        val rowBottom = composeRule.onNodeWithText("Track 30").getBoundsInRoot().bottom
+        val barTop = composeRule.onNodeWithText("Tera Naam Japdi Phiran", substring = true).getBoundsInRoot().top
+        org.junit.Assert.assertTrue("last row must clear the pinned player (row bottom $rowBottom, player text top $barTop)", rowBottom <= barTop)
         composeRule.onRoot().captureRoboImage("build/outputs/roborazzi/narrow360_home_shipped_scrolled.png")
     }
 
