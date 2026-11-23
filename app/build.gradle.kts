@@ -84,3 +84,9 @@ dependencies {
     testImplementation("io.github.takahirom.roborazzi:roborazzi:1.26.0")
     testImplementation("io.github.takahirom.roborazzi:roborazzi-compose:1.26.0")
 }
+
+// Use Maven Central's canonical artifact endpoint for Robolectric's runtime SDK resolver.
+// Gradle dependency repositories do not configure that separate downloader.
+tasks.withType<org.gradle.api.tasks.testing.Test>().configureEach {
+    systemProperty("robolectric.dependency.repo.url", "https://repo.maven.apache.org/maven2")
+}
