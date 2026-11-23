@@ -236,6 +236,7 @@ class Crossfader(
         val decision = decideArm(dur, main.currentPosition, speed, phase, seconds(ctx)*1000L) ?: return
         phasePlan = phase; phaseTimerArmed = false; phaseSpeed = speed
         fadeMs = decision.fadeMs; nudge = phase?.incomingSpeedRatio ?: 1f; toIndex = next
+        val sp = if (speed > 0f) speed else 1f
         val now = SystemClock.uptimeMillis()
         deadlineMs = now + decision.deadlineAfterMs
         plannedStartMs = deadlineMs - fadeMs
@@ -255,7 +256,7 @@ class Crossfader(
         incoming = p; rampStart = 0L; fadeChecked = false; incomingPrepared = false; beganAt = now
         mixing = true
         p.prepare() // Assign ownership and indicator before preparation: synchronous errors may cancel both.
-        Log.i(TAG, "armed: fade=${fadeMs}ms, boundary in ${(remaining / sp).toLong()}ms, next index $next")
+        Log.i(TAG, "armed: fade=${fadeMs}ms, boundary in ${decision.deadlineAfterMs}ms, next index $next")
     }
 
     private fun preparePhaseStart(inc: ExoPlayer) {
