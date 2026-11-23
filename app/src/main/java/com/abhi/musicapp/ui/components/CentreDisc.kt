@@ -124,8 +124,9 @@ fun CentreDisc(
 internal var clayClockOverride: (() -> Long)? = null
 
 @Composable
-fun ClayBlob(levels: (() -> FloatArray?)?, tick: State<Long>?, beat: (() -> Float)? = null, clockNs: () -> Long = { clayClockOverride?.invoke() ?: System.nanoTime() }, tuning: ClayTuning = ClayTuning.CURRENT, smoother: ClaySmoother = remember(tuning) { ClaySmoother(LOBES, tuning.attackS, tuning.releaseS) }) {
+fun ClayBlob(levels: (() -> FloatArray?)?, tick: State<Long>?, beat: (() -> Float)? = null, clockNs: () -> Long = { clayClockOverride?.invoke() ?: System.nanoTime() }, smoother: ClaySmoother? = null, tuning: ClayTuning = ClayTuning.CURRENT) {
     val drops = remember { ClayDrops() }
+    val sm0 = smoother ?: remember(tuning) { ClaySmoother(LOBES, tuning.attackS, tuning.releaseS) }
     Canvas(Modifier.fillMaxSize()) {
         tick?.value // redraw every frame while live
         val lv = levels?.invoke()
@@ -141,7 +142,7 @@ fun ClayBlob(levels: (() -> FloatArray?)?, tick: State<Long>?, beat: (() -> Floa
         val capL = r * 0.34f
         val ang = DoubleArray(lobes) { i -> LOBE_BASE[i] + 0.12 * sec + 0.9 * sin(0.31 * sec + i * 1.7) }
         // Quick to grow with the music, slow to settle, so a quiet moment glides back to the resting circle instead of snapping.
-        val sm = smoother.step(clayTargets(lv, b, sec, tuning), now)
+        val sm = sm0.step(clayTargets(lv, b, sec, tuning), now)
         val len = FloatArray(lobes) { sm[it] * r }
         val clay = Brush.radialGradient(0f to Color(0xFF4A4A4E), 1f to Color(0xFF38383C), center = Offset(c.x - r * 0.06f, c.y - r * 0.08f), radius = r * 0.8f)
         // Chunky clay: the core and each lobe are unions of overlapping circles (thick neck, rounded bulb at the tip), so lobes are fat and
