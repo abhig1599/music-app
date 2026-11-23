@@ -89,9 +89,9 @@ class ScreenShotTest {
     // PREVIEW ONLY (not approved palette): same light-weight label with the shipped colours vs a muted variant, for his review.
     @Test fun mixingPreviewLightCurrentPalette() = mixShot("mixing_preview_light_current_palette", 3, true)
     @Test fun mixingPreviewLightMutedPalette() {
+        // His clarification (17:33): "muted means light gray" - a solid light gray, not a desaturated gradient.
         com.abhi.musicapp.ui.screens.mixingPaletteForRender = listOf(
-            androidx.compose.ui.graphics.Color(0xFFE8A46C), androidx.compose.ui.graphics.Color(0xFFE08FB0),
-            androidx.compose.ui.graphics.Color(0xFFA394DC), androidx.compose.ui.graphics.Color(0xFF7FAEE6),
+            androidx.compose.ui.graphics.Color(0xFFA6A6A6), androidx.compose.ui.graphics.Color(0xFFA6A6A6),
         )
         try { mixShot("mixing_preview_light_muted_palette", 3, true) }
         finally { com.abhi.musicapp.ui.screens.mixingPaletteForRender = null }
