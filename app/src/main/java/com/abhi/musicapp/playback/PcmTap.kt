@@ -10,7 +10,7 @@ import java.nio.ByteBuffer
 import java.util.concurrent.atomic.AtomicInteger
 
 /**
- * WIRED ONLY IN DEBUG BUILDS (PlaybackService.buildPlayer inserts it into the processor chain under BuildConfig.DEBUG; the release
+ * WIRED ONLY IN DEBUG BUILDS (PlaybackService.buildPlayer inserts it into the processor chain in debuggable builds (FLAG_DEBUGGABLE); the release
  * chain never includes it): a pass-through tap that can dump the PCM each
  * player decodes to filesDir/xfade_pcm/deck<N>.pcm, armed only when the "pcm_capture" transitions pref is true (the emulator
  * transition smoke arms it via run-as; nothing is ever written unless armed). It exists so the transition test can show both decks

@@ -85,8 +85,8 @@ class PlaybackService : MediaSessionService() {
                     .setEnableFloatOutput(enableFloatOutput)
                     .setEnableAudioTrackPlaybackParams(enableAudioTrackPlaybackParams)
                     .setAudioProcessors(
-                        // PcmTap is debug-only and writes nothing unless the smoke arms its pref; release builds get the level tap alone.
-                        if (com.abhi.musicapp.BuildConfig.DEBUG) arrayOf(AudioLevels.newProcessor(), PcmTap.newProcessor(context))
+                        // PcmTap is wired only into debuggable builds and writes nothing unless the smoke arms its pref; release builds get the level tap alone.
+                        if ((context.applicationInfo.flags and android.content.pm.ApplicationInfo.FLAG_DEBUGGABLE) != 0) arrayOf(AudioLevels.newProcessor(), PcmTap.newProcessor(context))
                         else arrayOf(AudioLevels.newProcessor()),
                     )
                     .build()
