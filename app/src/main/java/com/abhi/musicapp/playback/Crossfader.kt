@@ -57,8 +57,8 @@ class Crossfader(
     private val onSwap: (ExoPlayer) -> Unit,
     private val onItemChanged: (ExoPlayer) -> Unit = {},
     private val autoMixActive: () -> Boolean = { AutoMix.active(ctx) },
-    private val tempoOf: (androidx.media3.common.MediaItem) -> Float? = { item ->
-        TempoCache.cached(ctx, TempoCache.keyFor(ctx, item.localConfiguration?.uri, item.mediaId))?.takeIf { it > 0f }
+    private val tempoOf: (androidx.media3.common.MediaItem) -> TempoResult? = { item ->
+        TempoCache.cachedResult(ctx, TempoCache.keyFor(ctx, item.localConfiguration?.uri, item.mediaId))
     },
 ) {
     private val handler = Handler(Looper.getMainLooper())
@@ -199,7 +199,7 @@ class Crossfader(
         val dur = main.duration
         if (dur == C.TIME_UNSET || dur <= 0L) return
         val speed = main.playbackParameters.speed
-        val plan = plannedTransition(
+        val plan = plannedMeasuredTransition(
             if (autoMixActive()) main.currentMediaItem?.let(tempoOf) else null,
             if (autoMixActive()) tempoOf(main.getMediaItemAt(next)) else null,
             seconds(ctx), dur,
@@ -310,6 +310,16 @@ class Crossfader(
          * passing null) means the plain crossfade: the user's seconds capped at a third of the PLAYING song. A tempo-matched plan is also
          * capped at a third of the playing song, and falls back to plain when that leaves under 500 ms. Pure maths for unit tests.
          */
+        /** Production entry point retains analysis confidence rather than inventing certainty. */
+        internal fun plannedMeasuredTransition(out: TempoResult?, incoming: TempoResult?, userSecs: Int, outDurMs: Long): Pair<Long, Float> {
+            val plain = min(userSecs.coerceIn(1,12)*1000L, if (outDurMs > 0L) outDurMs/3 else Long.MAX_VALUE)
+            if (out == null || incoming == null || outDurMs <= 0) return plain to 1f
+            val p = AutoMixPlanner.plan(out,incoming,userSecs)
+            if (!p.beatMatched) return plain to 1f
+            val fade = min(p.fadeMs,outDurMs/3)
+            return if (fade < 500) plain to 1f else fade to p.incomingSpeed
+        }
+
         internal fun plannedTransition(outBpm: Float?, inBpm: Float?, userSecs: Int, outDurMs: Long): Pair<Long, Float> {
             val plain = min(userSecs.coerceIn(1, 12) * 1000L, if (outDurMs > 0L) outDurMs / 3 else Long.MAX_VALUE)
             if (outBpm == null || inBpm == null || outDurMs <= 0L) return plain to 1f

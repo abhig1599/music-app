@@ -76,4 +76,11 @@ class AutoMixTransitionTest {
             }
         }
     }
+    @Test fun measuredConfidenceIsNotUpgradedToCertain() {
+        val weak = com.abhi.musicapp.analysis.TempoResult(120f,.74f)
+        val strong = com.abhi.musicapp.analysis.TempoResult(124f,.9f)
+        assertEquals(8000L to 1f,Crossfader.plannedMeasuredTransition(weak,strong,8,180000))
+        val accepted=Crossfader.plannedMeasuredTransition(weak.copy(confidence=.9f),strong,8,180000)
+        assertTrue(accepted.second < 1f)
+    }
 }

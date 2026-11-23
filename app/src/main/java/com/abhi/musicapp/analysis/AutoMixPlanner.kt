@@ -21,8 +21,11 @@ object AutoMixPlanner {
 
     fun plan(out: TempoResult, into: TempoResult, userFadeSec: Int): Plan {
         val plain = Plan(false, userFadeSec.coerceIn(1, 12) * 1000L, 1f)
+        if (!out.confidence.isFinite() || !into.confidence.isFinite() ||
+            out.confidence !in .75f..1f || into.confidence !in .75f..1f) return plain
         val a = out.bpm ?: return plain
         val b = into.bpm ?: return plain
+        if (!a.isFinite() || !b.isFinite() || a !in 60f..180f || b !in 60f..180f) return plain
         val ratio = matchRatio(a, b) ?: return plain // incoming speed needed to match the outgoing tempo
         val nudge = ratio - 1f
         if (abs(nudge) > MAX_NUDGE) return plain

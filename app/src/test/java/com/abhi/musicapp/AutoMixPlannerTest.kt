@@ -30,4 +30,11 @@ class AutoMixPlannerTest {
         val p = AutoMixPlanner.plan(t(70f), t(140f), 8)
         assertTrue(p.beatMatched); assertEquals(1f, p.incomingSpeed, 0.001f)
     }
+    @Test fun weakAndInvalidEvidenceCannotChangePlaybackSpeed() {
+        for (bad in listOf(TempoResult(120f,.74f),TempoResult(120f,Float.NaN),
+            TempoResult(Float.NaN,1f),TempoResult(120f,1.1f))) {
+            val p=AutoMixPlanner.plan(bad,t(124f),8)
+            assertFalse(p.beatMatched); assertEquals(1f,p.incomingSpeed,0f)
+        }
+    }
 }
