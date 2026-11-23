@@ -34,6 +34,19 @@ class BeatGridAnalyzerTest {
             assertEquals(bpm, r.bpm!!, 2.5f)
         }
     }
+    @Test fun randomNoiseAbstains() {
+        val random = java.util.Random(7)
+        assertTrue(BeatGridAnalyzer.analyze(FloatArray(sr * 24) { (random.nextFloat() - .5f) * .5f }, sr).timesSeconds.isEmpty())
+    }
+    @Test fun incompatibleTempoChangeAbstains() {
+        val first = clickTrack(120f, .237f).copyOfRange(0, sr * 16)
+        val second = clickTrack(90f, .237f).copyOfRange(0, sr * 16)
+        assertTrue(BeatGridAnalyzer.analyze(first + second, sr).timesSeconds.isEmpty())
+    }
+    @Test fun nonfiniteInputAbstains() {
+        val x = clickTrack(120f, .237f); x[4] = Float.NaN
+        assertTrue(BeatGridAnalyzer.analyze(x, sr).timesSeconds.isEmpty())
+    }
     @Test fun silenceAndShortInputAbstain() {
         assertTrue(BeatGridAnalyzer.analyze(FloatArray(sr * 24), sr).timesSeconds.isEmpty())
         assertTrue(BeatGridAnalyzer.analyze(FloatArray(sr), sr).timesSeconds.isEmpty())

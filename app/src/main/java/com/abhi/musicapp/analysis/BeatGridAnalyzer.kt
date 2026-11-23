@@ -9,9 +9,24 @@ object BeatGridAnalyzer {
     private const val HOP = 256
     private const val WIN = 1024
     fun analyze(samples: FloatArray, sampleRate: Int): BeatGrid {
+        if (sampleRate <= 0 || samples.any { !it.isFinite() }) return BeatGrid(emptyList(), 0f, null)
         val tempo = TempoAnalyzer.analyze(samples, sampleRate)
         val bpm = tempo.bpm ?: return BeatGrid(emptyList(), 0f, null)
         if (sampleRate <= 0 || samples.size < sampleRate * 8) return BeatGrid(emptyList(), 0f, null)
+        // A single global grid must not bridge incompatible local tempi with invented beats.
+        // Local BPM checks do not prove phase accuracy, but reject obvious variable-tempo passages.
+        val span = sampleRate * 10
+        if (samples.size >= span * 2) {
+            var start = 0
+            while (start + span <= samples.size) {
+                val local = TempoAnalyzer.analyze(samples.copyOfRange(start, start + span), sampleRate)
+                if (local.bpm != null && local.confidence >= .5f) {
+                    val gap = floatArrayOf(.5f, 1f, 2f).minOf { abs(local.bpm * it / bpm - 1f) }
+                    if (gap > .06f) return BeatGrid(emptyList(), 0f, bpm)
+                }
+                start += span / 2
+            }
+        }
         val frames = (samples.size - WIN) / HOP + 1
         val envelope = FloatArray(frames)
         var previous = 0f
