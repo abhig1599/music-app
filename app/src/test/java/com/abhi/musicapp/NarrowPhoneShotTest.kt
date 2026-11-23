@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.swipeUp
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
@@ -142,7 +143,7 @@ class NarrowPhoneShotTest {
         composeRule.waitForIdle()
         composeRule.onNodeWithText("Track 03").assertIsDisplayed()
         composeRule.onNodeWithText("days left", substring = true).assertDoesNotExist()
-        composeRule.onNodeWithText("file untouched", substring = true).assertIsDisplayed()
+        org.junit.Assert.assertEquals(2, composeRule.onAllNodesWithText("file untouched", substring = true).fetchSemanticsNodes().size) // one per bin row
         composeRule.onNodeWithText("nothing is ever deleted automatically", substring = true).assertIsDisplayed()
         composeRule.onRoot().captureRoboImage("build/outputs/roborazzi/narrow360_recycle_bin_shipped.png")
     }
