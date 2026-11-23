@@ -82,10 +82,13 @@ GR=$(adb shell dumpsys package $PKG | grep -c 'READ_MEDIA_AUDIO: granted=true')
 [ "$GR" = "0" ] && adb shell pm grant $PKG android.permission.READ_MEDIA_AUDIO
 # Onboarding finisher: run 5 showed the app still on the language page (so onboarding never completed and the library never showed).
 # Walk forward with whatever button is on screen, up to 10 steps, until "Get Started" has been tapped.
+# Run 6 showed the app had left the foreground (launcher focus) before this point: `pm grant` of the audio permission can kill the
+# app process. Bring the activity back first, and again whenever no button is visible.
+adb shell am start -n $PKG/com.abhi.musicapp.MainActivity >/dev/null; sleep 6
 DONE_OB=0
 for step in $(seq 1 10); do
   if tap_exact "Get Started"; then say "onboarding step $step: Get Started tapped"; DONE_OB=1; break; fi
-  if tap_exact "Next"; then say "onboarding step $step: Next tapped"; else say "onboarding step $step: no Next/Get Started on screen"; fi
+  if tap_exact "Next"; then say "onboarding step $step: Next tapped"; else say "onboarding step $step: no Next/Get Started on screen (relaunching)"; adb shell am start -n $PKG/com.abhi.musicapp.MainActivity >/dev/null; sleep 4; fi
   sleep 3
 done
 say "onboarding finished: $DONE_OB"; sleep 4
