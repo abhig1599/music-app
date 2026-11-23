@@ -71,7 +71,7 @@ What changed (Crossfader.kt, SettingsScreen.kt, PlayerScreen.kt, PlayerManager.k
 - Incoming deck is prepared paused ahead of time; the ramp starts so it ENDS exactly at the natural track end (fadeWindow maths).
 - Settings: AutoMix on forces Crossfade on; Crossfade off drops AutoMix; engine gate also honours the saved 0.1.7 state.
 - Player shows gradient "Mixing." -> "Mixing.." -> "Mixing..." only while a transition is genuinely armed/fading.
-- XFADE logcat diagnostics; DEBUG-ONLY per-deck PCM tap (PcmTap, pref-armed), wired into the processor chain only in debug builds.
+- XFADE logcat diagnostics; DEBUG-ONLY per-deck PCM tap (PcmTap, pref-armed), present in the audio chain only in -PpcmTap=true builds (the smoke), never in candidates.
 
 Verification here:
 - Unit/Robolectric: fadeWindow timing maths, transitionsAllowed gate incl. the 0.1.7 state, incoming-deck queue/start mirror,

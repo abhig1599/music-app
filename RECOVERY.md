@@ -18,7 +18,7 @@
 - Working branch state: fixes on top of 4ba44c7 (main) -
   boundary-aligned fades (ramp ends at the natural end; no early chop),
   AutoMix/Crossfade switch coherence (and gate), "Mixing" gradient indicator
-  from the service-side state, XFADE diagnostics, DEBUG-only PCM tap (PcmTap),
+  from the service-side state, XFADE diagnostics, PCM tap (PcmTap, -PpcmTap=true builds only),
   emulator transition smoke (workflow 'Transition smoke', manual dispatch).
   NO release built or published; a 0.1.8 candidate still needs his go-ahead.
   His actual 0.1.7 switch states are unconfirmed.
