@@ -45,8 +45,9 @@ import kotlin.math.sin
  * tempo-matched, not beat-matched. Unknown tempos fall back to exactly the plain crossfade; a WRONG tempo can sound worse than plain, which
  * is the beta risk a phone test must judge. See analysis/AutoMix.kt and docs/AUTOMIX_RESEARCH.md.
  *
- * [mixing] is true from the moment a transition is armed (incoming deck preparing) until the swap or an abort; the Player screen shows
- * the "Mixing" gradient label for exactly that window, so the indicator always reflects a real transition, never a guess.
+ * [mixing] is true from the moment a transition is armed (incoming deck preparing) until the session hand-over completes
+ * (or an abort); the Player screen shows the "Mixing" gradient label for exactly that window, so the indicator always reflects
+ * a real transition, never a guess, and the song details and normal label switch together only when mixing ends.
  *
  * Device evidence: docs/MIXING_QA.md. Emulator transition smoke (two tones, per-deck PCM taps) asserts both decks output audio
  * simultaneously during the ramp and that the swap lands at the boundary. Pause, seek, next/previous, repeat-one, shuffle and the
@@ -102,7 +103,11 @@ class Crossfader(
 
     private val mainListener = object : Player.Listener {
         override fun onPlayWhenReadyChanged(playWhenReady: Boolean, reason: Int) {
-            if (!playWhenReady && incoming != null) cancel("paused")
+            if (!playWhenReady && incoming != null) { Log.i(TAG, "main playWhenReady=false (reason=$reason), aborting transition"); cancel("paused") }
+        }
+        override fun onPlayerError(error: androidx.media3.common.PlaybackException) {
+            // Previously silent: a main-deck error looked exactly like the user's "songs pause by themselves".
+            Log.e(TAG, "MAIN player error: ${error.errorCodeName} (${error.errorCode})", error)
         }
         override fun onPositionDiscontinuity(old: Player.PositionInfo, new: Player.PositionInfo, reason: Int) {
             if (incoming == null) return
@@ -297,12 +302,14 @@ class Crossfader(
         }
         nudge = 1f
         main = inc
-        mixing = false
         Log.i(TAG, "swap: incoming is now active at position ${inc.currentPosition}ms")
         onSwap(inc)
         inc.addListener(mainListener)
         onItemChanged(inc)
         old.volume = 0f; old.playWhenReady = false; old.release()
+        // Only now does the UI settle: the "Mixing" label stays up for the WHOLE transition and the song details
+        // advance with the normal label restoring together, at completion - never mid-blend or mid-handover.
+        mixing = false
     }
 
     /** Abort: drop the incoming player, put the main player back at normal volume and settle any speed ease at the user's speed. */
