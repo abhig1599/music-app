@@ -124,7 +124,7 @@ fun CentreDisc(
 internal var clayClockOverride: (() -> Long)? = null
 
 @Composable
-fun ClayBlob(levels: (() -> FloatArray?)?, tick: State<Long>?, beat: (() -> Float)? = null, clockNs: () -> Long = { clayClockOverride?.invoke() ?: System.nanoTime() }, smoother: ClaySmoother = remember { ClaySmoother(LOBES) }) {
+fun ClayBlob(levels: (() -> FloatArray?)?, tick: State<Long>?, beat: (() -> Float)? = null, clockNs: () -> Long = { clayClockOverride?.invoke() ?: System.nanoTime() }, tuning: ClayTuning = ClayTuning.CURRENT, smoother: ClaySmoother = remember(tuning) { ClaySmoother(LOBES, tuning.attackS, tuning.releaseS) }) {
     val drops = remember { ClayDrops() }
     Canvas(Modifier.fillMaxSize()) {
         tick?.value // redraw every frame while live
@@ -141,7 +141,7 @@ fun ClayBlob(levels: (() -> FloatArray?)?, tick: State<Long>?, beat: (() -> Floa
         val capL = r * 0.34f
         val ang = DoubleArray(lobes) { i -> LOBE_BASE[i] + 0.12 * sec + 0.9 * sin(0.31 * sec + i * 1.7) }
         // Quick to grow with the music, slow to settle, so a quiet moment glides back to the resting circle instead of snapping.
-        val sm = smoother.step(clayTargets(lv, b, sec), now)
+        val sm = smoother.step(clayTargets(lv, b, sec, tuning), now)
         val len = FloatArray(lobes) { sm[it] * r }
         val clay = Brush.radialGradient(0f to Color(0xFF4A4A4E), 1f to Color(0xFF38383C), center = Offset(c.x - r * 0.06f, c.y - r * 0.08f), radius = r * 0.8f)
         // Chunky clay: the core and each lobe are unions of overlapping circles (thick neck, rounded bulb at the tip), so lobes are fat and
@@ -190,7 +190,7 @@ fun ClayBlob(levels: (() -> FloatArray?)?, tick: State<Long>?, beat: (() -> Floa
 }
 
 /** Normalised (units of the disc radius) lobe lengths for the given levels, beat and time. Resting circle = all zeros. */
-internal fun clayTargets(lv: FloatArray?, b: Float, sec: Float): FloatArray {
+internal fun clayTargets(lv: FloatArray?, b: Float, sec: Float, t: ClayTuning = ClayTuning.CURRENT): FloatArray {
     fun band(i: Int): Float {
         if (lv == null || lv.isEmpty()) return 0f
         val lo = (i * lv.size) / LOBES; val hi = ((i + 1) * lv.size) / LOBES
@@ -202,13 +202,27 @@ internal fun clayTargets(lv: FloatArray?, b: Float, sec: Float): FloatArray {
     return FloatArray(LOBES) { i ->
         val l = band(i)
         val vary = 0.65f + 0.35f * sin(0.37 * sec + i * 2.1).toFloat()
-        val live = if (l < SENS_GATE) 0f else SENS_GAIN * (l - SENS_GATE) * LOBE_WEIGHT[i] * vary * (1f + 0.4f * b)
-        capL * kotlin.math.tanh(live / capL)
+        var x = (l - t.gate).coerceAtLeast(0f)
+        if (t.knee > 0f) x = x * x / (x + t.knee) // soft knee: no hard on/off edge at the gate
+        val idle = if (t.idle) 0.05f + 0.03f * FERRO_JITTER[(i + 3) % FERRO_JITTER.size] else 0f
+        val live = t.gain * x * LOBE_WEIGHT[i] * (if (t.vary) vary else 1f) * (1f + t.beatK * b)
+        idle + capL * kotlin.math.tanh(live / capL)
     }
 }
 
 /** Per-lobe smoothing: attack about 90 ms, release about 450 ms. The first step snaps to the target (no history). */
-class ClaySmoother(n: Int) {
+/** Motion tuning of the clay centre. [CURRENT] is what ships; other values exist only for side-by-side motion previews until he picks one. */
+data class ClayTuning(val gate: Float, val gain: Float, val beatK: Float, val idle: Boolean, val vary: Boolean, val knee: Float, val attackS: Float, val releaseS: Float) {
+    companion object {
+        val CURRENT = ClayTuning(gate = 0.15f, gain = 0.34f, beatK = 0.4f, idle = false, vary = true, knee = 0f, attackS = 0.09f, releaseS = 0.45f)
+        /** Reconstruction of the 2026-11-19 early clay values (commit a0de95b): tiny gate, gain 0.62, always-present idle lumps, no smoothing beyond the Player's level easing. */
+        val EARLY = ClayTuning(gate = 0.02f, gain = 0.62f, beatK = 0.6f, idle = true, vary = false, knee = 0f, attackS = 0.01f, releaseS = 0.01f)
+        /** Same shape and size, but a soft knee instead of a hard gate, a gentler beat kick and slower attack/release, so it swells and sinks with the song. */
+        val SMOOTH = ClayTuning(gate = 0.06f, gain = 0.55f, beatK = 0.2f, idle = false, vary = true, knee = 0.12f, attackS = 0.16f, releaseS = 0.60f)
+    }
+}
+
+class ClaySmoother(n: Int, private val attack: Float = 0.09f, private val release: Float = 0.45f) {
     private val v = FloatArray(n)
     private var last = Long.MIN_VALUE
     val settled: Boolean get() = v.all { it < 0.5f }
@@ -217,7 +231,7 @@ class ClaySmoother(n: Int) {
         val dt = ((nowNs - last) / 1e9f).coerceIn(0f, 0.25f)
         if (nowNs > last) last = nowNs
         for (i in v.indices) {
-            val tau = if (target[i] > v[i]) 0.09f else 0.45f
+            val tau = if (target[i] > v[i]) attack else release
             v[i] += (target[i] - v[i]) * (1f - kotlin.math.exp(-dt / tau))
         }
         return v
