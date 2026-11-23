@@ -99,7 +99,8 @@ private fun SourceOrMixing(mixing: Boolean, label: String, fontSize: androidx.co
     Text(
         "Mixing" + ".".repeat(mixingDotsOverrideForRender ?: if (reduced) 3 else dots),
         fontSize = fontSize, fontWeight = FontWeight.Medium,
-        style = androidx.compose.ui.text.TextStyle(
+        // Merge into the surrounding text style so line height and spacing match the plain source label exactly (layout unchanged).
+        style = androidx.compose.material3.LocalTextStyle.current.merge(androidx.compose.ui.text.TextStyle(
             brush = androidx.compose.ui.graphics.Brush.horizontalGradient(
                 listOf(
                     androidx.compose.ui.graphics.Color(0xFFFF7A18), // warm orange lead, brand-adjacent
@@ -108,7 +109,7 @@ private fun SourceOrMixing(mixing: Boolean, label: String, fontSize: androidx.co
                     androidx.compose.ui.graphics.Color(0xFF0A84FF), // blue
                 ),
             ),
-        ),
+        )),
     )
 }
 
