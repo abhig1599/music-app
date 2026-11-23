@@ -86,6 +86,16 @@ class ScreenShotTest {
     @Test fun mixingDots1() = mixShot("mixing_state_1_dot", 1, true)
     @Test fun mixingDots2() = mixShot("mixing_state_2_dots", 2, true)
     @Test fun mixingDots3() = mixShot("mixing_state_3_dots", 3, true)
+    // PREVIEW ONLY (not approved palette): same light-weight label with the shipped colours vs a muted variant, for his review.
+    @Test fun mixingPreviewLightCurrentPalette() = mixShot("mixing_preview_light_current_palette", 3, true)
+    @Test fun mixingPreviewLightMutedPalette() {
+        com.abhi.musicapp.ui.screens.mixingPaletteForRender = listOf(
+            androidx.compose.ui.graphics.Color(0xFFE8A46C), androidx.compose.ui.graphics.Color(0xFFE08FB0),
+            androidx.compose.ui.graphics.Color(0xFFA394DC), androidx.compose.ui.graphics.Color(0xFF7FAEE6),
+        )
+        try { mixShot("mixing_preview_light_muted_palette", 3, true) }
+        finally { com.abhi.musicapp.ui.screens.mixingPaletteForRender = null }
+    }
     @Test fun mixingLandscapeDots2() {
         com.abhi.musicapp.ui.screens.mixingDotsOverrideForRender = 2
         try { shotWide("mixing_state_landscape_2_dots") { PlayerScreen(onBack = {}, fixture = mixState(true), progressInFixture = true) } }

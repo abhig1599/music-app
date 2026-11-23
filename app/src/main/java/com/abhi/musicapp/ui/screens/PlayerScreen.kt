@@ -86,6 +86,8 @@ internal const val DIAL_DP = 301f
  */
 /** Render-test seam only: when non-null the Mixing label draws exactly this many dots (1..3) instead of animating. Never set by app code. */
 internal var mixingDotsOverrideForRender: Int? = null
+/** Render-test seam only: a preview palette for the Mixing gradient (the shipped palette is the default below). Never set by app code. */
+internal var mixingPaletteForRender: List<androidx.compose.ui.graphics.Color>? = null
 
 @Composable
 private fun SourceOrMixing(mixing: Boolean, label: String, fontSize: androidx.compose.ui.unit.TextUnit, color: androidx.compose.ui.graphics.Color, animate: Boolean = true) {
@@ -98,11 +100,11 @@ private fun SourceOrMixing(mixing: Boolean, label: String, fontSize: androidx.co
     }
     Text(
         "Mixing" + ".".repeat(mixingDotsOverrideForRender ?: if (reduced) 3 else dots),
-        fontSize = fontSize, fontWeight = FontWeight.Medium,
+        fontSize = fontSize, fontWeight = FontWeight.Light, // lighter than the plain source label (his request, 17:27)
         // Merge into the surrounding text style so line height and spacing match the plain source label exactly (layout unchanged).
         style = androidx.compose.material3.LocalTextStyle.current.merge(androidx.compose.ui.text.TextStyle(
             brush = androidx.compose.ui.graphics.Brush.horizontalGradient(
-                listOf(
+                mixingPaletteForRender ?: listOf(
                     androidx.compose.ui.graphics.Color(0xFFFF7A18), // warm orange lead, brand-adjacent
                     androidx.compose.ui.graphics.Color(0xFFFF2D95), // pink
                     androidx.compose.ui.graphics.Color(0xFF7A5CFF), // violet
