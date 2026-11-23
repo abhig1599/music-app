@@ -203,6 +203,26 @@ class ScreenShotTest {
     @Test fun playerSheetFocusOpen() = shot("player_sheet_focusopen") { com.abhi.musicapp.ui.screens.PlayerSheetFixture(com.abhi.musicapp.ui.screens.PlayerSheet.FocusOpen) }
     @Test fun playerSheetDeviceOpen() = shot("player_sheet_deviceopen") { com.abhi.musicapp.ui.screens.PlayerSheetFixture(com.abhi.musicapp.ui.screens.PlayerSheet.DeviceOpen) }
 
+    /** Selected D in the actual Player layout, warmed with a synthetic fixed-band signal. */
+    @Test fun selectedWaterPlayer() {
+        var ns = 0L
+        val lv = androidx.compose.runtime.mutableStateOf(FloatArray(48) { 0.65f })
+        com.abhi.musicapp.ui.components.clayClockOverride = { ns }
+        try {
+            composeRule.setContent { MusicAppTheme {
+                Box(Modifier.size(390.dp, 844.dp).background(androidx.compose.material3.MaterialTheme.colorScheme.background)) {
+                    PlayerScreen(onBack = {}, fixture = landscapeState(), progressInFixture = true,
+                        fixtureLevels = lv.value, fixtureFlipped = true, fixtureRotation = 180f, fixtureBeat = 0.4f)
+                }
+            } }
+            for (i in 1..12) {
+                composeRule.runOnIdle { ns = i * 80_000_000L; lv.value = FloatArray(48) { 0.65f + i * 0.0001f } }
+                composeRule.waitForIdle()
+            }
+            composeRule.onRoot().captureRoboImage("build/outputs/roborazzi/player_selected_D_water.png")
+        } finally { com.abhi.musicapp.ui.components.clayClockOverride = null }
+    }
+
     @Test fun playerFlippedFixture() = shot("player_flipped_fixture") {
         // TEST RENDER: centre disc on its animation face, synthetic levels (not real audio).
         val lv = FloatArray(48) { i -> (0.9f * (1f - i / 60f) * (0.55f + 0.45f * kotlin.math.abs(kotlin.math.sin(i * 1.7f)))).coerceIn(0f, 1f) }
