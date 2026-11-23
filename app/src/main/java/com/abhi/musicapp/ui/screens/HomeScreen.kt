@@ -152,7 +152,9 @@ fun HomeScreen(
                 else -> emptyList()
             }
 
-    LazyColumn(modifier = Modifier.fillMaxSize()) {
+    // Bottom inset while the mini player is up: the pinned bar overlays the page, so the last list row
+    // must be able to scroll fully clear of it (pixel review 2026-11-24: Track 30 hid behind the bar).
+    LazyColumn(modifier = Modifier.fillMaxSize(), contentPadding = androidx.compose.foundation.layout.PaddingValues(bottom = if (playerState.hasTrack) 96.dp else 0.dp)) {
         // Measured from his Figma home frame (390x844 dp, 68%-zoom crop rescaled 1:1):
         // header centre y~65, mosaic y 110-272 / 289-450, chips y 471-507, list from y 528.
         val blockBg = com.abhi.musicapp.ui.theme.GrayLight
