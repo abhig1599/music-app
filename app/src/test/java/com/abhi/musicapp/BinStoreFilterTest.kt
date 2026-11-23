@@ -5,8 +5,14 @@ import com.abhi.musicapp.library.BinStore
 import com.abhi.musicapp.library.Song
 import org.junit.Assert.assertEquals
 import org.junit.Test
+import org.junit.runner.RunWith
+import androidx.test.ext.junit.runners.AndroidJUnit4
+import org.robolectric.annotation.Config
 
-/** Recycle Bin filtering: removed songs drop out of the library view; nothing is reordered, deleted or edited. */
+/** Recycle Bin filtering: removed songs drop out of the library view; nothing is reordered, deleted or edited.
+ *  Robolectric because Song carries android.net.Uri, which is a null stub in plain JVM unit tests. */
+@RunWith(AndroidJUnit4::class)
+@Config(sdk = [34])
 class BinStoreFilterTest {
     private fun song(id: Long) = Song(id, "t$id", "a", 1000L, Uri.EMPTY, "Music")
 
