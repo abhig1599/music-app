@@ -4,6 +4,7 @@ import androidx.compose.ui.test.hasAnyDescendant
 import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.performClick
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.abhi.musicapp.ui.screens.SettingsScreen
 import com.abhi.musicapp.ui.theme.MusicAppTheme
