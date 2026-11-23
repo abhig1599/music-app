@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.ui.platform.testTag
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -240,6 +241,7 @@ fun MiniPlayer(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 18.dp, vertical = 4.dp) // Figma: x18, 355 wide
+            .testTag("miniPlayer") // whole bar incl. margins; tests bound-check rows against this top edge
             .pressScale(0.97f)
             .clip(RoundedCornerShape(14.dp))
             .background(bg)
