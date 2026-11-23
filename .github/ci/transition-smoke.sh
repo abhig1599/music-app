@@ -88,6 +88,17 @@ adb shell run-as $PKG rm -rf /data/data/$PKG/files/xfade_pcm
 adb shell am force-stop $PKG; sleep 2
 adb shell am start -n $PKG/com.abhi.musicapp.MainActivity >/dev/null; sleep 6
 refresh; say "home lists tones: a=$(grep -c xf_tone_a /tmp/ui.xml) b=$(grep -c xf_tone_b /tmp/ui.xml)"
+# Same recovery smoke.sh uses: the library list refreshes on ON_RESUME, so poll, then HOME + relaunch, up to 3 rounds.
+for round in 1 2 3; do
+  [ "$(grep -c xf_tone_a /tmp/ui.xml)" != "0" ] && break
+  say "tones not listed (round $round): HOME + relaunch to force a library refresh"
+  adb shell input keyevent 3; sleep 2
+  adb shell am start -n $PKG/com.abhi.musicapp.MainActivity >/dev/null; sleep 8
+  refresh; say "home lists tones: a=$(grep -c xf_tone_a /tmp/ui.xml) b=$(grep -c xf_tone_b /tmp/ui.xml)"
+done
+cp /tmp/ui.xml $OUT/home_ui.xml 2>/dev/null; adb exec-out screencap -p > $OUT/home.png 2>/dev/null
+adb shell content query --uri content://media/external/audio/media --projection _display_name:relative_path:duration 2>/dev/null | grep -E "xf_tone" | head -4 | tee -a $R
+adb shell dumpsys package $PKG | grep -m2 "READ_MEDIA_AUDIO" | tee -a $R
 
 adb logcat -c
 T0=$(date +%s)
