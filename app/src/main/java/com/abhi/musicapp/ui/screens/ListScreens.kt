@@ -28,9 +28,12 @@ import com.abhi.musicapp.ui.theme.GrayText
 import com.abhi.musicapp.ui.theme.InkBlack
 
 @Composable
-fun FoldersScreen(onBack: () -> Unit, onOpenPlayer: () -> Unit = {}) {
+fun FoldersScreen(onBack: () -> Unit, onOpenPlayer: () -> Unit = {}, initialFolder: String? = null) {
+    // A folder picked on Home arrives as initialFolder so its songs show directly; picking a folder here
+    // drills into the same list. (Before, Home's tap reopened this same chooser and a tap played blind.)
+    var selected by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(initialFolder) }
     Column(modifier = Modifier.fillMaxSize()) {
-        Header("Folders", onBack)
+        Header(selected ?: "Folders") { if (selected != null) selected = null else onBack() }
         val context = androidx.compose.ui.platform.LocalContext.current
         var folders by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf<List<Pair<String, List<com.abhi.musicapp.library.Song>>>>(emptyList()) }
         androidx.compose.runtime.LaunchedEffect(Unit) {
@@ -40,10 +43,23 @@ fun FoldersScreen(onBack: () -> Unit, onOpenPlayer: () -> Unit = {}) {
             Text(if (!com.abhi.musicapp.library.LibraryRepository.hasAudioPermission(context)) "Music permission is off, so folders can't be read. Enable it in system settings." else "No folders found on this device.",
                 color = GrayText, fontSize = 14.sp, modifier = Modifier.padding(horizontal = 24.dp))
         }
-        folders.forEach { (name, list) ->
-            SongRow(name, "${list.size} songs", trailing = {
-                Icon(Icons.Filled.ChevronRight, contentDescription = null, tint = GrayText)
-            }, onClick = { com.abhi.musicapp.playback.PlayerManager.playAll(list, 0); onOpenPlayer() })
+        val current = folders.firstOrNull { it.first == selected }
+        val open = selected
+        if (open == null) {
+            folders.forEach { (name, list) ->
+                SongRow(name, "${list.size} songs", trailing = {
+                    Icon(Icons.Filled.ChevronRight, contentDescription = null, tint = GrayText)
+                }, onClick = { selected = name })
+            }
+        } else if (current == null) {
+            Text("That folder has no songs on this device anymore.", color = GrayText, fontSize = 14.sp,
+                modifier = Modifier.padding(horizontal = 24.dp))
+        } else {
+            current.second.forEachIndexed { i, song ->
+                SongRow(song.title, song.artist, trailing = {
+                    Icon(Icons.Filled.ChevronRight, contentDescription = null, tint = GrayText)
+                }, onClick = { com.abhi.musicapp.playback.PlayerManager.playAll(current.second, i); onOpenPlayer() })
+            }
         }
     }
 }
