@@ -188,7 +188,7 @@ class Crossfader(
             if (w < 0L) return // not yet time: keep the incoming deck paused at 0 until the boundary-aligned start
             if (w < 500L) { cancel("too late to fade"); return } // main will carry into the next song on its own
             // Re-measure the true remaining media time NOW (the arm-time estimate can drift) so the fade ends at the natural end.
-            val dur = main.duration
+            val dur = mainEffectiveDurationMs()
             val sp = main.playbackParameters.speed.let { if (it > 0f) it else 1f }
             fadeMs = if (dur != C.TIME_UNSET && dur > 0L) ((dur - main.currentPosition) / sp).toLong() else w
             if (fadeMs < 500L) { cancel("too late to fade"); return }
@@ -213,6 +213,14 @@ class Crossfader(
         else { r.last = s; applySpeed(s) }
     }
 
+    private fun mainUri(): String? = main.currentMediaItem?.localConfiguration?.uri?.toString()
+
+    private fun mainEffectiveDurationMs(): Long {
+        val dur = main.duration
+        if (dur == C.TIME_UNSET || dur <= 0L) return dur
+        return effectiveDurationMs(dur, contentEndOf?.invoke(mainUri(), dur))
+    }
+
     private fun applySpeed(s: Float) { main.playbackParameters = PlaybackParameters(s, main.playbackParameters.pitch) }
 
     private fun maybeBegin() {
@@ -220,20 +228,16 @@ class Crossfader(
         if (main.repeatMode == Player.REPEAT_MODE_ONE || main.shuffleModeEnabled || SleepTimer.isFinishingSong) return
         val next = main.nextMediaItemIndex
         if (next == C.INDEX_UNSET) return
-        val dur = main.duration
+        val dur = mainEffectiveDurationMs()
         if (dur == C.TIME_UNSET || dur <= 0L) return
         val speed = main.playbackParameters.speed
         // Inconclusive pair evidence always means plain overlap, not an unphased BPM-only nudge.
-        val plain = min(seconds(ctx)*1000L,dur/3)
         val phase = selectPhase(phasePlanOf(),autoMixActive())
-        val f = phase?.let { (it.fadeMs / speed.toDouble()).toLong() } ?: plain
-        val remaining = dur - main.currentPosition
-        if (!shouldBegin(remaining, f, speed)) return
+        val decision = decideArm(dur, main.currentPosition, speed, phase, seconds(ctx)*1000L) ?: return
         phasePlan = phase; phaseTimerArmed = false; phaseSpeed = speed
-        fadeMs = f; nudge = phase?.incomingSpeedRatio ?: 1f; toIndex = next
-        val sp = if (speed > 0f) speed else 1f
+        fadeMs = decision.fadeMs; nudge = phase?.incomingSpeedRatio ?: 1f; toIndex = next
         val now = SystemClock.uptimeMillis()
-        deadlineMs = now + (remaining / sp).toLong()
+        deadlineMs = now + decision.deadlineAfterMs
         plannedStartMs = deadlineMs - fadeMs
         val p = newPlayer()
         p.setAudioAttributes(AudioAttributes.Builder().setUsage(C.USAGE_MEDIA).setContentType(C.AUDIO_CONTENT_TYPE_MUSIC).build(), false)
@@ -257,7 +261,7 @@ class Crossfader(
     private fun preparePhaseStart(inc: ExoPlayer) {
         if (phaseTimerArmed) return
         val p = phasePlan ?: return
-        val timing = PhaseSchedule.prepare(p,main.currentPosition,main.duration,inc.duration,phaseSpeed,seconds(ctx)*1000L)
+        val timing = PhaseSchedule.prepare(p,main.currentPosition,mainEffectiveDurationMs(),inc.duration,phaseSpeed,seconds(ctx)*1000L)
         if (timing == null) { dropPhase("phase no longer schedulable"); return }
         val target = SystemClock.uptimeMillis() + timing.delayMs
         phaseTimerArmed = true
@@ -328,12 +332,29 @@ class Crossfader(
         main.volume = base
     }
 
+    /** Detected content-end lookup, keyed by file identity; a null result means "use the file end". Set by the service. */
+    var contentEndOf: ((uri: String?, fileDurationMs: Long) -> Long?)? = null
+
     companion object {
+        /** The boundary a transition aims at: the detected content end when known and sane, else the file end. */
+        internal fun effectiveDurationMs(fileDurationMs: Long, contentEndMs: Long?): Long =
+            contentEndMs?.takeIf { it in 1..fileDurationMs } ?: fileDurationMs
         internal fun selectPhase(plan: PhaseTransitionPlanner.Plan?, autoMix: Boolean): PhaseTransitionPlanner.Plan? =
             plan?.takeIf { autoMix && it.aligned }
         private const val TAG = "XFADE"
         private fun prefs(c: Context) = c.applicationContext.getSharedPreferences("transitions", Context.MODE_PRIVATE)
         /** Start preparing the incoming deck when the wall-clock time left (media time / speed) is within the fade plus 1.5 s, and not already over. */
+        /** Where the overlap ends and how long it lasts, from observed player state. maybeBegin delegates here. */
+        internal data class ArmDecision(val fadeMs: Long, val deadlineAfterMs: Long)
+        internal fun decideArm(effectiveDurationMs: Long, positionMs: Long, speed: Float, phase: PhaseTransitionPlanner.Plan?, userFadeMs: Long): ArmDecision? {
+            if (effectiveDurationMs <= 0 || positionMs < 0) return null
+            val plain = min(userFadeMs, effectiveDurationMs / 3)
+            val f = phase?.let { (it.fadeMs / speed.toDouble()).toLong() } ?: plain
+            val remaining = effectiveDurationMs - positionMs
+            if (!shouldBegin(remaining, f, speed)) return null
+            val sp = if (speed > 0f) speed else 1f
+            return ArmDecision(f, (remaining / sp).toLong())
+        }
         internal fun shouldBegin(remainingMediaMs: Long, fadeMs: Long, speed: Float): Boolean {
             val sp = if (speed > 0f) speed else 1f
             val wall = remainingMediaMs / sp
