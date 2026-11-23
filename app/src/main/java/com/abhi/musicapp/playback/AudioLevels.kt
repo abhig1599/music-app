@@ -33,7 +33,7 @@ object AudioLevels {
     /** The Player screen turns analysis on while it is visible and playing; off, the audio thread does no maths. */
     fun setEnabled(on: Boolean) { enabled = on; if (!on) { bands = FloatArray(LEVEL_BANDS); beat = 0f } }
 
-    private val analyzer = BandAnalyzer()
+    private val analyzer = BandAnalyzer() // one shared analyzer; during an overlap BOTH decks feed it, so its methods are synchronized
 
     @kotlin.OptIn(UnstableApi::class)
     fun newProcessor(): TeeAudioProcessor = TeeAudioProcessor(object : TeeAudioProcessor.AudioBufferSink {
@@ -65,12 +65,16 @@ class BandAnalyzer {
     private var bassAvg = 0.0
     private var peak = 1e-3 // slow automatic gain so quiet and loud songs both fill the ring
 
+    @Synchronized
     fun configure(sampleRate: Int, channelCount: Int, enc: Int) {
         rate = if (sampleRate > 0) sampleRate else 44100
         channels = max(1, channelCount); encoding = enc; filled = 0; beat = 0f; bassAvg = 0.0; edges = binEdges(rate); peak = 1e-3
     }
 
-    /** Returns fresh levels once a full window has been collected, else null. Unsupported encodings give null. */
+    /** Returns fresh levels once a full window has been collected, else null. Unsupported encodings give null.
+     *  Synchronized: two live decks call this from two audio threads during a crossfade; without the lock the
+     *  window fill can race past the buffer and throw on the audio thread (a playback-stopping sink error). */
+    @Synchronized
     fun push(src: ByteBuffer): FloatArray? {
         val b = src.duplicate().order(ByteOrder.nativeOrder())
         val bytes = when (encoding) { C.ENCODING_PCM_16BIT -> 2; C.ENCODING_PCM_FLOAT -> 4; else -> return null }
@@ -84,6 +88,7 @@ class BandAnalyzer {
         return out
     }
 
+    @Synchronized // shares beat/bassAvg/peak state with push (and is called from it)
     fun analyze(samples: FloatArray, sampleRate: Int): FloatArray {
         if (sampleRate != rate) { rate = sampleRate; edges = binEdges(rate) }
         for (i in 0 until FFT_SIZE) { re[i] = samples[i] * hann[i]; im[i] = 0.0 }
