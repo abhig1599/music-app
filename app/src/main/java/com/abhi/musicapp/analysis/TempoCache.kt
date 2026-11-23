@@ -72,23 +72,35 @@ object TempoCache {
     /** Background tempo prefetch for the next queued song. Off by default and has no setting in the UI; nothing audible uses the result. */
     fun prefetchEnabled(c: Context) = prefs(c).getBoolean("prefetch_on", false)
 
-    private fun decode(c: Context, uri: Uri, cancelled: () -> Boolean): Pair<FloatArray, Int>? {
+    /** Analysis-only decoded window. Timeline offset remains explicit so tail beats cannot be mistaken for head beats. */
+    data class DecodedWindow(val samples: FloatArray, val sampleRate: Int, val startMs: Long)
+    fun decodeWindow(c: Context, uri: Uri, startMs: Long, seconds: Int = MAX_SECONDS, cancelled: () -> Boolean = { false }): DecodedWindow? =
+        try { decodeRange(c, uri, startMs.coerceAtLeast(0L), seconds.coerceIn(1, MAX_SECONDS), cancelled)?.takeUnless { cancelled() } } catch (_: Exception) { null }
+
+    private fun decode(c: Context, uri: Uri, cancelled: () -> Boolean): Pair<FloatArray, Int>? =
+        decodeWindow(c, uri, 0L, MAX_SECONDS, cancelled)?.let { it.samples to it.sampleRate }
+
+    private fun decodeRange(c: Context, uri: Uri, startMs: Long, seconds: Int, cancelled: () -> Boolean): DecodedWindow? {
         val ex = MediaExtractor()
         try {
             ex.setDataSource(c, uri, null)
             val idx = (0 until ex.trackCount).firstOrNull { ex.getTrackFormat(it).getString(MediaFormat.KEY_MIME)?.startsWith("audio/") == true } ?: return null
             ex.selectTrack(idx)
             val fmt = ex.getTrackFormat(idx)
+            val startUs = Math.multiplyExact(startMs, 1000L)
+            if (startUs > 0L) ex.seekTo(startUs, MediaExtractor.SEEK_TO_PREVIOUS_SYNC)
             var sr = fmt.getInteger(MediaFormat.KEY_SAMPLE_RATE)
             if (sr !in 8000..192000) return null
             var encoding = android.media.AudioFormat.ENCODING_PCM_16BIT
             var ch = fmt.getInteger(MediaFormat.KEY_CHANNEL_COUNT).coerceAtLeast(1)
             val codec = MediaCodec.createDecoderByType(fmt.getString(MediaFormat.KEY_MIME)!!)
-            var out = FloatArray(sr * MAX_SECONDS); var n = 0
+            var out = FloatArray(sr * seconds); var n = 0
             try {
             codec.configure(fmt, null, null, 0); codec.start()
             val info = MediaCodec.BufferInfo(); var inDone = false; var outDone = false
-            while (!outDone && n < out.size && !cancelled()) {
+            val deadline = android.os.SystemClock.elapsedRealtime() + 30_000L
+            var firstSampleUs: Long? = null
+            while (!outDone && n < out.size && !cancelled() && android.os.SystemClock.elapsedRealtime() < deadline) {
                 if (!inDone) {
                     val i = codec.dequeueInputBuffer(10_000)
                     if (i >= 0) {
@@ -102,8 +114,12 @@ object TempoCache {
                     val buffer = codec.getOutputBuffer(o)
                     if (buffer != null && info.size > 0) {
                         val mono = PcmWindow.mono(buffer, info.offset, info.size, ch, encoding)
-                        val count = minOf(mono.size, out.size - n)
-                        mono.copyInto(out, n, 0, count); n += count
+                        val skip = skipFramesBeforeStart(info.presentationTimeUs, startUs, sr, mono.size)
+                        val count = minOf(mono.size - skip, out.size - n)
+                        if (count > 0) {
+                            if (firstSampleUs == null) firstSampleUs = info.presentationTimeUs + skip * 1_000_000L / sr
+                            mono.copyInto(out, n, skip, skip + count); n += count
+                        }
                     }
                     codec.releaseOutputBuffer(o, false)
                     if (info.flags and MediaCodec.BUFFER_FLAG_END_OF_STREAM != 0) outDone = true
@@ -113,13 +129,21 @@ object TempoCache {
                     if (ch !in 1..32) return null
                     val actualRate = actual.getInteger(MediaFormat.KEY_SAMPLE_RATE)
                     if (actualRate !in 8000..192000 || (n > 0 && actualRate != sr)) return null
-                    if (actualRate != sr) { sr = actualRate; out = FloatArray(sr * MAX_SECONDS) }
+                    if (actualRate != sr) { sr = actualRate; out = FloatArray(sr * seconds) }
                     encoding = if (actual.containsKey(MediaFormat.KEY_PCM_ENCODING)) actual.getInteger(MediaFormat.KEY_PCM_ENCODING) else android.media.AudioFormat.ENCODING_PCM_16BIT
                     if (encoding != PcmWindow.PCM16 && encoding != PcmWindow.FLOAT32) return null
                 }
             }
             } finally { try { codec.stop() } catch (e: Exception) {}; codec.release() } // always freed, also on error or cancel
-            return out.copyOf(n) to sr
+            if (cancelled() || android.os.SystemClock.elapsedRealtime() >= deadline || n == 0) return null
+            return DecodedWindow(out.copyOf(n), sr, (firstSampleUs ?: startUs) / 1000L)
         } finally { ex.release() }
     }
+    internal fun skipFramesBeforeStart(bufferUs: Long, requestedUs: Long, rate: Int, frames: Int): Int {
+        if (bufferUs >= requestedUs) return 0
+        val delta = requestedUs - bufferUs
+        if (delta > (frames.toLong() * 1_000_000L / rate) + 1L) return frames
+        return ((delta * rate + 999_999L) / 1_000_000L).coerceIn(0L, frames.toLong()).toInt()
+    }
+
 }

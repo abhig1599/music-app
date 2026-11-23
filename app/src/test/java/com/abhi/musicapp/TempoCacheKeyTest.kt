@@ -28,6 +28,13 @@ class TempoCacheKeyTest {
         assertEquals(null, TempoCache.cachedResult(ctx, key))
     }
 
+    @Test fun tailWindowDiscardsPrerollAtFramePrecision() {
+        assertEquals(0, TempoCache.skipFramesBeforeStart(2_000_000L, 2_000_000L, 48000, 1024))
+        assertEquals(480, TempoCache.skipFramesBeforeStart(1_990_000L, 2_000_000L, 48000, 1024))
+        assertEquals(1024, TempoCache.skipFramesBeforeStart(1_000_000L, 2_000_000L, 48000, 1024))
+        assertEquals(1, TempoCache.skipFramesBeforeStart(1_999_999L, 2_000_000L, 48000, 1024))
+    }
+
     @Test fun nullUriIsNotPersistable() {
         val k = TempoCache.keyFor(ctx, null, "42")
         assertEquals("42", k.value); assertFalse(k.persistable)
