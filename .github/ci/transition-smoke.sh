@@ -80,7 +80,7 @@ PY
 ); [ -n "$c" ] && { set -- $c; adb shell input tap $1 $2; sleep 3; }
 GR=$(adb shell dumpsys package $PKG | grep -c 'READ_MEDIA_AUDIO: granted=true')
 [ "$GR" = "0" ] && adb shell pm grant $PKG android.permission.READ_MEDIA_AUDIO
-tap_exact "Next"; sleep 2; tap_exact "Get Started"; sleep 4
+tap_exact "Next" && say "onboarding: Next(2) tapped"; sleep 2; tap_exact "Get Started" && say "onboarding: Get Started tapped"; sleep 4
 
 # Arm transitions + PCM capture, then restart so the process re-reads prefs
 adb shell run-as $PKG sh -c "mkdir -p /data/data/$PKG/shared_prefs && printf '%s' '<?xml version=\"1.0\" encoding=\"utf-8\" standalone=\"yes\" ?><map><boolean name=\"on\" value=\"true\" /><int name=\"secs\" value=\"4\" /><boolean name=\"pcm_capture\" value=\"true\" /></map>' > /data/data/$PKG/shared_prefs/transitions.xml" && say "prefs armed via run-as"
@@ -96,6 +96,16 @@ for round in 1 2 3; do
   adb shell am start -n $PKG/com.abhi.musicapp.MainActivity >/dev/null; sleep 8
   refresh; say "home lists tones: a=$(grep -c xf_tone_a /tmp/ui.xml) b=$(grep -c xf_tone_b /tmp/ui.xml)"
 done
+say "screen texts now: $(python3 - <<'PY'
+import xml.etree.ElementTree as ET
+try:
+    r=ET.parse('/tmp/ui.xml').getroot()
+    t=[(n.get('text') or n.get('content-desc') or '').strip() for n in r.iter('node')]
+    print(' | '.join([x for x in t if x][:40]))
+except Exception as e: print('ui dump unreadable', e)
+PY
+)"
+say "focus: $(adb shell dumpsys window | grep -m1 mCurrentFocus | tr -d '\r')"
 cp /tmp/ui.xml $OUT/home_ui.xml 2>/dev/null; adb exec-out screencap -p > $OUT/home.png 2>/dev/null
 adb shell content query --uri content://media/external/audio/media --projection _display_name:relative_path:duration 2>/dev/null | grep -E "xf_tone" | head -4 | tee -a $R
 adb shell dumpsys package $PKG | grep -m2 "READ_MEDIA_AUDIO" | tee -a $R
