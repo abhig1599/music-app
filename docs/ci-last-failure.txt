@@ -13,7 +13,7 @@ org.gradle.api.tasks.TaskExecutionException: Execution failed for task ':app:tes
 	at org.gradle.api.internal.tasks.execution.CatchExceptionTaskExecuter.execute(CatchExceptionTaskExecuter.java:36)
 Caused by: org.gradle.api.internal.exceptions.MarkedVerificationException: There were failing tests. See the report at: file:///home/runner/work/music-app/music-app/app/build/reports/tests/testDebugUnitTest/index.html
 	at org.gradle.api.internal.tasks.execution.CatchExceptionTaskExecuter.execute(CatchExceptionTaskExecuter.java:36)
-BUILD FAILED in 1m 25s
+BUILD FAILED in 1m 29s
 <failure message="java.lang.NullPointerException: EMPTY must not be null
 <failure message="java.lang.NullPointerException: EMPTY must not be null
 <failure message="java.lang.NullPointerException: EMPTY must not be null
