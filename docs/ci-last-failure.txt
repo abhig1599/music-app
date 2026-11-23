@@ -1,19 +1,14 @@
 > Task :app:checkKotlinGradlePluginConfigurationErrors SKIPPED
 > Task :app:checkKotlinGradlePluginConfigurationErrors SKIPPED
-BinStoreFilterTest > unknownIdsRemoveNothing FAILED
-    java.lang.NullPointerException at BinStoreFilterTest.kt:11
-BinStoreFilterTest > removedIdsDropOutOrderPreserved FAILED
-    java.lang.NullPointerException at BinStoreFilterTest.kt:11
-BinStoreFilterTest > emptyBinKeepsEverything FAILED
-    java.lang.NullPointerException at BinStoreFilterTest.kt:11
-> Task :app:testDebugUnitTest FAILED
+e: file:///home/runner/work/music-app/music-app/app/src/test/java/com/abhi/musicapp/ContentEndDetectorTest.kt:157:9 None of the following candidates is applicable:
+e: file:///home/runner/work/music-app/music-app/app/src/test/java/com/abhi/musicapp/ContentEndDetectorTest.kt:158:9 None of the following candidates is applicable:
+> Task :app:compileDebugUnitTestKotlin FAILED
 * What went wrong:
 * Exception is:
-org.gradle.api.tasks.TaskExecutionException: Execution failed for task ':app:testDebugUnitTest'.
+org.gradle.api.tasks.TaskExecutionException: Execution failed for task ':app:compileDebugUnitTestKotlin'.
 	at org.gradle.api.internal.tasks.execution.CatchExceptionTaskExecuter.execute(CatchExceptionTaskExecuter.java:36)
-Caused by: org.gradle.api.internal.exceptions.MarkedVerificationException: There were failing tests. See the report at: file:///home/runner/work/music-app/music-app/app/build/reports/tests/testDebugUnitTest/index.html
+Caused by: org.gradle.workers.internal.DefaultWorkerExecutor$WorkExecutionException: A failure occurred while executing org.jetbrains.kotlin.compilerRunner.GradleCompilerRunnerWithWorkers$GradleKotlinCompilerWorkAction
 	at org.gradle.api.internal.tasks.execution.CatchExceptionTaskExecuter.execute(CatchExceptionTaskExecuter.java:36)
-BUILD FAILED in 1m 29s
-<failure message="java.lang.NullPointerException: EMPTY must not be null
-<failure message="java.lang.NullPointerException: EMPTY must not be null
-<failure message="java.lang.NullPointerException: EMPTY must not be null
+Caused by: org.jetbrains.kotlin.gradle.tasks.CompilationErrorException: Compilation error. See log for more details
+	at org.jetbrains.kotlin.gradle.tasks.TasksUtilsKt.throwExceptionIfCompilationFailed(tasksUtils.kt:21)
+BUILD FAILED in 8s
