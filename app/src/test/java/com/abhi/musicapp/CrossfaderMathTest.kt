@@ -37,4 +37,11 @@ class CrossfaderMathTest {
         assertEquals(5000L, Crossfader.effectiveFade(5000L, 0L))
         assertEquals(5000L, Crossfader.effectiveFade(5000L, -5L))
     }
+    @Test fun fadeWindowWaitsForTheBoundaryAlignedStart() {
+        // Before the planned start: -1 (keep the incoming deck paused). On time: the full planned fade. Late: shorter, never longer.
+        assertEquals(-1L, Crossfader.fadeWindow(9_999L, 10_000L, 4000L))
+        assertEquals(4000L, Crossfader.fadeWindow(10_000L, 10_000L, 4000L))
+        assertEquals(3700L, Crossfader.fadeWindow(10_300L, 10_000L, 4000L))
+        assertEquals(400L, Crossfader.fadeWindow(13_600L, 10_000L, 4000L)) // too late: the caller treats <500 ms as "skip the fade"
+    }
 }

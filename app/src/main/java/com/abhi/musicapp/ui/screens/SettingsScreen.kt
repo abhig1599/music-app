@@ -171,10 +171,13 @@ fun SettingsScreen(onBack: () -> Unit, onRowClick: (String) -> Unit = {}, fixtur
             Spacer(Modifier.height(13.dp))
             val tctx = androidx.compose.ui.platform.LocalContext.current
             var xOn by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(!fixture && com.abhi.musicapp.playback.Crossfader.enabled(tctx)) }
+            var aOn by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(!fixture && com.abhi.musicapp.analysis.AutoMix.switchedOn(tctx)) }
             var xSecs by androidx.compose.runtime.remember { androidx.compose.runtime.mutableFloatStateOf(if (fixture) 4f else com.abhi.musicapp.playback.Crossfader.seconds(tctx).toFloat()) }
+            // AutoMix needs Crossfade to be audible (0.1.7 let AutoMix sit on with Crossfade off, which mixed nothing): the switches stay coherent.
             ToggleRow("Crossfade", if (xOn) "The next song starts before this one ends" else "Off. Songs play one after the other", xOn) {
                 xOn = !xOn
                 if (!fixture) com.abhi.musicapp.playback.Crossfader.setEnabled(tctx, xOn)
+                if (!xOn && aOn) { aOn = false; if (!fixture) com.abhi.musicapp.analysis.AutoMix.setSwitchedOn(tctx, false) }
             }
             Spacer(Modifier.height(13.dp))
             Text("Duration: ${xSecs.toInt()} seconds", fontFamily = mono, fontSize = 12.sp, fontWeight = FontWeight.Bold, color = if (xOn) InkBlack else GrayText)
@@ -184,13 +187,13 @@ fun SettingsScreen(onBack: () -> Unit, onRowClick: (String) -> Unit = {}, fixtur
                 colors = androidx.compose.material3.SliderDefaults.colors(thumbColor = com.abhi.musicapp.ui.theme.Orangs, activeTrackColor = com.abhi.musicapp.ui.theme.Orangs),
             )
             Spacer(Modifier.height(13.dp))
-            var aOn by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(!fixture && com.abhi.musicapp.analysis.AutoMix.switchedOn(tctx)) }
             ToggleRow("AutoMix (beta)",
                 if (aOn) "Acts while Crossfade is on: when both songs' tempos are detected and close, the overlap is timed to whole bars and the next song's tempo is nudged to match, then eased back. Beats are not aligned yet. Otherwise the plain crossfade plays."
-                else "Off. The overlap is a plain crossfade for the set time. Tempo-based mixing needs this switch plus Crossfade.",
+                else "Off. The overlap is a plain crossfade for the set time. Turning this on also turns Crossfade on.",
                 aOn) {
                 aOn = !aOn
                 if (!fixture) com.abhi.musicapp.analysis.AutoMix.setSwitchedOn(tctx, aOn)
+                if (aOn && !xOn) { xOn = true; if (!fixture) com.abhi.musicapp.playback.Crossfader.setEnabled(tctx, true) }
             }
             Spacer(Modifier.height(6.dp))
             Text("Crossfade and AutoMix are experimental and have not been heard on a real phone yet. AutoMix is this app's own tempo matching for local files, not Apple's feature.", fontFamily = mono, fontSize = 11.sp, color = GrayText)

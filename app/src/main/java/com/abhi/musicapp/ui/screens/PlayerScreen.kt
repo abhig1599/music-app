@@ -78,6 +78,37 @@ internal const val RING_DRAG_MIN_FRACTION = 0.34f
 internal const val CENTRE_DISC_DP = 164f
 internal const val DIAL_DP = 301f
 
+/**
+ * Source label slot on the Player. While a transition is actually running (a deck is armed or fading - the service-side Crossfader
+ * state, not a guess) it replaces the source text with an Apple Music-style gradient "Mixing" whose dots cycle 1..2..3 like a loading
+ * indicator for exactly the transition window. Reduced motion: static three dots. Fixtures (design snapshots, screenshot tests)
+ * also draw the static three dots so they stay deterministic. Otherwise the slot is byte-identical to before.
+ */
+@Composable
+private fun SourceOrMixing(mixing: Boolean, label: String, fontSize: androidx.compose.ui.unit.TextUnit, color: androidx.compose.ui.graphics.Color, animate: Boolean = true) {
+    if (!mixing) { Text(label, fontSize = fontSize, fontWeight = FontWeight.Medium, color = color); return }
+    val reduced = reducedMotion() || !animate
+    var dots by androidx.compose.runtime.remember { androidx.compose.runtime.mutableIntStateOf(3) }
+    androidx.compose.runtime.LaunchedEffect(mixing, reduced) {
+        if (reduced) { dots = 3; return@LaunchedEffect }
+        while (true) { dots = dots % 3 + 1; kotlinx.coroutines.delay(450) }
+    }
+    Text(
+        "Mixing" + ".".repeat(if (reduced) 3 else dots),
+        fontSize = fontSize, fontWeight = FontWeight.Medium,
+        style = androidx.compose.ui.text.TextStyle(
+            brush = androidx.compose.ui.graphics.Brush.horizontalGradient(
+                listOf(
+                    androidx.compose.ui.graphics.Color(0xFFFF7A18), // warm orange lead, brand-adjacent
+                    androidx.compose.ui.graphics.Color(0xFFFF2D95), // pink
+                    androidx.compose.ui.graphics.Color(0xFF7A5CFF), // violet
+                    androidx.compose.ui.graphics.Color(0xFF0A84FF), // blue
+                ),
+            ),
+        ),
+    )
+}
+
 internal fun formatMs(ms: Long): String {
     if (ms <= 0) return "0:00"
     val totalSec = ms / 1000
@@ -251,7 +282,7 @@ fun PlayerScreen(onBack: () -> Unit, fixture: PlayerUiState? = null, initialOver
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            Text(sourceLabel ?: if (fixture != null) "[Playlist/Source]" else "Local music", fontSize = 17.sp, fontWeight = FontWeight.Medium, color = InkBlack)
+            SourceOrMixing(state.mixing, sourceLabel ?: if (fixture != null) "[Playlist/Source]" else "Local music", 17.sp, InkBlack, animate = fixture == null)
             Text(
                 if (state.hasTrack) state.title else "Nothing playing",
                 fontSize = 32.sp, fontWeight = FontWeight.Medium, color = InkBlack,
@@ -413,7 +444,7 @@ private fun LandscapeBody(
                     }
                 }
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text(sourceLabel ?: if (fixture != null) "[Playlist/Source]" else "Local music", fontSize = 15.sp, fontWeight = FontWeight.Medium, color = GrayText)
+                    SourceOrMixing(state.mixing, sourceLabel ?: if (fixture != null) "[Playlist/Source]" else "Local music", 15.sp, GrayText, animate = fixture == null)
                     Text(if (state.hasTrack) state.title else "Nothing playing", fontSize = 28.sp, fontWeight = FontWeight.Medium, color = InkBlack,
                         maxLines = 2, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis, letterSpacing = (-0.6).sp)
                     Text(formatMs(state.positionMs) + " / " + formatMs(state.durationMs), fontSize = 14.sp, color = GrayText, fontFamily = mono)

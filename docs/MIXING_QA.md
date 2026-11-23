@@ -60,3 +60,27 @@ survive a file replacement.
 7. First song after enabling AutoMix may crossfade plainly (tempo not analysed yet) - expected, not a bug.
 
 Report back which step number misbehaves and what you heard; that maps to the ranked list above.
+
+## 2026-11-23 update: boundary-aligned fades, coherent switches, "Mixing" indicator, emulator overlap evidence
+
+Why: his 0.1.7 phone test heard "the old song cut, then the next", not an overlap. Code review found (a) the fade completed up to
+~1.5 s BEFORE the old song's natural end (early release = audible chop), and (b) AutoMix could be ON while Crossfade was OFF, a
+state that mixes nothing at all (his actual switch states are unconfirmed; the trap is removed either way).
+
+What changed (Crossfader.kt, SettingsScreen.kt, PlayerScreen.kt, PlayerManager.kt, playback/PcmTap.kt):
+- Incoming deck is prepared paused ahead of time; the ramp starts so it ENDS exactly at the natural track end (fadeWindow maths).
+- Settings: AutoMix on forces Crossfade on; Crossfade off drops AutoMix; engine gate also honours the saved 0.1.7 state.
+- Player shows gradient "Mixing." -> "Mixing.." -> "Mixing..." only while a transition is genuinely armed/fading.
+- XFADE logcat diagnostics; DEBUG-ONLY per-deck PCM tap (PcmTap, pref-armed), wired into the processor chain only in debug builds.
+
+Verification here:
+- Unit/Robolectric: fadeWindow timing maths, transitionsAllowed gate incl. the 0.1.7 state, incoming-deck queue/start mirror,
+  settings switch coherence (UI click test), Mixing label on/off render tests, plus the pre-existing suite.
+- Emulator transition smoke (.github/ci/transition-smoke.sh, manual workflow "Transition smoke"): two 24 s tones (440/880 Hz),
+  crossfade 4 s. Passes only if: fade armed at the right wall-clock window, >8 logged gain ticks with BOTH decks >0.05,
+  per-deck PCM taps both non-silent across the shared window, swap lands at the boundary, "Mixing" visible during the ramp,
+  no FATAL. Artifacts include mix_reconstructed.wav (per-deck PCM x the gains the app logged - a reconstruction, NOT a bus
+  capture; the OS mixer sum is not capturable on an emulator) and an RMS envelope.
+
+Still NOT proven: real-song sound on his phone (the final verdict), session/notification continuity on his device, AutoMix tempo
+reads on real music. His manual phone script above still applies; step 1 should now show the "Mixing" label exactly during overlaps.

@@ -84,7 +84,11 @@ class PlaybackService : MediaSessionService() {
                 DefaultAudioSink.Builder(context)
                     .setEnableFloatOutput(enableFloatOutput)
                     .setEnableAudioTrackPlaybackParams(enableAudioTrackPlaybackParams)
-                    .setAudioProcessors(arrayOf(AudioLevels.newProcessor()))
+                    .setAudioProcessors(
+                        // PcmTap is debug-only and writes nothing unless the smoke arms its pref; release builds get the level tap alone.
+                        if (com.abhi.musicapp.BuildConfig.DEBUG) arrayOf(AudioLevels.newProcessor(), PcmTap.newProcessor(context))
+                        else arrayOf(AudioLevels.newProcessor()),
+                    )
                     .build()
         }
         return ExoPlayer.Builder(this, factory).build()

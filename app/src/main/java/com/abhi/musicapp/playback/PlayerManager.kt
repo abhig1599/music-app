@@ -27,6 +27,8 @@ data class PlayerUiState(
     val hasTrack: Boolean = false,
     val mediaId: Long = -1L,
     val speed: Float = 1f,
+    /** True only while a crossfade/AutoMix transition is armed or fading (service-side Crossfader state, not a guess). */
+    val mixing: Boolean = false,
 )
 
 /**
@@ -193,6 +195,7 @@ object PlayerManager {
             hasTrack = c.currentMediaItem != null,
             mediaId = c.currentMediaItem?.mediaId?.toLongOrNull() ?: -1L,
             speed = c.playbackParameters.speed,
+            mixing = PlaybackService.crossfader?.mixing == true,
         )
     }
 }

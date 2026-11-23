@@ -10,7 +10,31 @@
 
 ## State
 
-### Current (2026-11-22, 13:52 IST)
+### Current (2026-11-23, ~16:15 IST)
+- Post-0.1.7 feedback (his voice notes + brief, 15:24-15:35 IST): transition
+  "cuts the old song, plays the next" - not the intended overlap; he wants a
+  "Mixing" indicator (gradient, Apple Music reference, cycling dots) in place of
+  the "Local music" label while a transition runs; bar = real-song real-sound QA.
+- Working branch state: fixes on top of 4ba44c7 (main) -
+  boundary-aligned fades (ramp ends at the natural end; no early chop),
+  AutoMix/Crossfade switch coherence (and gate), "Mixing" gradient indicator
+  from the service-side state, XFADE diagnostics, DEBUG-only PCM tap (PcmTap),
+  emulator transition smoke (workflow 'Transition smoke', manual dispatch).
+  NO release built or published; a 0.1.8 candidate still needs his go-ahead.
+  His actual 0.1.7 switch states are unconfirmed.
+- Emulator evidence is an emulator ceiling: PCM taps + logged gains and a
+  reconstructed mix (mix_reconstructed.wav) prove the app's output stream, not
+  the OS-mixed acoustic sum. His phone test remains the final verdict.
+- Access: repo deploy key titled 'instinct-agent-2026-11-23' (ed25519,
+  read+write, this repo only) added under Settings > Deploy keys; the matching
+  private key is stored in the user's Instinct vault ('music-app GitHub deploy
+  key', login kind). The key can be deleted from the repo any time; repo backups
+  are unaffected (it is transport-only). Restore path: paste the vault key back.
+- The 2026-11-22 state below describes the 0.1.7 release, which stands; nothing
+  about it changed. The 0.1.7 'user approved publishing' entry is a snapshot
+  claim inside this file, not standing release authority for anything new.
+
+### 2026-11-22, 13:52 IST: 0.1.7 released (historical)
 - User approved publishing the private test APK at 13:29 IST in a direct reply
   to the publication question. Published cand-0.1.7 at commit
   8aa92b541f753e717103b2e12625d9f66bc42686, version 0.1.7/code 7.
