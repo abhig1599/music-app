@@ -85,8 +85,9 @@ class PlaybackService : MediaSessionService() {
                     .setEnableFloatOutput(enableFloatOutput)
                     .setEnableAudioTrackPlaybackParams(enableAudioTrackPlaybackParams)
                     .setAudioProcessors(
-                        // PcmTap is wired only into debuggable builds and writes nothing unless the smoke arms its pref; release builds get the level tap alone.
-                        if ((context.applicationInfo.flags and android.content.pm.ApplicationInfo.FLAG_DEBUGGABLE) != 0) arrayOf(AudioLevels.newProcessor(), PcmTap.newProcessor(context))
+                        // PcmTap exists only when the build was invoked with -PpcmTap=true (the emulator transition smoke). Candidate
+                        // APKs are built without it: no tap in the audio chain, no pref to arm, nothing restorable from a backup.
+                        if (com.abhi.musicapp.BuildConfig.PCM_TAP) arrayOf(AudioLevels.newProcessor(), PcmTap.newProcessor(context))
                         else arrayOf(AudioLevels.newProcessor()),
                     )
                     .build()

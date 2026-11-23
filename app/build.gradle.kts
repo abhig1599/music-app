@@ -15,6 +15,9 @@ android {
         targetSdk = 34
         versionCode = 7
         versionName = "0.1.7"
+        // The per-deck PCM capture tap exists ONLY in builds invoked with -PpcmTap=true (the emulator transition
+        // smoke). Every candidate APK is built without it: no tap in the audio chain, nothing to arm, nothing to inherit.
+        buildConfigField("boolean", "PCM_TAP", project.hasProperty("pcmTap").toString())
     }
 
     // Fixed debug key (private repo, debug build only) so later debug APKs install over earlier ones.
@@ -42,6 +45,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
     testOptions {
         unitTests {
