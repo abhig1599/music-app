@@ -95,9 +95,12 @@ fun RecycleBinScreen(onBack: () -> Unit, fixture: List<BinRow> = emptyList(),
         androidx.activity.result.contract.ActivityResultContracts.StartIntentSenderForResult()
     ) { res ->
         pendingDelete?.let { entry ->
-            if (handleDeleteResult(ctx, res.resultCode, entry.mediaId)) tick++
-            else if (res.resultCode == android.app.Activity.RESULT_OK) deleteNote = "Android confirmed, but the file is still listed, so the song stays in the bin."
-            // cancelled or denied in the system dialog: bin item stays, nothing to say
+            when (handleDeleteResult(ctx, res.resultCode, entry.mediaId)) {
+                DeleteResult.DROPPED -> tick++
+                DeleteResult.UNVERIFIED -> deleteNote = "Couldn't verify whether the file was deleted. The song stays in the bin; check it before trying again."
+                DeleteResult.KEPT -> if (res.resultCode == android.app.Activity.RESULT_OK) deleteNote = "Android confirmed, but the file is still listed, so the song stays in the bin."
+                // cancelled or denied in the system dialog: bin item stays, nothing to say
+            }
         }
         pendingDelete = null
     }
@@ -195,20 +198,27 @@ internal fun requestFileDeletion(ctx: android.content.Context, mediaId: Long): a
         ctx.contentResolver,
         listOf(android.content.ContentUris.withAppendedId(android.provider.MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, mediaId)))
 
-/** True while MediaStore still lists this audio id (stale ids from already-missing files query as absent). */
-internal fun mediaStoreHasAudio(ctx: android.content.Context, mediaId: Long): Boolean =
+/** True/false while MediaStore lists/lacks this audio id; NULL when that cannot be determined (query exception,
+ * null cursor, permission failure) - unknown is never treated as "file absent". */
+internal fun mediaStoreHasAudio(ctx: android.content.Context, mediaId: Long): Boolean? = try {
     ctx.contentResolver.query(
         android.content.ContentUris.withAppendedId(android.provider.MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, mediaId),
-        arrayOf(android.provider.MediaStore.Audio.Media._ID), null, null, null)?.use { it.moveToFirst() } == true
+        arrayOf(android.provider.MediaStore.Audio.Media._ID), null, null, null)?.use { it.moveToFirst() }
+} catch (e: Exception) { null }
 
-/** Handles the system consent result: the bin entry drops only when the user approved AND the provider really no
- * longer lists the item. Cancellation, denial, or a still-present provider entry all preserve the bin item. */
+internal enum class DeleteResult { DROPPED, KEPT, UNVERIFIED }
+
+/** Handles the system consent result: the bin entry drops only when the user approved AND the provider verifiably no
+ * longer lists the item. Cancellation, denial, a still-present provider entry, or an UNVERIFIABLE provider state all
+ * preserve the bin item (unverifiable is surfaced to the user by the caller). */
 internal fun handleDeleteResult(ctx: android.content.Context, resultCode: Int, mediaId: Long,
-    stillExists: (android.content.Context, Long) -> Boolean = ::mediaStoreHasAudio): Boolean {
-    if (resultCode != android.app.Activity.RESULT_OK) return false
-    if (stillExists(ctx, mediaId)) return false
+    stillExists: (android.content.Context, Long) -> Boolean? = ::mediaStoreHasAudio): DeleteResult {
+    if (resultCode != android.app.Activity.RESULT_OK) return DeleteResult.KEPT
+    val has = try { stillExists(ctx, mediaId) } catch (e: Exception) { null }
+    if (has == null) return DeleteResult.UNVERIFIED
+    if (has) return DeleteResult.KEPT
     com.abhi.musicapp.library.BinStore(ctx).restore(mediaId)
-    return true
+    return DeleteResult.DROPPED
 }
 
 /**
