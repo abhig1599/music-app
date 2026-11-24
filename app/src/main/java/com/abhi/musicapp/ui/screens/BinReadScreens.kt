@@ -39,6 +39,7 @@ import androidx.compose.ui.unit.sp
 import com.abhi.musicapp.ui.theme.GeistMono
 import com.abhi.musicapp.ui.theme.GrayText
 import com.abhi.musicapp.ui.theme.InkBlack
+import com.abhi.musicapp.ui.theme.Orangs
 import com.abhi.musicapp.ui.theme.PureWhite
 import com.abhi.musicapp.ui.theme.SurfaceSoft
 
