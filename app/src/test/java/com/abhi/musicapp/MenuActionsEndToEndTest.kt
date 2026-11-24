@@ -86,7 +86,7 @@ class MenuActionsEndToEndTest {
     @Test fun deleteResultKeepsEntryOnCancelOrDenial() {
         val ctx = ApplicationProvider.getApplicationContext<android.content.Context>()
         BinStore(ctx).add(7L)
-        org.junit.Assert.assertFalse(com.abhi.musicapp.ui.screens.handleDeleteResult(ctx, android.app.Activity.RESULT_CANCELED, 7L))
+        assertEquals(com.abhi.musicapp.ui.screens.DeleteResult.KEPT, com.abhi.musicapp.ui.screens.handleDeleteResult(ctx, android.app.Activity.RESULT_CANCELED, 7L))
         assertTrue(BinStore(ctx).removedIds().contains(7L))
         BinStore(ctx).restore(7L)
     }
@@ -94,7 +94,18 @@ class MenuActionsEndToEndTest {
     @Test fun deleteResultKeepsEntryWhenProviderStillHasIt() {
         val ctx = ApplicationProvider.getApplicationContext<android.content.Context>()
         BinStore(ctx).add(7L)
-        org.junit.Assert.assertFalse(com.abhi.musicapp.ui.screens.handleDeleteResult(ctx, android.app.Activity.RESULT_OK, 7L) { _, _ -> true })
+        assertEquals(com.abhi.musicapp.ui.screens.DeleteResult.KEPT, com.abhi.musicapp.ui.screens.handleDeleteResult(ctx, android.app.Activity.RESULT_OK, 7L) { _, _ -> true })
+        assertTrue(BinStore(ctx).removedIds().contains(7L))
+        BinStore(ctx).restore(7L)
+    }
+
+    @Test fun deleteResultUnverifiableKeepsEntry() {
+        val ctx = ApplicationProvider.getApplicationContext<android.content.Context>()
+        // Query failure / null cursor / permission failure = unknown: never treated as file-absent, entry preserved.
+        BinStore(ctx).add(7L)
+        assertEquals(com.abhi.musicapp.ui.screens.DeleteResult.UNVERIFIED, com.abhi.musicapp.ui.screens.handleDeleteResult(ctx, android.app.Activity.RESULT_OK, 7L) { _, _ -> null })
+        assertTrue(BinStore(ctx).removedIds().contains(7L))
+        assertEquals(com.abhi.musicapp.ui.screens.DeleteResult.UNVERIFIED, com.abhi.musicapp.ui.screens.handleDeleteResult(ctx, android.app.Activity.RESULT_OK, 7L) { _, _ -> throw SecurityException("no read") })
         assertTrue(BinStore(ctx).removedIds().contains(7L))
         BinStore(ctx).restore(7L)
     }
@@ -102,7 +113,7 @@ class MenuActionsEndToEndTest {
     @Test fun deleteResultDropsEntryOnlyWhenApprovedAndGone() {
         val ctx = ApplicationProvider.getApplicationContext<android.content.Context>()
         BinStore(ctx).add(7L)
-        assertTrue(com.abhi.musicapp.ui.screens.handleDeleteResult(ctx, android.app.Activity.RESULT_OK, 7L) { _, _ -> false })
+        assertEquals(com.abhi.musicapp.ui.screens.DeleteResult.DROPPED, com.abhi.musicapp.ui.screens.handleDeleteResult(ctx, android.app.Activity.RESULT_OK, 7L) { _, _ -> false })
         org.junit.Assert.assertFalse(BinStore(ctx).removedIds().contains(7L))
     }
 
