@@ -72,9 +72,11 @@ data class BinRow(val name: String, val daysLeft: Int)
 
 /**
  * Recycle Bin. List rows: 351x72, white, r10, pad 10, left group 292x50 gap 13 (50x50 thumb + text), undo icon 24x24; list gap 6.
- * Shipped meaning (settled 2026-11-23, main): "removed from library" - an app-only hide via BinStore. The audio file is NEVER
- * touched, nothing is auto-purged, and there is no permanent-deletion path in the app, so Empty Bin stays disabled and the
- * design's "N days left" countdown (which would imply auto-deletion) is replaced by the removal date. Restore shows the song again.
+ * Shipped meaning (settled 2026-11-23, main): "removed from library" - an app-only hide via BinStore. Nothing is auto-purged,
+ * so Empty Bin stays disabled and the design's "N days left" countdown (which would imply auto-deletion) is replaced by the
+ * removal date. Restore shows the song again. The ONLY permanent path is the explicit per-row "Delete forever" (user's
+ * three-dot Delete request, 2026-11-24): it asks in-app, then Android shows its own system consent dialog (API 30+);
+ * the app can never delete a file silently.
  * [fixture] rows remain design samples for render tests only.
  * [fixtureEntries] is render-only: it supplies the SHIPPED row path (real BinStore entries + resolved songs)
  * so the production bin renders in tests without MediaStore; rows show the removal date, never a countdown.
@@ -86,6 +88,17 @@ fun RecycleBinScreen(onBack: () -> Unit, fixture: List<BinRow> = emptyList(),
     var tick by androidx.compose.runtime.remember { androidx.compose.runtime.mutableIntStateOf(0) }
     val isFixture = fixture.isNotEmpty()
     var real by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf<List<Pair<com.abhi.musicapp.library.BinStore.Entry, com.abhi.musicapp.library.Song?>>>(fixtureEntries ?: emptyList()) }
+    // Per-row permanent deletion: in-app confirmation, then Android's own consent dialog (API 30+). No silent deletes.
+    var pendingDelete by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf<com.abhi.musicapp.library.BinStore.Entry?>(null) }
+    val deleteLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
+        androidx.activity.result.contract.ActivityResultContracts.StartIntentSenderForResult()
+    ) { res ->
+        if (res.resultCode == android.app.Activity.RESULT_OK) {
+            pendingDelete?.let { com.abhi.musicapp.library.BinStore(ctx).restore(it.mediaId) } // file is gone; drop the bin entry
+            tick++
+        }
+        pendingDelete = null
+    }
     androidx.compose.runtime.LaunchedEffect(tick) {
         if (fixtureEntries != null) {
             real = fixtureEntries
@@ -94,6 +107,7 @@ fun RecycleBinScreen(onBack: () -> Unit, fixture: List<BinRow> = emptyList(),
             real = com.abhi.musicapp.library.BinStore(ctx).entries().map { it to byId[it.mediaId] }
         }
     }
+    Box(Modifier.fillMaxSize()) {
     FigmaPage("Recycle Bin", onBack, titleSize = 30.sp, chevronBack = true, trailing = {
         // "Empty Bin" pill from the design: stays disabled - permanently deleting files is not a shipped action.
         Box(Modifier.alpha(0.5f).clip(RoundedCornerShape(8.dp)).background(SurfaceSoft).padding(horizontal = 10.dp, vertical = 6.dp)) {
@@ -123,6 +137,8 @@ fun RecycleBinScreen(onBack: () -> Unit, fixture: List<BinRow> = emptyList(),
                             Text(song?.title ?: "Song no longer on this phone", fontSize = 18.sp, color = InkBlack, maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
                             Text("Removed $date - file untouched", fontFamily = GeistMono, fontSize = 13.sp, color = GrayText)
                         }
+                        Icon(Icons.Filled.Delete, "Delete forever", tint = GrayText, modifier = Modifier.size(22.dp).clickable { pendingDelete = entry })
+                        Spacer(Modifier.width(14.dp))
                         Icon(Icons.Filled.Undo, "Restore", tint = InkBlack, modifier = Modifier.size(24.dp).clickable {
                             com.abhi.musicapp.library.BinStore(ctx).restore(entry.mediaId); tick++
                         })
@@ -133,7 +149,40 @@ fun RecycleBinScreen(onBack: () -> Unit, fixture: List<BinRow> = emptyList(),
             }
         }
     }
+
+    // In-app confirmation for the only permanent-deletion path. On pre-Android-11 phones permanent deletion is unavailable.
+    pendingDelete?.let { entry ->
+        val canDelete = android.os.Build.VERSION.SDK_INT >= 30
+        Box(Modifier.fillMaxSize().background(androidx.compose.ui.graphics.Color(0x99000000)).clickable { pendingDelete = null })
+        Box(Modifier.align(androidx.compose.ui.Alignment.Center).padding(horizontal = 40.dp).clip(RoundedCornerShape(12.dp)).background(com.abhi.musicapp.ui.theme.FigmaWhite).padding(20.dp)) {
+            Column {
+                Text("Delete forever?", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = InkBlack)
+                Spacer(Modifier.height(8.dp))
+                Text(
+                    if (canDelete) "The audio file will be permanently deleted from this phone, not just hidden from this app. Android asks you to confirm once more. This cannot be undone."
+                    else "Permanently deleting files needs Android 11 or newer. On this phone the song can only be hidden from this app.",
+                    fontSize = 13.sp, color = InkBlack)
+                Spacer(Modifier.height(14.dp))
+                Row {
+                    if (canDelete) {
+                        Text("Delete forever", fontSize = 14.sp, color = Orangs, modifier = Modifier.clickable {
+                            deleteLauncher.launch(androidx.activity.result.IntentSenderRequest.Builder(requestFileDeletion(ctx, entry.mediaId).intentSender).build())
+                        })
+                        Spacer(Modifier.width(24.dp))
+                    }
+                    Text("Cancel", fontSize = 14.sp, color = InkBlack, modifier = Modifier.clickable { pendingDelete = null })
+                }
+            }
+        }
+    }
+    }
 }
+
+/** Android's own consent dialog for permanently deleting one audio file (API 30+). The app cannot delete silently. */
+internal fun requestFileDeletion(ctx: android.content.Context, mediaId: Long): android.app.PendingIntent =
+    android.provider.MediaStore.createDeleteRequest(
+        ctx.contentResolver,
+        listOf(android.content.ContentUris.withAppendedId(android.provider.MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, mediaId)))
 
 /**
  * Read Now (Reader). Cards: white, r16, 351 wide; API card 351x168 (pad 14/16/14/10, gap 13; title row 20, API row 321x46, button 321x48), empty card 351x267.52, gap 24 (Design panel). Button radius/fonts estimated.
