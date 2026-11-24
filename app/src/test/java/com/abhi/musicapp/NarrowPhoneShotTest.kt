@@ -7,6 +7,7 @@ import androidx.compose.ui.test.getBoundsInRoot
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.swipeUp
 import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -151,6 +152,32 @@ class NarrowPhoneShotTest {
         org.junit.Assert.assertEquals(2, composeRule.onAllNodesWithText("file untouched", substring = true).fetchSemanticsNodes().size) // one per bin row
         composeRule.onNodeWithText("nothing is ever deleted automatically", substring = true).assertIsDisplayed()
         composeRule.onRoot().captureRoboImage("build/outputs/roborazzi/narrow360_recycle_bin_shipped.png")
+    }
+
+    /** Bin Delete forever: in-app confirmation on supported phones (Android 11+ system dialog follows). */
+    @Test fun binDeleteConfirmSupported() {
+        val song = com.abhi.musicapp.library.Song(id = 7L, title = "Track X", artist = "A", durationMs = 1L,
+            uri = android.net.Uri.parse("content://media/external/audio/media/7"), folder = "Music")
+        composeRule.setContent { FitDesignWidth { MusicAppTheme { bg { com.abhi.musicapp.ui.screens.RecycleBinScreen(onBack = {}, fixtureEntries = listOf(com.abhi.musicapp.library.BinStore.Entry(7L, 1_763_900_000_000L) to song)) }() } } }
+        composeRule.waitForIdle()
+        composeRule.onNodeWithContentDescription("Delete forever").performClick()
+        composeRule.waitForIdle()
+        composeRule.onNodeWithText("Delete forever?").assertIsDisplayed()
+        composeRule.onRoot().captureRoboImage("build/outputs/roborazzi/narrow360_bin_delete_confirm.png")
+    }
+
+    /** Bin Delete forever on Android 10 and older: explains permanent deletion is unavailable there. */
+    @Test @org.robolectric.annotation.Config(sdk = [29])
+    fun binDeleteConfirmUnsupported() {
+        val song = com.abhi.musicapp.library.Song(id = 7L, title = "Track X", artist = "A", durationMs = 1L,
+            uri = android.net.Uri.parse("content://media/external/audio/media/7"), folder = "Music")
+        composeRule.setContent { FitDesignWidth { MusicAppTheme { bg { com.abhi.musicapp.ui.screens.RecycleBinScreen(onBack = {}, fixtureEntries = listOf(com.abhi.musicapp.library.BinStore.Entry(7L, 1_763_900_000_000L) to song)) }() } } }
+        composeRule.waitForIdle()
+        composeRule.onNodeWithContentDescription("Delete forever").performClick()
+        composeRule.waitForIdle()
+        composeRule.onNodeWithText("needs Android 11 or newer", substring = true).assertIsDisplayed()
+        composeRule.onNodeWithText("Delete forever?").assertIsDisplayed()
+        composeRule.onRoot().captureRoboImage("build/outputs/roborazzi/narrow360_bin_delete_confirm_unsupported.png")
     }
 
     /** Shipped remove-from-library confirmation (player menu): app-hide wording, file stays on the phone. */
