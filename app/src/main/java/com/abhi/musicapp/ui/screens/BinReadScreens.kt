@@ -90,12 +90,14 @@ fun RecycleBinScreen(onBack: () -> Unit, fixture: List<BinRow> = emptyList(),
     var real by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf<List<Pair<com.abhi.musicapp.library.BinStore.Entry, com.abhi.musicapp.library.Song?>>>(fixtureEntries ?: emptyList()) }
     // Per-row permanent deletion: in-app confirmation, then Android's own consent dialog (API 30+). No silent deletes.
     var pendingDelete by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf<com.abhi.musicapp.library.BinStore.Entry?>(null) }
+    var deleteNote by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf<String?>(null) }
     val deleteLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
         androidx.activity.result.contract.ActivityResultContracts.StartIntentSenderForResult()
     ) { res ->
-        if (res.resultCode == android.app.Activity.RESULT_OK) {
-            pendingDelete?.let { com.abhi.musicapp.library.BinStore(ctx).restore(it.mediaId) } // file is gone; drop the bin entry
-            tick++
+        pendingDelete?.let { entry ->
+            if (handleDeleteResult(ctx, res.resultCode, entry.mediaId)) tick++
+            else if (res.resultCode == android.app.Activity.RESULT_OK) deleteNote = "Android confirmed, but the file is still listed, so the song stays in the bin."
+            // cancelled or denied in the system dialog: bin item stays, nothing to say
         }
         pendingDelete = null
     }
@@ -145,7 +147,8 @@ fun RecycleBinScreen(onBack: () -> Unit, fixture: List<BinRow> = emptyList(),
                     }
                 }
                 if (real.isEmpty()) Text("Nothing in the bin", fontFamily = GeistMono, fontSize = 13.sp, color = GrayText, modifier = Modifier.padding(top = 8.dp))
-                else Text("Removed songs only stop showing in this app. Their files stay on your phone; nothing is ever deleted automatically.", fontFamily = GeistMono, fontSize = 11.sp, color = GrayText, modifier = Modifier.padding(top = 8.dp))
+                else Text("Removed songs only stop showing in this app. Their files stay on your phone unless you choose Delete forever on a row; nothing is ever deleted automatically.", fontFamily = GeistMono, fontSize = 11.sp, color = GrayText, modifier = Modifier.padding(top = 8.dp))
+                deleteNote?.let { note -> Text(note, fontFamily = GeistMono, fontSize = 11.sp, color = Orangs, modifier = Modifier.padding(top = 8.dp)) }
             }
         }
     }
@@ -166,7 +169,12 @@ fun RecycleBinScreen(onBack: () -> Unit, fixture: List<BinRow> = emptyList(),
                 Row {
                     if (canDelete) {
                         Text("Delete forever", fontSize = 14.sp, color = Orangs, modifier = Modifier.clickable {
-                            deleteLauncher.launch(androidx.activity.result.IntentSenderRequest.Builder(requestFileDeletion(ctx, entry.mediaId).intentSender).build())
+                            try {
+                                deleteLauncher.launch(androidx.activity.result.IntentSenderRequest.Builder(requestFileDeletion(ctx, entry.mediaId).intentSender).build())
+                            } catch (e: Exception) {
+                                deleteNote = "Couldn't ask Android to delete this file. The song stays in the bin."
+                                pendingDelete = null
+                            }
                         })
                         Spacer(Modifier.width(24.dp))
                     }
@@ -178,11 +186,30 @@ fun RecycleBinScreen(onBack: () -> Unit, fixture: List<BinRow> = emptyList(),
     }
 }
 
-/** Android's own consent dialog for permanently deleting one audio file (API 30+). The app cannot delete silently. */
+/** Android's own consent dialog for permanently deleting one audio file (API 30+). The app cannot delete silently.
+ * Per developer.android.com/reference/android/provider/MediaStore#createDeleteRequest: the uri must be hosted by
+ * MediaStore.AUTHORITY and reference one item by _ID (ContentUris.withAppendedId does exactly that), and the delete
+ * has completely finished by the time the activity result arrives - RESULT_OK means granted AND done. */
 internal fun requestFileDeletion(ctx: android.content.Context, mediaId: Long): android.app.PendingIntent =
     android.provider.MediaStore.createDeleteRequest(
         ctx.contentResolver,
         listOf(android.content.ContentUris.withAppendedId(android.provider.MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, mediaId)))
+
+/** True while MediaStore still lists this audio id (stale ids from already-missing files query as absent). */
+internal fun mediaStoreHasAudio(ctx: android.content.Context, mediaId: Long): Boolean =
+    ctx.contentResolver.query(
+        android.content.ContentUris.withAppendedId(android.provider.MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, mediaId),
+        arrayOf(android.provider.MediaStore.Audio.Media._ID), null, null, null)?.use { it.moveToFirst() } == true
+
+/** Handles the system consent result: the bin entry drops only when the user approved AND the provider really no
+ * longer lists the item. Cancellation, denial, or a still-present provider entry all preserve the bin item. */
+internal fun handleDeleteResult(ctx: android.content.Context, resultCode: Int, mediaId: Long,
+    stillExists: (android.content.Context, Long) -> Boolean = ::mediaStoreHasAudio): Boolean {
+    if (resultCode != android.app.Activity.RESULT_OK) return false
+    if (stillExists(ctx, mediaId)) return false
+    com.abhi.musicapp.library.BinStore(ctx).restore(mediaId)
+    return true
+}
 
 /**
  * Read Now (Reader). Cards: white, r16, 351 wide; API card 351x168 (pad 14/16/14/10, gap 13; title row 20, API row 321x46, button 321x48), empty card 351x267.52, gap 24 (Design panel). Button radius/fonts estimated.
