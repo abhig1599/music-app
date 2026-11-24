@@ -83,6 +83,29 @@ class MenuActionsEndToEndTest {
         SleepTimer.cancel()
     }
 
+    @Test fun deleteResultKeepsEntryOnCancelOrDenial() {
+        val ctx = ApplicationProvider.getApplicationContext<android.content.Context>()
+        BinStore(ctx).add(7L)
+        org.junit.Assert.assertFalse(com.abhi.musicapp.ui.screens.handleDeleteResult(ctx, android.app.Activity.RESULT_CANCELED, 7L))
+        assertTrue(BinStore(ctx).removedIds().contains(7L))
+        BinStore(ctx).restore(7L)
+    }
+
+    @Test fun deleteResultKeepsEntryWhenProviderStillHasIt() {
+        val ctx = ApplicationProvider.getApplicationContext<android.content.Context>()
+        BinStore(ctx).add(7L)
+        org.junit.Assert.assertFalse(com.abhi.musicapp.ui.screens.handleDeleteResult(ctx, android.app.Activity.RESULT_OK, 7L) { _, _ -> true })
+        assertTrue(BinStore(ctx).removedIds().contains(7L))
+        BinStore(ctx).restore(7L)
+    }
+
+    @Test fun deleteResultDropsEntryOnlyWhenApprovedAndGone() {
+        val ctx = ApplicationProvider.getApplicationContext<android.content.Context>()
+        BinStore(ctx).add(7L)
+        assertTrue(com.abhi.musicapp.ui.screens.handleDeleteResult(ctx, android.app.Activity.RESULT_OK, 7L) { _, _ -> false })
+        org.junit.Assert.assertFalse(BinStore(ctx).removedIds().contains(7L))
+    }
+
     @Test fun binDeleteForeverAsksInAppFirst() {
         val song = com.abhi.musicapp.library.Song(id = 7L, title = "Track X", artist = "A", durationMs = 1L,
             uri = android.net.Uri.parse("content://media/external/audio/media/7"), folder = "Music")
