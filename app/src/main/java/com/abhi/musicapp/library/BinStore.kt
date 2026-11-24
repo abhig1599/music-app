@@ -6,7 +6,8 @@ import android.content.Context
  * Recycle Bin = "removed from library": songs the user asked this app to stop showing. App-private
  * preference keyed by MediaStore id with the removal time. This NEVER deletes, moves or edits the audio
  * file: the song stays on the phone, visible in every other app, and Restore shows it here again.
- * There is no automatic purge and no permanent-deletion path in the app.
+ * There is no automatic purge. The only permanent deletion is the explicit per-row "Delete forever" in the
+ * Recycle Bin (Android 11+), confirmed in-app and again by Android's system dialog; it removes the file itself.
  */
 class BinStore(context: Context) {
     private val prefs = context.applicationContext.getSharedPreferences("recycle_bin", Context.MODE_PRIVATE)
