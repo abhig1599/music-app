@@ -1,13 +1,13 @@
 > Task :app:checkKotlinGradlePluginConfigurationErrors SKIPPED
-e: file:///home/runner/work/music-app/music-app/app/src/main/java/com/abhi/musicapp/ui/screens/BinReadScreens.kt:154:104 Unresolved reference 'Orangs'.
-e: file:///home/runner/work/music-app/music-app/app/src/main/java/com/abhi/musicapp/ui/screens/BinReadScreens.kt:174:74 Unresolved reference 'Orangs'.
-> Task :app:compileDebugKotlin FAILED
+> Task :app:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :app:compileDebugUnitTestKotlin FAILED
+e: file:///home/runner/work/music-app/music-app/app/src/test/java/com/abhi/musicapp/MenuActionsEndToEndTest.kt:127:86 Unresolved reference 'assertIsDisplayed'.
 * What went wrong:
 * Exception is:
-org.gradle.api.tasks.TaskExecutionException: Execution failed for task ':app:compileDebugKotlin'.
+org.gradle.api.tasks.TaskExecutionException: Execution failed for task ':app:compileDebugUnitTestKotlin'.
 	at org.gradle.api.internal.tasks.execution.CatchExceptionTaskExecuter.execute(CatchExceptionTaskExecuter.java:36)
 Caused by: org.gradle.workers.internal.DefaultWorkerExecutor$WorkExecutionException: A failure occurred while executing org.jetbrains.kotlin.compilerRunner.GradleCompilerRunnerWithWorkers$GradleKotlinCompilerWorkAction
 	at org.gradle.api.internal.tasks.execution.CatchExceptionTaskExecuter.execute(CatchExceptionTaskExecuter.java:36)
 Caused by: org.jetbrains.kotlin.gradle.tasks.CompilationErrorException: Compilation error. See log for more details
 	at org.jetbrains.kotlin.gradle.tasks.TasksUtilsKt.throwExceptionIfCompilationFailed(tasksUtils.kt:21)
-BUILD FAILED in 37s
+BUILD FAILED in 9s
