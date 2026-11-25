@@ -96,9 +96,7 @@ object MixPlanner {
             if (overlap !in 500L..cap) continue
             val outInOverlap = ob.filter { it >= start && it < end }
             if (outInOverlap.size < 4) continue
-            val inCoverage = ib.filter { (it / ratio) <= overlap }
-            if (inCoverage.size < 4) continue
-            val residual = maxResidual(outInOverlap, start, inCoverage, ratio, beatMs) ?: continue
+            val residual = maxResidual(outInOverlap, start, ib, ratio, oBpm, iBpm) ?: continue
             if (residual > MAX_PHASE_ERROR_MS) continue
             val plan = Plan(start, end, overlap, ratio, gainTrim(outRms, inRms), residual,
                 "beat-aligned ${bars * 4}-beat overlap ending at content end, nudge %.4f".format(ratio))
@@ -124,24 +122,23 @@ object MixPlanner {
     }
 
     /**
-     * Largest misalignment between the two beat trains inside the overlap. During the overlap the incoming
-     * deck runs at [ratio], so its beat at media time b is heard b/[ratio] into the overlap. Each outgoing
-     * beat is compared with the nearest incoming beat (modulo one beat, so only sub-beat phase counts).
+     * Compare actual beat timestamps from the cue at zero. With half/double-time
+     * detection, every other beat on the faster grid is a subdivision.
      */
-    internal fun maxResidual(outInOverlap: List<Long>, outStartMs: Long, inBeats: List<Long>, ratio: Float, beatMs: Double): Double? {
-        if (outInOverlap.isEmpty() || inBeats.isEmpty() || ratio <= 0.0 || !ratio.isFinite()) return null
-        val period = beatMs
-        var worst = -1.0
-        for (a in outInOverlap) {
-            val off = (a - outStartMs).toDouble()
-            var bestForBeat = Double.MAX_VALUE
-            for (b in inBeats) {
-                val d = abs(off - b / ratio) % period
-                val wrapped = min(d, period - d)
-                if (wrapped < bestForBeat) bestForBeat = wrapped
-            }
-            if (bestForBeat == Double.MAX_VALUE) return null
-            if (bestForBeat > worst) worst = bestForBeat
+    private fun maxResidual(
+        outgoing: List<Long>, startMs: Long, incoming: List<Long>,
+        ratio: Float, outgoingBpm: Float, incomingBpm: Float,
+    ): Double? {
+        val matchedIncomingBpm = incomingBpm * ratio
+        val outStride = if (outgoingBpm > matchedIncomingBpm * 1.5f) 2 else 1
+        val inStride = if (matchedIncomingBpm > outgoingBpm * 1.5f) 2 else 1
+        var worst = 0.0
+        for (i in outgoing.indices step outStride) {
+            val beat = incoming.getOrNull(i / outStride * inStride) ?: return null
+            val offset = (outgoing[i] - startMs).toDouble()
+            val error = abs(offset - beat / ratio.toDouble())
+            if (error > MAX_PHASE_ERROR_MS) return null
+            worst = maxOf(worst, error)
         }
         return worst
     }
