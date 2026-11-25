@@ -209,7 +209,12 @@ class Crossfader(
             // Re-measure the true remaining media time NOW (the arm-time estimate can drift) so the fade ends at the natural end.
             val sp = main.playbackParameters.speed.let { if (it > 0f) it else 1f }
             val mp = mixPlan
-            fadeMs = if (mp != null) ((mp.outEndMs - main.currentPosition) / sp.toDouble()).toLong()
+            val position = main.currentPosition
+            if (mp != null && (!autoMixActive() || !canStartMix(mp, position))) {
+                dropPhase("beat-aligned start missed or disabled")
+                return
+            }
+            fadeMs = if (mp != null) ((mp.outEndMs - position) / sp.toDouble()).toLong()
             else {
                 val dur = mainEffectiveDurationMs()
                 if (dur != C.TIME_UNSET && dur > 0L) ((dur - main.currentPosition) / sp).toLong() else w
@@ -338,9 +343,14 @@ class Crossfader(
         old.removeListener(mainListener)
         incomingReady?.let { inc.removeListener(it) }
         incomingReady = null; incoming = null; rampStart = 0L; toIndex = C.INDEX_UNSET
-        // The in-fade ease targets unity at t = 1 but the slew can lag on very short fades: ease any residue
-        // to unity over ~400 ms rather than stepping the level at the hand-over.
-        if (abs(trimNow - 1f) > 0.0005f) trimRestore = TrimRestore(trimNow, SystemClock.uptimeMillis()) else inc.volume = base
+        // An automatic item transition can swap before the final fade tick. Continue
+        // from the actual applied volume, including any remaining fade and trim.
+        val handoverVolume = inc.volume
+        if (!muted && abs(handoverVolume - base) > 0.0005f) {
+            trimRestore = TrimRestore(handoverVolume, SystemClock.uptimeMillis())
+        } else {
+            inc.volume = base
+        }
         // AutoMix: the incoming song ran nudged to the old song's tempo during the overlap. Ease it back to the user's speed
         // over ~1.5 s rather than stepping; a user speed change during the ease wins and stops it.
         val userParams = old.playbackParameters
@@ -395,6 +405,9 @@ class Crossfader(
             if (!plan.inGain.isFinite() || plan.inGain !in 0.25f..4f) return null
             return plan
         }
+        internal fun canStartMix(plan: MixPlanner.Plan, positionMs: Long): Boolean =
+            abs(positionMs - plan.outStartMs).toDouble() + plan.maxResidualMs <= MixPlanner.MAX_PHASE_ERROR_MS
+
         internal fun selectPhase(plan: PhaseTransitionPlanner.Plan?, autoMix: Boolean): PhaseTransitionPlanner.Plan? =
             plan?.takeIf { autoMix && it.aligned }
         /** Fraction of the fade over which the level trim eases back to unity so the hand-over is step-free. */
