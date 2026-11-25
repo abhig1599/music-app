@@ -52,4 +52,7 @@ data class TransitionAnalysisResult(
     val outgoing: PhaseTransitionPlanner.Grid?,
     val incoming: PhaseTransitionPlanner.Grid?,
     val plan: PhaseTransitionPlanner.Plan,
+    /** Beat-aligned whole-bar plan; null when evidence is weak, which keeps today's crossfade. */
+    val mix: MixPlanner.Plan? = null,
 )
+
