@@ -2,8 +2,9 @@ package com.abhi.musicapp.analysis
 
 import kotlin.math.*
 
-/** Experimental analysis only, never called by playback. Beat positions are not downbeats or phrases. */
-data class BeatGrid(val timesSeconds: List<Float>, val confidence: Float, val bpm: Float?)
+/** Experimental analysis only, never called by playback. Beat positions are not phrase boundaries; bar
+ * position is tagged only when BarPhaseAnalyzer finds clear accent evidence, otherwise barPhase is null. */
+data class BeatGrid(val timesSeconds: List<Float>, val confidence: Float, val bpm: Float?, val barPhase: BarPhaseAnalyzer.BarPhase? = null)
 
 object BeatGridAnalyzer {
     private const val HOP = 256
@@ -76,6 +77,6 @@ object BeatGridAnalyzer {
         val target = 60f / bpm
         val error = intervals.map { abs(it / target - 1f) }.average().toFloat()
         val confidence = min(tempo.confidence, support * (1f - error.coerceIn(0f, 1f)))
-        return if (confidence >= .65f) BeatGrid(times, confidence, bpm) else BeatGrid(emptyList(), confidence, bpm)
+        return if (confidence >= .65f) BeatGrid(times, confidence, bpm, BarPhaseAnalyzer.analyze(samples, sampleRate, times)) else BeatGrid(emptyList(), confidence, bpm)
     }
 }
