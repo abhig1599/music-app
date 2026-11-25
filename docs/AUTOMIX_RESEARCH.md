@@ -66,8 +66,10 @@ references above), not Apple documentation. analysis/BarPhaseAnalyzer.kt estimat
 existing beat grid from measured audio accents: low-band (120 Hz one-pole) energy rise per beat vs a
 pre-beat baseline, averaged per bar position (index mod 4, 4/4 assumed, >= 8 bars). Confidence is the
 strong-pair margin over the odd positions; p/p+2 ties are reported as two-beat ambiguity (musically safe,
-both choices pair strong beats) at reduced confidence; weak evidence returns null and every caller keeps
-beat-only behaviour. Design rules kept from the patch review: beats are never moved (a genuine onset delay
+both choices pair strong beats) at reduced confidence and attach no bar position at the BeatWindow
+boundary, so the planner abstains; weak evidence returns null and every caller keeps beat-only behaviour.
+4/4 is assumed without meter detection: synthetic period-3 and 6/8 probes all abstain or tie
+(docs/MIXING_QA.md), but false-positive tags on unusual content remain possible - not meter detection. Design rules kept from the patch review: beats are never moved (a genuine onset delay
 stays a delayed beat, never relabeled), the index-locked stricter matching is unchanged, and bar evidence
 can only PREFER an already-passing MixPlanner candidate, never create or salvage one. MixPlanner.plan()
 takes optional trailing bar params (defaults = identical behaviour), counts bar-matched stride-adjusted
