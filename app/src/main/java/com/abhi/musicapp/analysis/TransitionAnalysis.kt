@@ -37,6 +37,8 @@ object TransitionAnalysis {
             durationMs, contentEnd,
             head?.grid?.beatsMs, head?.grid?.bpm, head?.grid?.confidence ?: 0f,
             null, fadeMs, tail?.rms, head?.rms,
+            tail?.grid?.firstBeatBarPosition, head?.grid?.firstBeatBarPosition,
+            tail?.grid?.barConfidence ?: 0f, head?.grid?.barConfidence ?: 0f,
         )
         val result = TransitionAnalysisResult(tail?.grid, head?.grid, plan, mix)
         if (cancelled()) return null
