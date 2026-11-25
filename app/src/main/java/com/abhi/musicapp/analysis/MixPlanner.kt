@@ -26,6 +26,7 @@ import kotlin.math.roundToLong
 object MixPlanner {
     const val MAX_PHASE_ERROR_MS = 45.0
     const val MAX_GAIN_DB = 6f
+    const val MIN_BAR_CONFIDENCE = .25f
 
     data class Plan(
         /** Outgoing media position where the fade begins (an outgoing beat). */
@@ -56,6 +57,10 @@ object MixPlanner {
         userFadeMs: Long,
         outRms: Float?,
         inRms: Float?,
+        outBarPos0: Int? = null,
+        inBarPos0: Int? = null,
+        outBarConf: Float = 0f,
+        inBarConf: Float = 0f,
     ): Plan? {
         if (outDurationMs <= 0L || userFadeMs < 500L) return null
         if (!valid(outBeatsMs, outBpm, outConfidence) || !valid(inBeatsMs, inBpm, inConfidence)) return null
@@ -89,7 +94,15 @@ object MixPlanner {
             .sortedBy { abs(ob[it] - anchor) }
             .take(3)
         if (candidates.isEmpty()) return null
+        // Optional bar evidence (tag-only, from BarPhaseAnalyzer accents on the real audio): when BOTH
+        // grids carry confident bar positions, prefer the candidate whose index-locked beat pairs share a
+        // bar position (downbeat lands on downbeat). Never a reason to reject a candidate that already
+        // passed every beat gate, and never changes anything when evidence is missing.
+        val barEvidence = outBarPos0 != null && inBarPos0 != null &&
+            outBarConf >= MIN_BAR_CONFIDENCE && inBarConf >= MIN_BAR_CONFIDENCE
+        val (outStride, inStride) = strides(ratio, oBpm, iBpm)
         var best: Plan? = null
+        var bestBar = -1
         for (c in candidates) {
             val start = ob[c]
             val overlap = end - start
@@ -98,9 +111,16 @@ object MixPlanner {
             if (outInOverlap.size < 4) continue
             val residual = maxResidual(outInOverlap, start, ib, ratio, oBpm, iBpm) ?: continue
             if (residual > MAX_PHASE_ERROR_MS) continue
+            val barScore = if (barEvidence)
+                alignedPairs(outInOverlap.size, c, outStride, inStride, ib.size, outBarPos0!!, inBarPos0!!) else -1
             val plan = Plan(start, end, overlap, ratio, gainTrim(outRms, inRms), residual,
-                "beat-aligned ${bars * 4}-beat overlap ending at content end, nudge %.4f".format(ratio))
-            if (best == null || plan.maxResidualMs < best.maxResidualMs) best = plan
+                "beat-aligned ${bars * 4}-beat overlap ending at content end, nudge %.4f".format(ratio) +
+                    if (barScore >= 0) ", bar-matched $barScore pairs" else "")
+            if (best == null || barScore > bestBar ||
+                (barScore == bestBar && plan.maxResidualMs < best!!.maxResidualMs)) {
+                best = plan
+                bestBar = barScore
+            }
         }
         return best
     }
@@ -129,9 +149,7 @@ object MixPlanner {
         outgoing: List<Long>, startMs: Long, incoming: List<Long>,
         ratio: Float, outgoingBpm: Float, incomingBpm: Float,
     ): Double? {
-        val matchedIncomingBpm = incomingBpm * ratio
-        val outStride = if (outgoingBpm > matchedIncomingBpm * 1.5f) 2 else 1
-        val inStride = if (matchedIncomingBpm > outgoingBpm * 1.5f) 2 else 1
+        val (outStride, inStride) = strides(ratio, outgoingBpm, incomingBpm)
         var worst = 0.0
         for (i in outgoing.indices step outStride) {
             val beat = incoming.getOrNull(i / outStride * inStride) ?: return null
@@ -141,6 +159,29 @@ object MixPlanner {
             worst = maxOf(worst, error)
         }
         return worst
+    }
+
+
+    /** Half/double-time stride handling: every other beat on the faster grid is a subdivision. */
+    private fun strides(ratio: Float, outgoingBpm: Float, incomingBpm: Float): Pair<Int, Int> {
+        val matchedIncomingBpm = incomingBpm * ratio
+        val outStride = if (outgoingBpm > matchedIncomingBpm * 1.5f) 2 else 1
+        val inStride = if (matchedIncomingBpm > outgoingBpm * 1.5f) 2 else 1
+        return outStride to inStride
+    }
+
+    /** How many index-locked beat pairs across the overlap share the same position within the bar. */
+    private fun alignedPairs(outOverlapSize: Int, outStartIndex: Int, outStride: Int, inStride: Int, inBeatCount: Int, outPos0: Int, inPos0: Int): Int {
+        var n = 0
+        var i = 0
+        while (i < outOverlapSize) {
+            val j = i / outStride * inStride
+            if (j >= inBeatCount) break
+            if (Math.floorMod(outPos0 + outStartIndex + i, BarPhaseAnalyzer.BEATS_PER_BAR) ==
+                Math.floorMod(inPos0 + j, BarPhaseAnalyzer.BEATS_PER_BAR)) n++
+            i += outStride
+        }
+        return n
     }
 
     /** Linear trim so the incoming deck's head loudness matches the outgoing tail; clamped to +/-[MAX_GAIN_DB]. */
