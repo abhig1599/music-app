@@ -5,7 +5,14 @@ import kotlin.math.roundToLong
 
 /** Analysis-only plan. Both songs retain all content: incoming starts at0, outgoing reaches its natural end. */
 object PhaseTransitionPlanner {
-    data class Grid(val beatsMs: List<Long>, val bpm: Float?, val confidence: Float)
+    data class Grid(
+        val beatsMs: List<Long>,
+        val bpm: Float?,
+        val confidence: Float,
+        /** Bar position (0 = downbeat) of beatsMs[0] from measured accent evidence; null when unknown. */
+        val firstBeatBarPosition: Int? = null,
+        val barConfidence: Float = 0f,
+    )
     data class Plan(
         val aligned: Boolean,
         val startOutgoingMs: Long,
