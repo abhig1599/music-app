@@ -70,6 +70,20 @@ class MixPlannerTest {
         assertNull(plan(inBeats = beats(120f, 120L, 80)))
     }
 
+    @Test fun incomingFirstBeatOnePeriodLateFallsBack() {
+        assertNull(plan(inBeats = beats(120f, 500L, 80)))
+    }
+
+    @Test fun halfTimeGridStillAlignsOnSharedBeats() {
+        assertNotNull(plan(inBeats = beats(60f, 0L, 80), inBpm = 60f))
+    }
+
+    @Test fun lateStartMustFitRemainingPhaseBudget() {
+        val p = plan()!!.copy(maxResidualMs = 20.0)
+        assertTrue(com.abhi.musicapp.playback.Crossfader.canStartMix(p, p.outStartMs + 25))
+        assertTrue(!com.abhi.musicapp.playback.Crossfader.canStartMix(p, p.outStartMs + 26))
+    }
+
     @Test fun fileEndIsUsedWhenNoContentEndDetected() {
         val p = plan(contentEnd = null)
         assertNotNull(p); p!!
