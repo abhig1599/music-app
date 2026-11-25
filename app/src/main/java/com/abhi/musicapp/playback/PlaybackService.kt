@@ -32,7 +32,7 @@ class PlaybackService : MediaSessionService() {
         exo = player
         val session = MediaSession.Builder(this, player).build()
         mediaSession = session
-        crossfader = Crossfader(this, player, { buildPlayer() }, { p -> session.player = p; exo = p }, { p -> onTrackChanged(p) }, phasePlanOf = { currentPhasePlan() }).also { f -> f.contentEndOf = { uri, dur -> currentTailIdentity?.takeIf { it.uri == uri && it.durationMs == dur && it == tailRevalidatedFor }?.let { validatedContentEnd } }; f.start() }
+        crossfader = Crossfader(this, player, { buildPlayer() }, { p -> session.player = p; exo = p }, { p -> onTrackChanged(p) }, phasePlanOf = { currentPhasePlan() }, mixPlanOf = { currentMixPlan() }).also { f -> f.contentEndOf = { uri, dur -> currentTailIdentity?.takeIf { it.uri == uri && it.durationMs == dur && it == tailRevalidatedFor }?.let { validatedContentEnd } }; f.start() }
         playbackHandler.post(analysisReconcile)
     }
 
@@ -57,6 +57,12 @@ class PlaybackService : MediaSessionService() {
     private fun currentPhasePlan(): com.abhi.musicapp.analysis.PhaseTransitionPlanner.Plan? {
         val p=exo ?: return null
         return phaseResult?.plan?.takeIf { phaseSignature!=null && phaseSignature==analysisKey(p) }
+    }
+
+    /** Beat-aligned whole-bar plan for the current/next pair, same freshness gate as the phase plan. */
+    private fun currentMixPlan(): com.abhi.musicapp.analysis.MixPlanner.Plan? {
+        val p=exo ?: return null
+        return phaseResult?.mix?.takeIf { phaseSignature!=null && phaseSignature==analysisKey(p) }
     }
 
 
@@ -204,3 +210,4 @@ class PlaybackService : MediaSessionService() {
         super.onDestroy()
     }
 }
+
