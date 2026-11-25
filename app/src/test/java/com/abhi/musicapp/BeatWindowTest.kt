@@ -1,5 +1,6 @@
 package com.abhi.musicapp
 
+import com.abhi.musicapp.analysis.BarPhaseAnalyzer
 import com.abhi.musicapp.analysis.BeatGrid
 import com.abhi.musicapp.analysis.BeatWindow
 import org.junit.Assert.*
@@ -18,5 +19,18 @@ class BeatWindowTest {
         assertNull(BeatWindow.absoluteGrid(grid,0,1700))
         assertNull(BeatWindow.absoluteGrid(grid.copy(timesSeconds=listOf(0f,.5f,Float.NaN,1.5f)),0,60000))
         assertNull(BeatWindow.absoluteGrid(grid.copy(timesSeconds=listOf(0f,.5f,.5f,1.5f)),0,60000))
+    }
+    @Test fun unambiguousBarPhaseIsTagged() {
+        val tagged = grid.copy(barPhase = BarPhaseAnalyzer.BarPhase(1, .6f, 8, false))
+        val absolute = BeatWindow.absoluteGrid(tagged, 240000, 60000)!!
+        assertEquals(3, absolute.firstBeatBarPosition)
+        assertEquals(.6f, absolute.barConfidence, 0f)
+    }
+    @Test fun ambiguousBarPhaseNeverReachesThePlanner() {
+        // A p/p+2 tie is not a unique downbeat: the planner must abstain, so no position is attached.
+        val tagged = grid.copy(barPhase = BarPhaseAnalyzer.BarPhase(1, .6f, 8, true))
+        val absolute = BeatWindow.absoluteGrid(tagged, 240000, 60000)!!
+        assertNull(absolute.firstBeatBarPosition)
+        assertEquals(0f, absolute.barConfidence, 0f)
     }
 }
