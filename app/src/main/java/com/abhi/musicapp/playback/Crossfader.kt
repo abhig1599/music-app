@@ -49,7 +49,8 @@ import kotlin.math.sin
  * Beat-aligned mix plans (analysis/MixPlanner.kt, same AutoMix opt-in): when both songs have high-confidence beat grids and matching
  * tempos, the overlap lasts a whole number of bars starting on an outgoing beat, the incoming deck runs nudged to the outgoing tempo
  * with its beat train required to overlay the outgoing one (else the plan is dropped), and its level is RMS-trimmed to the outgoing
- * tail. The overlap still ends exactly at the detected content end and the incoming song starts at 0: nothing audible is skipped.
+ * tail. The trim eases back to unity across the last quarter of the fade, with any residue eased out after the swap, so the
+ * level never steps at the hand-over or on fallback. The overlap still ends exactly at the detected content end and the incoming song starts at 0: nothing audible is skipped.
  * Reliability on real songs is unverified until the phone listening test; every fallback is today's crossfade.
  *
  * [mixing] is true from the moment a transition is armed (incoming deck preparing) until the session hand-over completes
@@ -94,6 +95,10 @@ class Crossfader(
     private var mixPlan: MixPlanner.Plan? = null
     /** Level trim applied to the incoming deck while [mixPlan] is armed (1 = no trim). */
     private var inGain = 1f
+    /** Currently applied incoming-deck trim; slews toward the target so trim changes never step the volume. */
+    private var trimNow = 1f
+    /** Post-swap ease of the new active player's volume when the fade ended with trim residue; null when not easing. */
+    private var trimRestore: TrimRestore? = null
     /** Post-swap ease of the new active player's speed back to the user's setting; null when not restoring. */
     private var restore: Restore? = null
     /** True while a transition is armed or fading; the UI's "Mixing" label reads this. Written on the main thread. */
@@ -103,13 +108,14 @@ class Crossfader(
         private set
 
     private class Restore(val from: Float, val to: Float, val start: Long, var last: Float)
+    private class TrimRestore(val from: Float, val start: Long)
 
     private val base get() = if (muted) 0f else 1f
 
     private val loop = object : Runnable {
         override fun run() {
             try { step() } catch (e: Exception) { cancel("exception: " + e.javaClass.simpleName) }
-            handler.postDelayed(this, if (incoming != null || restore != null) 40L else 250L)
+            handler.postDelayed(this, if (incoming != null || restore != null || trimRestore != null) 40L else 250L)
         }
     }
 
@@ -159,6 +165,7 @@ class Crossfader(
     // Test seams (no audio): let a unit test put a player in the incoming role and drive the swap and cancel paths.
     internal val activePlayer: ExoPlayer get() = main
     internal val restorePendingForTest: Boolean get() = restore != null
+    internal val trimRestorePendingForTest: Boolean get() = trimRestore != null
     internal fun injectIncomingForTest(p: ExoPlayer, toIdx: Int, nudgeFactor: Float = 1f) { incoming = p; toIndex = toIdx; rampStart = 0L; nudge = nudgeFactor; mixing = true }
     internal val phasePendingForTest: Boolean get() = phasePlan != null || phaseTimerArmed
     internal fun armPhaseTimerForTest(plan: PhaseTransitionPlanner.Plan, atMs: Long, onStart: () -> Unit) {
@@ -215,18 +222,28 @@ class Crossfader(
         }
         val t = ((now - rampStart) / fadeMs.toFloat()).coerceIn(0f, 1f)
         val (out, into) = gains(t)
+        // Trim eases to unity across the last quarter of the fade and every change is slew-limited, so the
+        // level never steps at the swap or on a mid-fade fallback to plain.
+        trimNow = slewTrim(trimNow, trimTargetAt(t, inGain))
         main.volume = base * out
-        inc.volume = base * into * inGain
-        Log.d(TAG, "fade t=%.2f out=%.2f in=%.2f".format(t, base * out, base * into))
+        inc.volume = base * into * trimNow
+        Log.d(TAG, "fade t=%.2f out=%.2f in=%.2f trim=%.3f".format(t, base * out, base * into, trimNow))
         if (t >= 1f) swap()
     }
 
     /** Eases the post-swap player speed back to the user's setting. Runs on the 40 ms loop while a restore is pending. */
     private fun stepRestore() {
-        val r = restore ?: return
-        val s = restoreSpeedAt(r.from, r.to, SystemClock.uptimeMillis() - r.start)
-        if (s == null) { r.last = r.to; applySpeed(r.to); restore = null }
-        else { r.last = s; applySpeed(s) }
+        val r = restore
+        if (r != null) {
+            val s = restoreSpeedAt(r.from, r.to, SystemClock.uptimeMillis() - r.start)
+            if (s == null) { r.last = r.to; applySpeed(r.to); restore = null }
+            else { r.last = s; applySpeed(s) }
+        }
+        val tr = trimRestore
+        if (tr != null) {
+            val f = trimEaseAt(tr.from, SystemClock.uptimeMillis() - tr.start)
+            if (f == null) { main.volume = base; trimRestore = null } else main.volume = base * f
+        }
     }
 
     private fun mainUri(): String? = main.currentMediaItem?.localConfiguration?.uri?.toString()
@@ -259,7 +276,7 @@ class Crossfader(
             ArmDecision(f, ((mix.outEndMs - main.currentPosition) / sp.toDouble()).toLong())
         } else decideArm(dur, main.currentPosition, speed, phase, seconds(ctx)*1000L) ?: return
         phasePlan = phase; phaseTimerArmed = false; phaseSpeed = speed
-        mixPlan = mix; inGain = mix?.inGain ?: 1f
+        mixPlan = mix; inGain = mix?.inGain ?: 1f; trimNow = 1f; trimRestore = null
         fadeMs = decision.fadeMs; nudge = mix?.incomingSpeed ?: phase?.incomingSpeedRatio ?: 1f; toIndex = next
         val now = SystemClock.uptimeMillis()
         deadlineMs = now + decision.deadlineAfterMs
@@ -321,7 +338,9 @@ class Crossfader(
         old.removeListener(mainListener)
         incomingReady?.let { inc.removeListener(it) }
         incomingReady = null; incoming = null; rampStart = 0L; toIndex = C.INDEX_UNSET
-        inc.volume = base
+        // The in-fade ease targets unity at t = 1 but the slew can lag on very short fades: ease any residue
+        // to unity over ~400 ms rather than stepping the level at the hand-over.
+        if (abs(trimNow - 1f) > 0.0005f) trimRestore = TrimRestore(trimNow, SystemClock.uptimeMillis()) else inc.volume = base
         // AutoMix: the incoming song ran nudged to the old song's tempo during the overlap. Ease it back to the user's speed
         // over ~1.5 s rather than stepping; a user speed change during the ease wins and stops it.
         val userParams = old.playbackParameters
@@ -331,7 +350,7 @@ class Crossfader(
             inc.playbackParameters = userParams
         }
         nudge = 1f
-        mixPlan = null; inGain = 1f
+        mixPlan = null; inGain = 1f; trimNow = 1f
         main = inc
         Log.i(TAG, "swap: incoming is now active at position ${inc.currentPosition}ms")
         onSwap(inc)
@@ -355,7 +374,7 @@ class Crossfader(
         }
         mixing = false
         nudge = 1f
-        mixPlan = null; inGain = 1f
+        mixPlan = null; inGain = 1f; trimNow = 1f; trimRestore = null
         restore?.let { it.last = it.to; main.playbackParameters = PlaybackParameters(it.to, main.playbackParameters.pitch); restore = null }
         main.volume = base
     }
@@ -378,6 +397,26 @@ class Crossfader(
         }
         internal fun selectPhase(plan: PhaseTransitionPlanner.Plan?, autoMix: Boolean): PhaseTransitionPlanner.Plan? =
             plan?.takeIf { autoMix && it.aligned }
+        /** Fraction of the fade over which the level trim eases back to unity so the hand-over is step-free. */
+        internal const val TRIM_EASE_T = 0.75f
+        /** Level-trim target at ramp position t in 0..1: the plan's trim until [TRIM_EASE_T], then linear to 1 at t = 1. Pure maths for unit tests. */
+        internal fun trimTargetAt(t: Float, inGain: Float): Float {
+            if (inGain == 1f) return 1f
+            val x = t.coerceIn(0f, 1f)
+            return if (x <= TRIM_EASE_T) inGain else inGain + (1f - inGain) * (x - TRIM_EASE_T) / (1f - TRIM_EASE_T)
+        }
+        /** One 40 ms step of the applied trim toward [target]; bounds the rate of any trim change, such as a mid-fade fallback. */
+        internal fun slewTrim(current: Float, target: Float, maxDelta: Float = 0.03f): Float =
+            if (target > current + maxDelta) current + maxDelta else if (target < current - maxDelta) current - maxDelta else target
+        /**
+         * Post-swap volume factor while easing a leftover trim residue back to 1: linear from [from] to 1 over [totalMs].
+         * Null once the ease is done (caller then applies base volume exactly and stops).
+         */
+        internal fun trimEaseAt(from: Float, elapsedMs: Long, totalMs: Long = 400L): Float? {
+            if (elapsedMs >= totalMs) return null
+            val t = (elapsedMs.coerceAtLeast(0L) / totalMs.toFloat()).coerceIn(0f, 1f)
+            return from + (1f - from) * t
+        }
         private const val TAG = "XFADE"
         private fun prefs(c: Context) = c.applicationContext.getSharedPreferences("transitions", Context.MODE_PRIVATE)
         /** Start preparing the incoming deck when the wall-clock time left (media time / speed) is within the fade plus 1.5 s, and not already over. */
