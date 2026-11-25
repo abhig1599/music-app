@@ -121,3 +121,41 @@ with the index-locked matching (2026-11-25 patch), planning requires the incomin
 ~45 ms of the song start (an offset beyond ~10% of a beat period always falls back), so real-world fallback
 frequency depends directly on where the beat detector anchors its first beat - exactly what the phone test
 must judge.
+
+## 2026-11-25 synthetic planner harness - measured table
+
+MixQualityHarnessTest (unit test, JVM) sweeps made-up beat grids through MixPlanner.plan: 8 outgoing tempos
+(90-150 bpm), 8 tempo relations (same, +/-2%, +5%, +7%, half, double, +20%), incoming grid first-beat
+offsets 0..1 beat period, per-beat Gaussian jitter sigma 0/10 ms, 12 s fade cap, 25 trials per jittered
+cell. It prints the table below to the unit-test log (CI shows unit-test standard output) and asserts the
+plan contract on every returned plan: start on an outgoing beat, end exactly at the detected content end,
+overlap within [500 ms, cap], max residual <= 45 ms, nudge within +/-6%. Fixed anchors: ideal aligned grids
+always plan; a half-period grid offset never does; tempos outside the 6% nudge cap or the half/double match
+window never do; identical inputs give identical plans.
+
+Measured on CI run https://github.com/abhig1599/music-app/actions/runs/45652253791 (commit 4f6a6c8, green):
+
+- total planned 2565/9828 = 26.1%
+- by incoming grid first-beat offset: 0.0P 988/1404 = 70.4%; 0.02P 976/1404 = 69.5%; 0.05P 589/1404 =
+  42.0%; 0.1P 12/1404 = 0.9%; 0.25P/0.5P/1.0P = 0%
+- by jitter: sigma=0 120/378 = 31.7%; sigma=10ms 2445/9450 = 25.9%
+
+SYNTHETIC ONLY: these rates measure the planner maths on made-up grids. They are NOT measured fallback
+rates on the real library and say nothing about how any mix sounds. What the sweep pins down: with
+index-locked matching (2026-11-25 patch), planning requires the incoming grid's first beat within ~45 ms
+of the song start (an offset beyond ~10% of a beat period always falls back), so real-world fallback
+frequency depends directly on where the beat detector anchors its first beat - exactly what the phone test
+must judge.
+
+## 2026-11-25 bar-phase (downbeat) evidence
+
+BarPhaseAnalyzer tags each beat grid with its bar phase from measured audio accents: low-band (120 Hz
+one-pole) RMS rise per beat against a pre-beat baseline, averaged per bar position (index mod 4), 4/4
+assumed, min 8 bars. The strong-pair margin over the odd positions gives the confidence; a p/p+2 tie is
+reported as two-beat ambiguity at reduced confidence. Weak evidence returns null, which keeps the
+beat-only behaviour everywhere. Beats are never moved and genuine onset delays stay visible - bar position
+is a tag, not a relabeling of time. MixPlanner uses confident bar positions on BOTH grids only to PREFER
+the passing candidate whose index-locked pairs share a bar position (downbeat on downbeat); it never
+rejects a candidate for bar reasons, so the fallback rates above are unchanged by this addition. All
+synthetic tests (kick-on-downbeat click tracks, ties, abstention, +/-30 ms grid-phase tolerance);
+unverified on real songs until the phone test.
