@@ -82,4 +82,19 @@ class BarPhaseAnalyzerTest {
         assertNull(BarPhaseAnalyzer.analyze(FloatArray(sr * 24), sr, beats.sortedDescending()))
         assertNull(BarPhaseAnalyzer.analyze(FloatArray(sr * 24), sr, beats.map { it - 5f }))
     }
+
+    @Test fun threeFourAccentsAlwaysAbstain() {
+        // 3/4: a period-3 accent spreads uniformly over the 4 bar positions (lcm 12), so no position
+        // can clear the average - structural abstention, mirroring the meter probe in docs/MIXING_QA.md.
+        val (samples, beats) = synth(120f, .1f, 40f) { it % 3 == 0 }
+        assertNull(BarPhaseAnalyzer.analyze(samples, sr, beats))
+    }
+
+    @Test fun sixEightSingleAccentNeverYieldsAUniqueDownbeat() {
+        // 6/8 with one accent every 6 beats folds onto two positions 2 beats apart: the result is either
+        // abstention or a two-beat ambiguity flag (BeatWindow then abstains), never a unique downbeat.
+        val (samples, beats) = synth(120f, .1f, 40f) { it % 6 == 0 }
+        val r = BarPhaseAnalyzer.analyze(samples, sr, beats)
+        if (r != null) assertTrue("expected ambiguity flag, got conf " + r.confidence, r.twoBeatAmbiguity)
+    }
 }
