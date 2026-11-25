@@ -152,10 +152,20 @@ must judge.
 BarPhaseAnalyzer tags each beat grid with its bar phase from measured audio accents: low-band (120 Hz
 one-pole) RMS rise per beat against a pre-beat baseline, averaged per bar position (index mod 4), 4/4
 assumed, min 8 bars. The strong-pair margin over the odd positions gives the confidence; a p/p+2 tie is
-reported as two-beat ambiguity at reduced confidence. Weak evidence returns null, which keeps the
-beat-only behaviour everywhere. Beats are never moved and genuine onset delays stay visible - bar position
+reported as two-beat ambiguity at reduced confidence, and BeatWindow attaches NO bar position for an
+ambiguous grid (MixPlanner abstains; the flag stays on BeatGrid for QA). Weak evidence returns null,
+which keeps the beat-only behaviour everywhere. Beats are never moved and genuine onset delays stay visible - bar position
 is a tag, not a relabeling of time. MixPlanner uses confident bar positions on BOTH grids only to PREFER
 the passing candidate whose index-locked pairs share a bar position (downbeat on downbeat); it never
 rejects a candidate for bar reasons, so the fallback rates above are unchanged by this addition. All
 synthetic tests (kick-on-downbeat click tracks, ties, abstention, +/-30 ms grid-phase tolerance);
 unverified on real songs until the phone test.
+
+Meter scope (synthetic probe, exact-math mirror of the analyzer, click tracks): the estimator assumes
+4/4 and has no meter detection. Measured 2026-11-25: period-3 accent patterns (3/4, three variants)
+always abstain - a period-3 accent spreads uniformly over the 4 bar positions, so no position clears
+the average; 6/8 with two accents per bar abstains; 6/8 with a single accent every 6 beats folds onto
+two positions 2 beats apart and is caught by the two-beat-ambiguity flag, which BeatWindow treats as
+abstain. So no tested non-4/4 pattern can steer the planner. This is 5 synthetic patterns, not meter
+detection: unusual real content could still produce a false-positive tag, and true multi-meter support
+remains future work.
