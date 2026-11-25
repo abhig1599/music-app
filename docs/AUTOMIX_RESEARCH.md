@@ -55,3 +55,21 @@ time-stretching, beat matching, silence removal and per-pair style choice for TH
 whole-bar overlays, beat-phase alignment and level matching here are standard published auto-DJ practice
 (see github.com/saksham-45/automix, 10.1186/s13636-018-0134-8), not Apple documentation. Audible quality
 and grid reliability on real songs remain phone-test hypotheses (docs/MIXING_QA.md).
+
+## Bar-phase (downbeat) evidence (2026-11-25)
+
+Standard published auto-DJ practice aligns transitions by BAR, not only by beat: a mix whose incoming
+phrase starts off-bar sounds wrong even with zero beat error. Apple's AutoMix is documented to choose a
+transition style per song pair, but Apple publishes no bar-alignment algorithm, so the method here is
+standard published MIR practice (accent-based bar-phase estimation, in the lineage of the auto-DJ
+references above), not Apple documentation. analysis/BarPhaseAnalyzer.kt estimates the bar phase of an
+existing beat grid from measured audio accents: low-band (120 Hz one-pole) energy rise per beat vs a
+pre-beat baseline, averaged per bar position (index mod 4, 4/4 assumed, >= 8 bars). Confidence is the
+strong-pair margin over the odd positions; p/p+2 ties are reported as two-beat ambiguity (musically safe,
+both choices pair strong beats) at reduced confidence; weak evidence returns null and every caller keeps
+beat-only behaviour. Design rules kept from the patch review: beats are never moved (a genuine onset delay
+stays a delayed beat, never relabeled), the index-locked stricter matching is unchanged, and bar evidence
+can only PREFER an already-passing MixPlanner candidate, never create or salvage one. MixPlanner.plan()
+takes optional trailing bar params (defaults = identical behaviour), counts bar-matched stride-adjusted
+pairs per candidate, and keeps the residual tie-break. Effect on real libraries is a phone-test hypothesis
+(docs/MIXING_QA.md).
