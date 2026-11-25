@@ -40,6 +40,16 @@ class CrossfaderSwapTest {
         inc.release()
     }
 
+    @Test fun earlySwapKeepsTheActualIncomingVolume() {
+        val (cf, _, inc) = make()
+        cf.injectIncomingForTest(inc, 1)
+        inc.volume = 0.7f
+        cf.swapForTest()
+        assertEquals(0.7f, inc.volume, 0.0001f)
+        assertTrue(cf.trimRestorePendingForTest)
+        inc.release()
+    }
+
     @Test fun cancelReleasesIncomingAndKeepsMain() {
         val (cf, main, inc) = make()
         main.volume = 0.3f
