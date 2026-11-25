@@ -13,6 +13,7 @@ import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
 import com.abhi.musicapp.analysis.AutoMix
+import com.abhi.musicapp.analysis.MixPlanner
 import com.abhi.musicapp.analysis.PhaseTransitionPlanner
 import com.abhi.musicapp.analysis.PhaseSchedule
 import com.abhi.musicapp.analysis.TransitionStartTimer
@@ -45,6 +46,12 @@ import kotlin.math.sin
  * tempo-matched, not beat-matched. Unknown tempos fall back to exactly the plain crossfade; a WRONG tempo can sound worse than plain, which
  * is the beta risk a phone test must judge. See analysis/AutoMix.kt and docs/AUTOMIX_RESEARCH.md.
  *
+ * Beat-aligned mix plans (analysis/MixPlanner.kt, same AutoMix opt-in): when both songs have high-confidence beat grids and matching
+ * tempos, the overlap lasts a whole number of bars starting on an outgoing beat, the incoming deck runs nudged to the outgoing tempo
+ * with its beat train required to overlay the outgoing one (else the plan is dropped), and its level is RMS-trimmed to the outgoing
+ * tail. The overlap still ends exactly at the detected content end and the incoming song starts at 0: nothing audible is skipped.
+ * Reliability on real songs is unverified until the phone listening test; every fallback is today's crossfade.
+ *
  * [mixing] is true from the moment a transition is armed (incoming deck preparing) until the session hand-over completes
  * (or an abort); the Player screen shows the "Mixing" gradient label for exactly that window, so the indicator always reflects
  * a real transition, never a guess, and the song details and normal label switch together only when mixing ends.
@@ -62,6 +69,7 @@ class Crossfader(
     private val onItemChanged: (ExoPlayer) -> Unit = {},
     private val phasePlanOf: () -> PhaseTransitionPlanner.Plan? = { null },
     private val autoMixActive: () -> Boolean = { AutoMix.active(ctx) },
+    private val mixPlanOf: () -> MixPlanner.Plan? = { null },
 ) {
     private val handler = Handler(Looper.getMainLooper())
     private val startTimer = TransitionStartTimer({ SystemClock.uptimeMillis() }, { r,t -> handler.postAtTime(r,t); Unit }, { handler.removeCallbacks(it) })
@@ -82,6 +90,10 @@ class Crossfader(
     private var fadeChecked = false
     /** AutoMix tempo factor the incoming player is running at during the overlap (1 = plain crossfade). */
     private var nudge = 1f
+    /** Beat-aligned whole-bar plan for the armed transition; null means today's plain/phase behaviour. */
+    private var mixPlan: MixPlanner.Plan? = null
+    /** Level trim applied to the incoming deck while [mixPlan] is armed (1 = no trim). */
+    private var inGain = 1f
     /** Post-swap ease of the new active player's speed back to the user's setting; null when not restoring. */
     private var restore: Restore? = null
     /** True while a transition is armed or fading; the UI's "Mixing" label reads this. Written on the main thread. */
@@ -128,7 +140,7 @@ class Crossfader(
                 if (abs(p.speed - r.last) > 0.0005f) restore = null
                 return
             }
-            if (phasePlan != null) dropPhase("user speed changed")
+            if (phasePlan != null || mixPlan != null) dropPhase("user speed changed")
             incoming?.playbackParameters = PlaybackParameters(p.speed * nudge, p.pitch)
             // A speed change while the incoming deck waits moves the natural end; re-aim the boundary so the fade still lands on it.
             if (incoming != null && rampStart == 0L) {
@@ -188,9 +200,13 @@ class Crossfader(
             if (w < 0L) return // not yet time: keep the incoming deck paused at 0 until the boundary-aligned start
             if (w < 500L) { cancel("too late to fade"); return } // main will carry into the next song on its own
             // Re-measure the true remaining media time NOW (the arm-time estimate can drift) so the fade ends at the natural end.
-            val dur = mainEffectiveDurationMs()
             val sp = main.playbackParameters.speed.let { if (it > 0f) it else 1f }
-            fadeMs = if (dur != C.TIME_UNSET && dur > 0L) ((dur - main.currentPosition) / sp).toLong() else w
+            val mp = mixPlan
+            fadeMs = if (mp != null) ((mp.outEndMs - main.currentPosition) / sp.toDouble()).toLong()
+            else {
+                val dur = mainEffectiveDurationMs()
+                if (dur != C.TIME_UNSET && dur > 0L) ((dur - main.currentPosition) / sp).toLong() else w
+            }
             if (fadeMs < 500L) { cancel("too late to fade"); return }
             inc.playWhenReady = true
             rampStart = now
@@ -200,7 +216,7 @@ class Crossfader(
         val t = ((now - rampStart) / fadeMs.toFloat()).coerceIn(0f, 1f)
         val (out, into) = gains(t)
         main.volume = base * out
-        inc.volume = base * into
+        inc.volume = base * into * inGain
         Log.d(TAG, "fade t=%.2f out=%.2f in=%.2f".format(t, base * out, base * into))
         if (t >= 1f) swap()
     }
@@ -231,12 +247,20 @@ class Crossfader(
         val dur = mainEffectiveDurationMs()
         if (dur == C.TIME_UNSET || dur <= 0L) return
         val speed = main.playbackParameters.speed
-        // Inconclusive pair evidence always means plain overlap, not an unphased BPM-only nudge.
-        val phase = selectPhase(phasePlanOf(),autoMixActive())
-        val decision = decideArm(dur, main.currentPosition, speed, phase, seconds(ctx)*1000L) ?: return
-        phasePlan = phase; phaseTimerArmed = false; phaseSpeed = speed
-        fadeMs = decision.fadeMs; nudge = phase?.incomingSpeedRatio ?: 1f; toIndex = next
         val sp = if (speed > 0f) speed else 1f
+        // Beat-aligned whole-bar plan (AutoMix opt-in): same content end, nothing audible skipped; any
+        // inconsistency drops it and the plain/phase path below runs unchanged.
+        val mix = selectMix(mixPlanOf(), autoMixActive(), main.currentPosition, dur)
+        // Inconclusive pair evidence always means plain overlap, not an unphased BPM-only nudge.
+        val phase = if (mix != null) null else selectPhase(phasePlanOf(),autoMixActive())
+        val decision = if (mix != null) {
+            val f = (mix.overlapMs / sp.toDouble()).toLong()
+            if (!shouldBegin(mix.outEndMs - main.currentPosition, f, speed)) return
+            ArmDecision(f, ((mix.outEndMs - main.currentPosition) / sp.toDouble()).toLong())
+        } else decideArm(dur, main.currentPosition, speed, phase, seconds(ctx)*1000L) ?: return
+        phasePlan = phase; phaseTimerArmed = false; phaseSpeed = speed
+        mixPlan = mix; inGain = mix?.inGain ?: 1f
+        fadeMs = decision.fadeMs; nudge = mix?.incomingSpeed ?: phase?.incomingSpeedRatio ?: 1f; toIndex = next
         val now = SystemClock.uptimeMillis()
         deadlineMs = now + decision.deadlineAfterMs
         plannedStartMs = deadlineMs - fadeMs
@@ -281,6 +305,7 @@ class Crossfader(
 
     private fun dropPhase(reason: String) {
         startTimer.cancel(); phaseTimerArmed=false; phasePlan=null
+        mixPlan=null; inGain=1f
         nudge=1f
         incoming?.playbackParameters=main.playbackParameters
         fadeMs=min(seconds(ctx)*1000L,main.duration.coerceAtLeast(0)/3)
@@ -306,6 +331,7 @@ class Crossfader(
             inc.playbackParameters = userParams
         }
         nudge = 1f
+        mixPlan = null; inGain = 1f
         main = inc
         Log.i(TAG, "swap: incoming is now active at position ${inc.currentPosition}ms")
         onSwap(inc)
@@ -329,6 +355,7 @@ class Crossfader(
         }
         mixing = false
         nudge = 1f
+        mixPlan = null; inGain = 1f
         restore?.let { it.last = it.to; main.playbackParameters = PlaybackParameters(it.to, main.playbackParameters.pitch); restore = null }
         main.volume = base
     }
@@ -340,6 +367,15 @@ class Crossfader(
         /** The boundary a transition aims at: the detected content end when known and sane, else the file end. */
         internal fun effectiveDurationMs(fileDurationMs: Long, contentEndMs: Long?): Long =
             contentEndMs?.takeIf { it in 1..fileDurationMs } ?: fileDurationMs
+        /** Sanity gate for a beat-aligned plan against observed player state; anything off means plain behaviour. */
+        internal fun selectMix(plan: MixPlanner.Plan?, autoMix: Boolean, positionMs: Long, effectiveDurationMs: Long): MixPlanner.Plan? {
+            if (!autoMix || plan == null) return null
+            if (plan.outStartMs < positionMs || plan.outEndMs <= plan.outStartMs || plan.outEndMs > effectiveDurationMs) return null
+            if (plan.overlapMs != plan.outEndMs - plan.outStartMs || plan.overlapMs !in 500L..12_000L) return null
+            if (!plan.incomingSpeed.isFinite() || plan.incomingSpeed !in 0.90f..1.10f) return null
+            if (!plan.inGain.isFinite() || plan.inGain !in 0.25f..4f) return null
+            return plan
+        }
         internal fun selectPhase(plan: PhaseTransitionPlanner.Plan?, autoMix: Boolean): PhaseTransitionPlanner.Plan? =
             plan?.takeIf { autoMix && it.aligned }
         private const val TAG = "XFADE"
@@ -437,3 +473,4 @@ internal fun configureIncoming(p: ExoPlayer, from: ExoPlayer, next: Int) {
     // Same queue as the active player, starting at the next song, so after the swap next/previous behave exactly as before.
     p.setMediaItems((0 until from.mediaItemCount).map { from.getMediaItemAt(it) }, next, 0L)
 }
+
