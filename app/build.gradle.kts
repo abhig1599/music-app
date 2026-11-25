@@ -50,6 +50,10 @@ android {
     testOptions {
         unitTests {
             isIncludeAndroidResources = true
+            // Surface the synthetic mix-QA table (MixQualityHarnessTest prints MIXQA lines) in CI logs.
+            all {
+                it.testLogging.showStandardStreams = true
+            }
         }
     }
     compileOptions {
