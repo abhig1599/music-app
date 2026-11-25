@@ -19,10 +19,17 @@ survive a file replacement.
 ## Ranked remaining risks (what a phone test must judge, in order)
 1. Session hand-over on a real phone: notification, lock-screen controls and the queue must keep showing the
    right song after MediaSession.setPlayer. Compile-checked only.
-2. No beat-phase alignment exists: the fade start is a wall-clock window (polled every 250 ms), not snapped
-   to a detected beat grid, so even a perfect tempo match can overlap off-beat by any fraction of a beat.
-   Onset-phase estimation with beat-grid-snapped starts is the top candidate for the next iteration. Tempo
-   analysis itself is tested on synthetic click tracks only, never on real songs.
+2. Beat-phase alignment (2026-11-25, MixPlanner): when both songs have high-confidence beat grids and a
+   matching tempo (half/double allowed), the overlap is a whole number of bars (8/4/2/1, largest inside the
+   user's 1-12 s cap) starting ON an outgoing beat, the incoming deck runs nudged to the outgoing tempo, the
+   two beat trains must overlay within 45 ms across the whole overlap (else plain crossfade), and the
+   incoming level is RMS-trimmed (+/-6 dB) to the outgoing tail. The overlap still ends exactly at the
+   detected content end and the incoming song starts at 0: nothing audible is skipped (the user authorised
+   silent-tail removal only). UNVERIFIED on real songs: grid reliability decides how often a plan exists at
+   all; synthetic-grid unit tests cover only the maths. Tradeoff: when beat start and the user's cap
+   conflict (no whole-bar overlap fits both), the pair falls back to the plain crossfade rather than
+   breaking the cap or the content boundary. Tempo analysis itself is tested on synthetic click tracks
+   only, never on real songs.
 3. Tempo misdetection on real songs (live drums, rubato, intros): wrong BPM -> wrong nudge. Mitigations:
    confidence gate, half/double-tempo handling, 6% cap, plain-crossfade fallback. A bad read sounds like a
    plain crossfade with a slightly off-speed incoming song for a few seconds.
@@ -88,3 +95,11 @@ reads on real music. His manual phone script above still applies; step 1 should 
 ## 2026-11-23 selected visualizer
 
 User chose size-matched D after comparing D with E. CentreDisc now calls DropletBlob with its default reactive=false. No E sensitivity boost or separated droplets are active. Timer, flip gesture, dial size, colors and light gradient Mixing label are unchanged. D motion was inspected with synthetic input only; phone frame pacing and real-song sensitivity/jitter remain unverified. Version/release unchanged. Audio smoke 8 remains incomplete, not a pass; media-session ERROR cannot be attributed from its unscoped dump summary. No more smoke retries.
+
+## 2026-11-25 additions to judge on the phone
+- Whether beat-aligned overlaps are actually on the beat across genres (the 45 ms gate is a math bound, not
+  an audible verdict), and how often pairs fall back to plain crossfade (grid confidence is the limiter).
+- Whether the +/-6 dB RMS level trim makes overlaps level-matched without pumping; RMS is not BS.1770.
+- Whether the whole-bar overlap length (up to 8 bars within the 12 s cap) feels right vs the fixed seconds.
+- Deferred: bass-swap EQ handover between decks (needs per-deck DSP, device-risky), musical key, true
+  two-deck time-stretching, and any cue-point skipping of musical intros/outros (out of authorised scope).
