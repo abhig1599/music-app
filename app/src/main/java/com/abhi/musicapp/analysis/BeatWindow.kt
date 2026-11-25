@@ -19,7 +19,9 @@ object BeatWindow {
         if (times.zipWithNext().any { (a,b) -> b <= a }) return null
         // Bar position of the first beat: downbeats sit at k == downbeatOffset (mod 4), so beat 0 is at
         // position (-downbeatOffset mod 4). Tagging only; no beat time changes.
-        val bp = grid.barPhase
+        // A p/p+2 tie is not a unique downbeat: attach nothing, so the planner abstains (beat-only).
+        // The flag stays on BeatGrid for QA; only an unambiguous tag reaches MixPlanner.
+        val bp = grid.barPhase?.takeUnless { it.twoBeatAmbiguity }
         val firstPos = bp?.let { Math.floorMod(-it.downbeatOffset, BarPhaseAnalyzer.BEATS_PER_BAR) }
         return PhaseTransitionPlanner.Grid(times, bpm, grid.confidence, firstPos, bp?.confidence ?: 0f)
     }
