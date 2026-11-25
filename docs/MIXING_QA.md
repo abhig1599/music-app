@@ -103,3 +103,21 @@ User chose size-matched D after comparing D with E. CentreDisc now calls Droplet
 - Whether the whole-bar overlap length (up to 8 bars within the 12 s cap) feels right vs the fixed seconds.
 - Deferred: bass-swap EQ handover between decks (needs per-deck DSP, device-risky), musical key, true
   two-deck time-stretching, and any cue-point skipping of musical intros/outros (out of authorised scope).
+
+## 2026-11-25 synthetic planner harness
+
+MixQualityHarnessTest (unit test, JVM) sweeps made-up beat grids through MixPlanner.plan: 8 outgoing tempos
+(90-150 bpm), 8 tempo relations (same, +/-2%, +5%, +7%, half, double, +20%), incoming grid first-beat
+offsets 0..1 beat period, per-beat Gaussian jitter sigma 0/10 ms, 12 s fade cap, 25 trials per jittered
+cell. It prints aggregate planned-vs-fallback rates to the unit-test log (lines prefixed MIXQA; CI shows
+unit-test standard output) and asserts the plan contract on every returned plan: start on an outgoing
+beat, end exactly at the detected content end, overlap within [500 ms, cap], max residual <= 45 ms, nudge
+within +/-6%. Fixed anchors: ideal aligned grids always plan; a half-period grid offset never does; tempos
+outside the 6% nudge cap or the half/double match window never do; identical inputs give identical plans.
+
+SYNTHETIC ONLY: the printed rates measure the planner maths on made-up grids. They are NOT measured
+fallback rates on the real library and say nothing about how any mix sounds. What the sweep does pin down:
+with the index-locked matching (2026-11-25 patch), planning requires the incoming grid's first beat within
+~45 ms of the song start (an offset beyond ~10% of a beat period always falls back), so real-world fallback
+frequency depends directly on where the beat detector anchors its first beat - exactly what the phone test
+must judge.
