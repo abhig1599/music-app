@@ -39,3 +39,19 @@ Crossfade hardening: the fade is abandoned if the incoming player errors, is not
 `tempo/prefetch_on` is true (default false, no UI), and it is skipped while the system battery saver is on. Cancel never caches an
 "unknown" result, the decoder is always released, and cancellation is checked inside the decode loop. Nothing audible comes from this:
 it only fills the cache the unused planner would read.
+
+## Beat-aligned overlaps (2026-11-25)
+
+New `analysis/MixPlanner.kt` (pure maths, unit-tested on synthetic grids): when both songs have
+high-confidence beat grids and tempos match (half/double allowed, existing 6% nudge cap), the transition
+overlap is a whole number of bars (8/4/2/1, largest inside the user's 1-12 s cap), starts on an outgoing
+beat, ends exactly at the detected content end, requires the two beat trains to overlay within 45 ms across
+the whole overlap, and RMS-trims the incoming level (+/-6 dB). Anything less falls back to today's
+crossfade. Wired through `TransitionAnalysis` (background worker, cached) into the Crossfader behind the
+same AutoMix opt-in; all cancel/fallback paths unchanged. Scope boundary honoured: the user authorised
+silent-tail removal only, so no audible intro/outro content is skipped and the incoming song starts at 0.
+Sources labelling: Apple documents (support.apple.com/en-us/105067, Apple Newsroom 2025-06-09) establish
+time-stretching, beat matching, silence removal and per-pair style choice for THEIR subscription engine;
+whole-bar overlays, beat-phase alignment and level matching here are standard published auto-DJ practice
+(see github.com/saksham-45/automix, 10.1186/s13636-018-0134-8), not Apple documentation. Audible quality
+and grid reliability on real songs remain phone-test hypotheses (docs/MIXING_QA.md).
