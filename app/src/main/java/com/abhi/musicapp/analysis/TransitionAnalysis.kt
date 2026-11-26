@@ -2,10 +2,13 @@ package com.abhi.musicapp.analysis
 
 import android.content.Context
 import android.net.Uri
+import android.util.Log
 import kotlin.math.sqrt
 
 /** Off-thread pair analysis, consumed only under the existing AutoMix opt-in. */
 object TransitionAnalysis {
+
+    private const val TAG = "TransitionAnalysis"
 
     private data class CacheKey(val outgoing: String, val incoming: String, val durationMs: Long, val fadeMs: Long)
     private val cache = object : LinkedHashMap<CacheKey, TransitionAnalysisResult>(4, .75f, true) {
@@ -32,6 +35,7 @@ object TransitionAnalysis {
         // Beat-aligned whole-bar plan. Content boundary: the same detected silent-tail end (or file end) the
         // crossfader already uses; the incoming song starts at 0. No audible content is skipped.
         val contentEnd = TailCache.fileIdentity(c, outgoing, durationMs)?.let { TailCache.contentEndMs(it) }
+        var mixReason: String? = null
         val mix = MixPlanner.plan(
             tail?.grid?.beatsMs, tail?.grid?.bpm, tail?.grid?.confidence ?: 0f,
             durationMs, contentEnd,
@@ -39,7 +43,19 @@ object TransitionAnalysis {
             null, fadeMs, tail?.rms, head?.rms,
             tail?.grid?.firstBeatBarPosition, head?.grid?.firstBeatBarPosition,
             tail?.grid?.barConfidence ?: 0f, head?.grid?.barConfidence ?: 0f,
-        )
+        ) { mixReason = it }
+        // Logcat-only diagnostics (mixdiag): what the analysis saw and what the planner decided. Off the
+        // audio thread; no state, no behavior change. firstBeat is ms from the analysed window start
+        // (incoming window starts at 0, so it is the incoming grid's offset from the song start).
+        Log.d(TAG, "mixdiag " +
+            "out[beats=${tail?.grid?.beatsMs?.size ?: 0} conf=${"%.2f".format(tail?.grid?.confidence ?: -1f)} " +
+            "firstBeat=${tail?.grid?.beatsMs?.firstOrNull()?.let { it - tailStart } ?: -1} " +
+            "bar=${tail?.grid?.firstBeatBarPosition}/${"%.2f".format(tail?.grid?.barConfidence ?: -1f)}] " +
+            "in[beats=${head?.grid?.beatsMs?.size ?: 0} conf=${"%.2f".format(head?.grid?.confidence ?: -1f)} " +
+            "firstBeat=${head?.grid?.beatsMs?.firstOrNull() ?: -1} " +
+            "bar=${head?.grid?.firstBeatBarPosition}/${"%.2f".format(head?.grid?.barConfidence ?: -1f)}] " +
+            if (mix != null) "planned start=${mix.outStartMs} overlap=${mix.overlapMs} residual=${"%.1f".format(mix.maxResidualMs)} speed=${mix.incomingSpeed}"
+            else "fallback reason=${mixReason ?: "unknown"}")
         val result = TransitionAnalysisResult(tail?.grid, head?.grid, plan, mix)
         if (cancelled()) return null
         // File replacement during decoding must never publish an old result under new metadata.
