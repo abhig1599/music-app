@@ -36,13 +36,22 @@ CI builds the debug APK on every push (`.github/workflows/android.yml`), artifac
 
 Apple documents importing local files or folders on Mac, adding songs to the queue and saving the queue on quit. Its AutoMix documentation limits the feature to eligible Apple Music catalog playback on supported devices. This Android app applies local analysis to device audio. Apple does not publish the complete transition algorithm. [Import music](https://support.apple.com/guide/music/import-items-already-on-your-computer-mus3081/mac) · [Queue and quit](https://support.apple.com/guide/music/musb1e6d1c76/mac) · [Song transitions](https://support.apple.com/guide/music/muse5e9ec085/mac)
 
-### Remaining differences and verification
+## Remaining work
 
-| Goal | Android implementation and remaining work |
-| --- | --- |
-| Continuous beat through the handoff | Beat-grid matching, downbeat preference when confident, level trim and shorter candidate windows. Run a listening comparison with the same song pair to verify the audible result. |
-| Last lyric into the next first lyric | The planner still starts the incoming track at zero. Reliable word timestamps, vocal entrance/exit cues and shortening audible instrumental passages remain open. |
-| Independent vocal and drum fades | Both decks currently mix full tracks. The reference engines illustrate stem separation and vocal ducking; these require additional processing and device-performance validation. |
-| Resume after quitting | Apple documents queue restoration on Mac. Android cold-start restoration of the exact queue and playback position needs a dedicated end-to-end test before claiming parity. |
+Status legend: **Implemented** = merged on main. **Unverified on device** = built and
+covered by unit/render tests, not yet confirmed by listening on a phone.
+**Open** = not implemented yet.
+
+| Item | Status | Notes |
+| --- | --- | --- |
+| Continuous beat through the handoff | Implemented, unverified on device | Beat-grid matching, downbeat preference when confident, level trim, and shorter candidate windows when the longest drifts (merged via PR #1). Needs a listening comparison with the same song pair; `adb logcat -s TransitionAnalysis:D` prints per-transition evidence. Not yet in a published APK (the latest test build, cand-0.1.9-test.1, predates PR #1). |
+| Last lyric into the next first lyric | Open | The planner still starts the incoming track at zero. Reliable word timestamps, vocal entrance/exit cues and shortening audible instrumental passages remain unimplemented. The reference engines below illustrate approaches. |
+| Independent vocal and drum fades | Open | Both decks mix full tracks. Stem separation and vocal ducking require additional processing and device-performance validation. |
+| Resume after quitting | Unverified | Cold-start restoration of the exact queue and playback position needs a dedicated end-to-end test before claiming parity with Apple's documented Mac behavior. |
+| Release workflow notes template | Open (minor) | `android.yml` cand-* auto-release notes still say "Private repo release" although the repository is public. |
+
+Contributions: open a PR with a short completion note describing what changed and
+how it was verified. Contributions are reviewed before merging, and this section
+is updated with the result.
 
 Reference implementations: [word-level handoffs and vocal ducking](https://github.com/allenbijo/auto-dj) and [cue selection and separate vocal, drum and bass tracks](https://github.com/VertexSelection/automix-engine).
