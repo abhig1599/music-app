@@ -169,3 +169,35 @@ two positions 2 beats apart and is caught by the two-beat-ambiguity flag, which 
 abstain. So no tested non-4/4 pattern can steer the planner. This is 5 synthetic patterns, not meter
 detection: unusual real content could still produce a false-positive tag, and true multi-meter support
 remains future work.
+
+## 2026-11-26 detector-imperfection sweep (synthetic)
+
+MixQualityHarnessTest.detectorImperfectionSweeps applies one detector-style imperfection at a time over a
+reduced base (outgoing 110/128/140 bpm; same/+2%/half tempo relation; incoming grid first-beat offset 0
+and 0.02P; jittered 10 ms base; 15 trials per cell; 240 runs per level). Measured on CI run
+https://github.com/abhig1599/music-app/actions/runs/45753152059 (commit 28cd41b, green):
+
+- dropped beats (detector misses): 0% 240/240 = 100%; 2% 192/240 = 80.0%; 5% 140/240 = 58.3%
+- extra ghost beats (half-interval): 0% 100%; 2% 196/240 = 81.7%; 5% 144/240 = 60.0%
+- tempo drift (reported bpm constant, true bpm ramps): 0%, 0.5%, 1% all 240/240 = 100%
+- swing (every second beat delayed): 0% 100%; 10% 30/240 = 12.5%; 30% 0/240 = 0%
+
+SYNTHETIC ONLY: made-up grids, planner maths, not the real detector or library. Interpretation
+(heuristic): swung timing is the harshest imperfection - 10% swing is 43-55 ms at these tempos,
+straddling the 45 ms budget, and 30% always falls back (pinned by a fixed anchor test). Missed or extra
+beats degrade roughly linearly at these rates. Drift up to 1% over the window stays inside the budget
+because the overlap spans only a slice of the drift. The first-beat-offset cliff from the main sweep
+above remains the dominant fallback driver.
+
+## 2026-11-26 transition diagnostics (mixdiag)
+
+TransitionAnalysis logs one logcat line per analysed pair (tag TransitionAnalysis, prefix mixdiag,
+Log.d, off the audio thread, no state, no behavior change): both grids' beat counts, confidence,
+first-beat offset from the analysed window start, bar position/confidence, and the outcome - planned
+(start/overlap/residual/speed) or fallback with a short reason constant. The reason comes from
+MixPlanner's new diagnostics-only onDecision callback (default null; it observes the decision, never
+changes it): bad-duration-or-fade, out-grid-weak, in-grid-weak, tempo-unmatched, nudge-cap-exceeded,
+no-beat-period, beat-period-out-of-range, no-whole-bar-overlap-fits-cap,
+no-anchor-beat-near-content-end, candidate-window, few-overlap-beats, residual-unknown,
+phase-too-large. Purpose: the phone listening test can capture per-transition evidence
+(adb logcat -s TransitionAnalysis:D) instead of judging by ear alone.
