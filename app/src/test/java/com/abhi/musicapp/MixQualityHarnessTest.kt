@@ -141,5 +141,119 @@ class MixQualityHarnessTest {
         }
     }
 
+    /** Detector imperfections, applied to made-up grids: missed beats. */
+    private fun dropped(base: List<Long>, p: Double, rng: Random): List<Long> =
+        if (p <= 0.0) base else base.filter { rng.nextDouble() >= p }
+
+    /** Detector imperfections: spurious half-interval ghost beats. */
+    private fun extras(base: List<Long>, p: Double, rng: Random): List<Long> {
+        if (p <= 0.0) return base
+        val out = ArrayList<Long>(base.size * 2)
+        for (k in base.indices) {
+            out.add(base[k])
+            if (k + 1 < base.size && rng.nextDouble() < p) out.add((base[k] + base[k + 1]) / 2)
+        }
+        return out.distinct().sorted()
+    }
+
+    /** Swung timing: every second beat delayed by [swing] of a period. Reported bpm stays constant. */
+    private fun swung(bpm: Float, startMs: Double, count: Int, swing: Double): List<Long> {
+        val period = 60000.0 / bpm
+        return (0 until count).map { maxOf(0L, Math.round(startMs + it * period + if (it % 2 == 1) swing * period else 0.0)) }
+    }
+
+    /** Tempo drift: true bpm ramps linearly to bpm*(1+[driftFrac]) by the last beat; reported bpm constant. */
+    private fun drifted(bpm: Float, startMs: Double, count: Int, driftFrac: Double): List<Long> {
+        val out = ArrayList<Long>(count)
+        var t = startMs
+        out.add(maxOf(0L, Math.round(t)))
+        for (k in 1 until count) {
+            val inst = bpm * (1.0 + driftFrac * (k - 1).toDouble() / (count - 1))
+            t += 60000.0 / inst
+            out.add(Math.round(t))
+        }
+        return out.distinct().sorted()
+    }
+
+    @Test fun swingBeyondThePhaseBudgetNeverPlans() {
+        val ob = beats(128f, 400.0, 500, 0.0, Random(1))
+        // 30% swing at 128bpm shifts every second beat by ~141ms: far beyond the 45ms budget, must fall back.
+        assertNull(MixPlanner.plan(ob, 128f, .9f, 210_000L, 198_700L,
+            swung(128f, 0.0, 90, 0.30), 128f, .9f, 200_000L, 12_000L, null, null))
+        // The same fixture unswung is an aligned grid and must plan.
+        assertNotNull(MixPlanner.plan(ob, 128f, .9f, 210_000L, 198_700L,
+            swung(128f, 0.0, 90, 0.0), 128f, .9f, 200_000L, 12_000L, null, null))
+    }
+
+    /**
+     * Detector-realistic imperfections, one dimension at a time over a reduced base sweep. SYNTHETIC:
+     * printed rates measure planner maths on made-up grids, never the real library or detector.
+     */
+    @Test fun detectorImperfectionSweeps() {
+        val outDur = 210_000L
+        val contentEnd = 198_700L
+        val inDur = 200_000L
+        val fadeMs = 12_000L
+        val cap = min(fadeMs, min(outDur / 3, inDur / 3))
+        val outBpms = floatArrayOf(110f, 128f, 140f)
+        val rels = listOf(1.0f, 1.02f, 0.5f)
+        val deltas = doubleArrayOf(0.0, 0.02)
+        val trials = 15
+        val dims = linkedMapOf(
+            "DroppedBeats" to doubleArrayOf(0.0, 0.02, 0.05),
+            "ExtraBeats" to doubleArrayOf(0.0, 0.02, 0.05),
+            "TempoDrift" to doubleArrayOf(0.0, 0.005, 0.01),
+            "Swing" to doubleArrayOf(0.0, 0.10, 0.30))
+        var totalRuns = 0
+        for ((dim, levels) in dims) {
+            for (level in levels) {
+                var runs = 0
+                var planned = 0
+                for (oBpm in outBpms) {
+                    val oPeriod = 60000.0 / oBpm
+                    val ob = beats(oBpm, 400.0, (outDur / oPeriod).toInt() + 2, 0.0, Random(1))
+                    val obSet = ob.toSet()
+                    for (rel in rels) {
+                        val iBpm = oBpm * rel
+                        if (iBpm < 60f || iBpm > 180f) continue
+                        val iPeriod = 60000.0 / iBpm
+                        for (frac in deltas) {
+                            val deltaMs = frac * iPeriod
+                            for (t in 0 until trials) {
+                                val rng = Random(5000L * t + 13)
+                                var ib = when (dim) {
+                                    "TempoDrift" -> drifted(iBpm, deltaMs, 90, level)
+                                    "Swing" -> swung(iBpm, deltaMs, 90, level)
+                                    else -> beats(iBpm, deltaMs, 90, 10.0, rng)
+                                }
+                                ib = when (dim) {
+                                    "DroppedBeats" -> dropped(ib, level, rng)
+                                    "ExtraBeats" -> extras(ib, level, rng)
+                                    else -> ib
+                                }
+                                val p = MixPlanner.plan(ob, oBpm, .9f, outDur, contentEnd,
+                                    ib, iBpm, .9f, inDur, fadeMs, null, null)
+                                runs++
+                                totalRuns++
+                                if (p == null) continue
+                                planned++
+                                assertTrue("start is an outgoing beat", p.outStartMs in obSet)
+                                assertEquals("ends exactly at content end", contentEnd, p.outEndMs)
+                                assertTrue("overlap in window", p.overlapMs in 500L..cap)
+                                assertTrue("residual in phase budget: ${p.maxResidualMs}",
+                                    p.maxResidualMs <= MixPlanner.MAX_PHASE_ERROR_MS + 1e-9)
+                                assertTrue("nudge within cap: ${p.incomingSpeed}",
+                                    abs(p.incomingSpeed - 1f) <= 0.06f + 1e-6f)
+                                assertEquals("no RMS evidence -> unity trim", 1f, p.inGain, 0f)
+                            }
+                        }
+                    }
+                }
+                println("MIXQA[SYNTHETIC] by$dim level=$level planned $planned/$runs = ${pct(planned, runs)}")
+            }
+        }
+        assertTrue("sweep actually ran", totalRuns > 500)
+    }
+
     private fun pct(n: Int, d: Int): String = "%.1f%%".format(100.0 * n / d)
 }
