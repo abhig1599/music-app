@@ -61,20 +61,23 @@ object MixPlanner {
         inBarPos0: Int? = null,
         outBarConf: Float = 0f,
         inBarConf: Float = 0f,
+        /** Diagnostics only: invoked once with a short reason constant when planning falls back. Never affects the decision. */
+        onDecision: ((String) -> Unit)? = null,
     ): Plan? {
-        if (outDurationMs <= 0L || userFadeMs < 500L) return null
-        if (!valid(outBeatsMs, outBpm, outConfidence) || !valid(inBeatsMs, inBpm, inConfidence)) return null
+        if (outDurationMs <= 0L || userFadeMs < 500L) return null.also { onDecision?.invoke("bad-duration-or-fade") }
+        if (!valid(outBeatsMs, outBpm, outConfidence)) return null.also { onDecision?.invoke("out-grid-weak") }
+        if (!valid(inBeatsMs, inBpm, inConfidence)) return null.also { onDecision?.invoke("in-grid-weak") }
         val ob = outBeatsMs!!
         val ib = inBeatsMs!!
         val oBpm = outBpm!!
         val iBpm = inBpm!!
 
         // Tempo match, allowing half/double time, with the existing 6% nudge cap.
-        val ratio = AutoMixPlanner.matchRatio(oBpm, iBpm) ?: return null
-        if (abs(ratio - 1f) > AutoMixPlanner.MAX_NUDGE) return null
+        val ratio = AutoMixPlanner.matchRatio(oBpm, iBpm) ?: return null.also { onDecision?.invoke("tempo-unmatched") }
+        if (abs(ratio - 1f) > AutoMixPlanner.MAX_NUDGE) return null.also { onDecision?.invoke("nudge-cap-exceeded") }
 
-        val beatMs = averageBeat(ob) ?: return null
-        if (beatMs !in 250.0..1200.0) return null
+        val beatMs = averageBeat(ob) ?: return null.also { onDecision?.invoke("no-beat-period") }
+        if (beatMs !in 250.0..1200.0) return null.also { onDecision?.invoke("beat-period-out-of-range") }
         val end = min(outContentEndMs?.takeIf { it in 1..outDurationMs } ?: outDurationMs, outDurationMs)
 
         // Whole bars (4 beats), largest of 8/4/2/1 bars fitting the user's limit and both duration caps.
@@ -83,7 +86,7 @@ object MixPlanner {
         val inCap = inDurationMs?.takeIf { it > 0L }?.div(3) ?: Long.MAX_VALUE
         val cap = min(limit, min(outCap, inCap))
         val bars = listOf(8, 4, 2, 1).firstOrNull { (it * 4 * beatMs).roundToLong() + (beatMs / 2).roundToLong() <= cap && it * 4 * beatMs >= 500.0 }
-            ?: return null
+            ?: return null.also { onDecision?.invoke("no-whole-bar-overlap-fits-cap") }
         val target = bars * 4 * beatMs
 
         // The fade starts on an outgoing beat near (end - target). Try the three closest beats and keep the
@@ -93,7 +96,7 @@ object MixPlanner {
             .filter { abs(ob[it] - anchor) <= beatMs * 1.5 && ob[it] in 1..end }
             .sortedBy { abs(ob[it] - anchor) }
             .take(3)
-        if (candidates.isEmpty()) return null
+        if (candidates.isEmpty()) return null.also { onDecision?.invoke("no-anchor-beat-near-content-end") }
         // Optional bar evidence (tag-only, from BarPhaseAnalyzer accents on the real audio): when BOTH
         // grids carry confident bar positions, prefer the candidate whose index-locked beat pairs share a
         // bar position (downbeat lands on downbeat). Never a reason to reject a candidate that already
@@ -103,14 +106,19 @@ object MixPlanner {
         val (outStride, inStride) = strides(ratio, oBpm, iBpm)
         var best: Plan? = null
         var bestBar = -1
+        var skippedWindow = 0
+        var skippedFewBeats = 0
+        var skippedNoResidual = 0
+        var skippedPhase = 0
         for (c in candidates) {
             val start = ob[c]
             val overlap = end - start
-            if (overlap !in 500L..cap) continue
+            if (overlap !in 500L..cap) { skippedWindow++; continue }
             val outInOverlap = ob.filter { it >= start && it < end }
-            if (outInOverlap.size < 4) continue
-            val residual = maxResidual(outInOverlap, start, ib, ratio, oBpm, iBpm) ?: continue
-            if (residual > MAX_PHASE_ERROR_MS) continue
+            if (outInOverlap.size < 4) { skippedFewBeats++; continue }
+            val residual = maxResidual(outInOverlap, start, ib, ratio, oBpm, iBpm)
+            if (residual == null) { skippedNoResidual++; continue }
+            if (residual > MAX_PHASE_ERROR_MS) { skippedPhase++; continue }
             val barScore = if (barEvidence)
                 alignedPairs(outInOverlap.size, c, outStride, inStride, ib.size, outBarPos0!!, inBarPos0!!) else -1
             val plan = Plan(start, end, overlap, ratio, gainTrim(outRms, inRms), residual,
@@ -121,6 +129,12 @@ object MixPlanner {
                 best = plan
                 bestBar = barScore
             }
+        }
+        if (best == null) {
+            val why = listOf(skippedWindow to "candidate-window", skippedFewBeats to "few-overlap-beats",
+                skippedNoResidual to "residual-unknown", skippedPhase to "phase-too-large")
+                .maxByOrNull { it.first }?.second ?: "no-candidate"
+            onDecision?.invoke(why)
         }
         return best
     }
