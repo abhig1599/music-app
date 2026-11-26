@@ -48,6 +48,18 @@ class MixPlannerBarTest {
         assertEquals(190_500L, p.outStartMs)
     }
 
+    @Test fun decisionCallbackReportsWhyAFallbackHappened() {
+        // Diagnostics only: the callback observes the fallback reason and never changes the outcome.
+        var reason: String? = null
+        val p = MixPlanner.plan(
+            beats(120f, 160_000L, 100), 120f, .9f, 210_000L, 198_700L,
+            beats(128.4f, 0L, 80), 128.4f, .9f, 200_000L, 12_000L, null, null,
+            null, null, 0f, 0f) { reason = it }
+        assertNull(p)
+        assertNotNull(reason)
+        assertTrue(reason!!.isNotBlank())
+    }
+
     @Test fun halfTimeGridWithBarEvidenceStillPlans() {
         val p = MixPlanner.plan(
             beats(120f, 160_000L, 100), 120f, .9f, 210_000L, 198_700L,
