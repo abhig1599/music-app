@@ -1,7 +1,7 @@
 # Recovery - how to resume this project after any reset
 
 ## Where things live
-- Source + docs: THIS repo (private, abhig1599/music-app). Everything needed to
+- Source + docs: THIS repo (public since 2026-11-25, abhig1599/music-app). Everything needed to
   continue is committed here - never rely on agent-local storage.
 - Figma design: https://www.figma.com/design/qZQCBqzvSKC9gJ46TzEkz2/Music-App
   (Abhishek's Draft, read-only for us - never edit his file).
@@ -10,7 +10,56 @@
 
 ## State
 
-### Current (2026-11-23, ~16:15 IST)
+### Current (2026-11-26, ~13:15 IST)
+- Repo is PUBLIC (since 2026-11-25). The android.yml cand-* auto-release notes
+  template still says "Private repo release" - stale text, fix when next
+  editing the workflow.
+- main is at be742d30 (bot screenshot push-back on top of merge 01620b90).
+  CI GREEN on the merge commit: run 45776396722 (build + unit suite via
+  Roborazzi record + screenshots pushed back).
+- Test APK DELIVERED 2026-11-26 ~12:01 IST via GitHub Releases (user approved
+  11:47 IST): https://github.com/abhig1599/music-app/releases/tag/cand-0.1.9-test.1
+  - asset music-app-cand-0.1.9-test.1-debug.apk + SHA256SUMS.txt, built from
+  7f54cdec, versionCode 9 / versionName "0.1.9-test.1", package
+  com.abhi.musicapp.test (installs BESIDE any release-package app and updates
+  prior test installs in place; no uninstall needed). Signed with the repo
+  debug.keystore; cert SHA-256 verified equal to the cand-0.1.8 APK's cert
+  from the actual binaries (55:9B:E8:D6:AC:B1:D8:F5:5E:49:B4:79:B6:2F:D2:F4:
+  DC:06:61:04:9A:1A:C5:95:09:0A:CA:3F:5B:B7:D1:15).
+  AWAITING his device feedback: do repeated pauses still happen, does the
+  blend sound continuous; optional evidence via adb logcat -s
+  TransitionAnalysis:D (mixdiag lines).
+- PR #1 (codex/automix-shorter-bars) MERGED 2026-11-26 ~13:05 IST per his
+  voice instruction: AutoMix now tries shorter whole-bar overlaps (8->4->2->1
+  bars) when the longest candidate fails every existing gate, instead of
+  falling straight back to plain crossfade. Strict-superset change:
+  previously-accepted plans are unchanged; index-locked residual gates and
+  bar-preference-never-rejects rule preserved. Branch CI green (45774443205).
+  GitHub blocks approving your own PR, so the review was recorded as a PR
+  comment and the PR merged. The merged change is NOT in the 0.1.9-test.1
+  APK - any new APK needs a fresh go-ahead.
+- Branch sweep 2026-11-26: combined-batch (0 ahead of main - already merged),
+  queue-sizing (only a bot screenshot commit ahead, behind 286),
+  delivery-cand-0.1.6 (orphan, no common ancestor). Nothing else to merge;
+  branch deletion NOT authorized.
+- MixQualityHarnessTest: the MIXQA / detector-imperfection tables are PRINTED,
+  not asserted; expect planning rates to shift upward after PR #1 (more
+  short-window plans). assertNull fallback contracts still hold (CI green).
+- Open product gaps (unchanged): vocal-to-vocal handoff (incoming track still
+  starts at zero; no intro skip, no vocal cue), queue cold-start restore
+  unverified, no audible validation of any mix on a real phone yet.
+- Access: deploy key 'instinct-agent-2026-11-23' was REVOKED by design
+  (2026-11-25). All repo writes go through the GitHub web UI in the signed-in
+  browser session. Public-repo API reads (runs, artifact lists, releases) work
+  unauthenticated; artifact/log downloads need auth (browser session, or
+  nightly.link + run-page digest check for artifacts).
+- Authorization snapshot: the 0.1.9-test.1 delivery and the PR #1 merge were
+  individually approved by the user (11:47 IST text "Yes"; 13:01 IST voice
+  note). Silent-tail-only content authorization (2026-11-23 voice note) still
+  stands: never skip musical intro/outro content. NOTHING beyond this is
+  pre-authorized - each new APK, release or merge needs its own go-ahead.
+
+### 2026-11-23, ~16:15 IST (superseded by the 2026-11-26 entry)
 - Post-0.1.7 feedback (his voice notes + brief, 15:24-15:35 IST): transition
   "cuts the old song, plays the next" - not the intended overlap; he wants a
   "Mixing" indicator (gradient, Apple Music reference, cycling dots) in place of
