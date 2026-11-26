@@ -43,6 +43,9 @@ object PlayerManager {
     private val _state = MutableStateFlow(PlayerUiState())
     val state: StateFlow<PlayerUiState> = _state
 
+    private var connecting = false
+    private var pendingPlay: Pair<List<Song>, Int>? = null
+
     private var queue: List<Song> = emptyList()
 
     /**
@@ -54,12 +57,19 @@ object PlayerManager {
     internal fun controllerContext(context: Context): Context = context.applicationContext
 
     fun connect(activityOrAppContext: Context) {
-        if (controller != null) return
+        if (controller != null || connecting) return
         val context = controllerContext(activityOrAppContext)
         val token = SessionToken(context, ComponentName(context, PlaybackService::class.java))
         val future = MediaController.Builder(context, token).buildAsync()
+        connecting = true
         future.addListener({
-            val c = future.get()
+            connecting = false
+            val c = try {
+                future.get()
+            } catch (failure: java.util.concurrent.ExecutionException) {
+                android.util.Log.w("PlayerManager", "Playback service connection failed", failure)
+                return@addListener
+            }
             controller = c
             c.addListener(object : Player.Listener {
                 override fun onEvents(player: Player, events: Player.Events) {
@@ -68,12 +78,21 @@ object PlayerManager {
                 override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
                     EqEngine.apply(context) // re-attach saved equaliser settings if the audio session changed
                     // Sleep timer "play last one to end": the song finished on its own, stop before the next one is heard.
-                    if (reason == Player.MEDIA_ITEM_TRANSITION_REASON_AUTO && SleepTimer.isFinishingSong) { player().pause(); SleepTimer.onSongEnded() }
+                    val finished = reason == Player.MEDIA_ITEM_TRANSITION_REASON_AUTO ||
+                        reason == Player.MEDIA_ITEM_TRANSITION_REASON_REPEAT
+                    if (finished && SleepTimer.isFinishingSong) {
+                        c.pause()
+                        SleepTimer.onSongEnded()
+                    }
                 }
                 override fun onPlaybackStateChanged(playbackState: Int) {
                     if (playbackState == Player.STATE_ENDED) SleepTimer.onSongEnded()
                 }
             })
+            pendingPlay?.let { (songs, index) ->
+                pendingPlay = null
+                playAll(songs, index)
+            }
             scope.launch {
                 while (isActive) {
                     pushState()
@@ -84,8 +103,13 @@ object PlayerManager {
     }
 
     fun playAll(songs: List<Song>, startIndex: Int) {
+        if (songs.isEmpty()) return
+        val c = controller
+        if (c == null) {
+            pendingPlay = songs.toList() to startIndex
+            return
+        }
         queue = songs
-        val c = controller ?: return
         c.setMediaItems(
             songs.map {
                 MediaItem.Builder()
@@ -146,7 +170,14 @@ object PlayerManager {
 
     fun togglePlayPause() {
         val c = controller ?: return
-        if (c.isPlaying) c.pause() else c.play()
+        if (c.playbackState == Player.STATE_ENDED && c.mediaItemCount > 0) {
+            c.seekToDefaultPosition()
+            c.play()
+        } else if (c.playWhenReady) {
+            c.pause()
+        } else {
+            c.play()
+        }
     }
 
     /** Current play queue as (mediaId, title, artist) plus the index being played; empty when nothing is loaded. */
@@ -177,7 +208,6 @@ object PlayerManager {
 
     fun seekTo(positionMs: Long) = controller?.seekTo(positionMs)
 
-    private fun player(): MediaController = controller!!
     fun pauseNow() { controller?.pause() }
 
     /** Playback speed (0.5x..2.0x). Media3 keeps pitch by default. */
