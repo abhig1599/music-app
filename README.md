@@ -1,7 +1,6 @@
 # Music App
 
-Android music player built from Abhishek's Figma file
-(https://www.figma.com/design/qZQCBqzvSKC9gJ46TzEkz2/Music-App).
+Android music player built from a Figma design file (not committed here).
 
 - **Platform:** Android first (Kotlin + Jetpack Compose, minSdk 26, targetSdk 34)
 - **Core:** local on-device audio playback (Media3/ExoPlayer + media session +
