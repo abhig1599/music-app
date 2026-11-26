@@ -2,11 +2,8 @@
 
 ## Where things live
 - Source + docs: THIS repository (public since 2026-11-25, abhig1599/music-app).
-  Everything needed to continue is committed here. Because the repo is public,
-  commit only public-safe content: no credentials or access routes, no private
-  links, no approval/conversation records, no internal operating instructions.
-- UI design: the owner's private Figma draft (ask the owner for access; treat it
-  as read-only).
+  Everything needed to continue is committed here.
+- UI design source: the owner's Figma file (not committed here).
 - Debug APK: GitHub Actions artifacts (14 days) + Releases when a build is
   published. Convention: one versioned debug APK per delivered change.
 
@@ -86,5 +83,3 @@
 3. Verify visuals by rendering screens (Roborazzi) and comparing against the
    design before claiming any screen done.
 4. Phone test script for mixing: docs/MIXING_QA.md.
-5. No paid services, releases or merges without the repository owner's
-   explicit go-ahead.
