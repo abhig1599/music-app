@@ -85,58 +85,61 @@ object MixPlanner {
         val outCap = outDurationMs / 3
         val inCap = inDurationMs?.takeIf { it > 0L }?.div(3) ?: Long.MAX_VALUE
         val cap = min(limit, min(outCap, inCap))
-        val bars = listOf(8, 4, 2, 1).firstOrNull { (it * 4 * beatMs).roundToLong() + (beatMs / 2).roundToLong() <= cap && it * 4 * beatMs >= 500.0 }
-            ?: return null.also { onDecision?.invoke("no-whole-bar-overlap-fits-cap") }
-        val target = bars * 4 * beatMs
+        var lastReason = "no-whole-bar-overlap-fits-cap"
+        for (bars in listOf(8, 4, 2, 1)) {
+            val nominal = bars * 4 * beatMs
+            if (nominal < 500 || nominal.roundToLong() + (beatMs / 2).roundToLong() > cap) continue
+            val target = bars * 4 * beatMs
 
-        // The fade starts on an outgoing beat near (end - target). Try the three closest beats and keep the
-        // one whose beat train best overlays the incoming train across the whole overlap.
-        val anchor = end - target
-        val candidates = ob.indices
-            .filter { abs(ob[it] - anchor) <= beatMs * 1.5 && ob[it] in 1..end }
-            .sortedBy { abs(ob[it] - anchor) }
-            .take(3)
-        if (candidates.isEmpty()) return null.also { onDecision?.invoke("no-anchor-beat-near-content-end") }
-        // Optional bar evidence (tag-only, from BarPhaseAnalyzer accents on the real audio): when BOTH
-        // grids carry confident bar positions, prefer the candidate whose index-locked beat pairs share a
-        // bar position (downbeat lands on downbeat). Never a reason to reject a candidate that already
-        // passed every beat gate, and never changes anything when evidence is missing.
-        val barEvidence = outBarPos0 != null && inBarPos0 != null &&
-            outBarConf >= MIN_BAR_CONFIDENCE && inBarConf >= MIN_BAR_CONFIDENCE
-        val (outStride, inStride) = strides(ratio, oBpm, iBpm)
-        var best: Plan? = null
-        var bestBar = -1
-        var skippedWindow = 0
-        var skippedFewBeats = 0
-        var skippedNoResidual = 0
-        var skippedPhase = 0
-        for (c in candidates) {
-            val start = ob[c]
-            val overlap = end - start
-            if (overlap !in 500L..cap) { skippedWindow++; continue }
-            val outInOverlap = ob.filter { it >= start && it < end }
-            if (outInOverlap.size < 4) { skippedFewBeats++; continue }
-            val residual = maxResidual(outInOverlap, start, ib, ratio, oBpm, iBpm)
-            if (residual == null) { skippedNoResidual++; continue }
-            if (residual > MAX_PHASE_ERROR_MS) { skippedPhase++; continue }
-            val barScore = if (barEvidence)
-                alignedPairs(outInOverlap.size, c, outStride, inStride, ib.size, outBarPos0!!, inBarPos0!!) else -1
-            val plan = Plan(start, end, overlap, ratio, gainTrim(outRms, inRms), residual,
-                "beat-aligned ${bars * 4}-beat overlap ending at content end, nudge %.4f".format(ratio) +
-                    if (barScore >= 0) ", bar-matched $barScore pairs" else "")
-            if (best == null || barScore > bestBar ||
-                (barScore == bestBar && plan.maxResidualMs < best!!.maxResidualMs)) {
-                best = plan
-                bestBar = barScore
+            // The fade starts on an outgoing beat near (end - target). Try the three closest beats and keep the
+            // one whose beat train best overlays the incoming train across the whole overlap.
+            val anchor = end - target
+            val candidates = ob.indices
+                .filter { abs(ob[it] - anchor) <= beatMs * 1.5 && ob[it] in 1..end }
+                .sortedBy { abs(ob[it] - anchor) }
+                .take(3)
+            if (candidates.isEmpty()) { lastReason = "no-anchor-beat-near-content-end"; continue }
+            // Optional bar evidence (tag-only, from BarPhaseAnalyzer accents on the real audio): when BOTH
+            // grids carry confident bar positions, prefer the candidate whose index-locked beat pairs share a
+            // bar position (downbeat lands on downbeat). Never a reason to reject a candidate that already
+            // passed every beat gate, and never changes anything when evidence is missing.
+            val barEvidence = outBarPos0 != null && inBarPos0 != null &&
+                outBarConf >= MIN_BAR_CONFIDENCE && inBarConf >= MIN_BAR_CONFIDENCE
+            val (outStride, inStride) = strides(ratio, oBpm, iBpm)
+            var best: Plan? = null
+            var bestBar = -1
+            var skippedWindow = 0
+            var skippedFewBeats = 0
+            var skippedNoResidual = 0
+            var skippedPhase = 0
+            for (c in candidates) {
+                val start = ob[c]
+                val overlap = end - start
+                if (overlap !in 500L..cap) { skippedWindow++; continue }
+                val outInOverlap = ob.filter { it >= start && it < end }
+                if (outInOverlap.size < 4) { skippedFewBeats++; continue }
+                val residual = maxResidual(outInOverlap, start, ib, ratio, oBpm, iBpm)
+                if (residual == null) { skippedNoResidual++; continue }
+                if (residual > MAX_PHASE_ERROR_MS) { skippedPhase++; continue }
+                val barScore = if (barEvidence)
+                    alignedPairs(outInOverlap.size, c, outStride, inStride, ib.size, outBarPos0!!, inBarPos0!!) else -1
+                val plan = Plan(start, end, overlap, ratio, gainTrim(outRms, inRms), residual,
+                    "beat-aligned ${bars * 4}-beat overlap ending at content end, nudge %.4f".format(ratio) +
+                        if (barScore >= 0) ", bar-matched $barScore pairs" else "")
+                if (best == null || barScore > bestBar ||
+                    (barScore == bestBar && plan.maxResidualMs < best!!.maxResidualMs)) {
+                    best = plan
+                    bestBar = barScore
+                }
             }
+            if (best != null) return best
+            lastReason =
+                listOf(skippedWindow to "candidate-window", skippedFewBeats to "few-overlap-beats",
+                    skippedNoResidual to "residual-unknown", skippedPhase to "phase-too-large")
+                    .maxByOrNull { it.first }?.second ?: "no-candidate"
         }
-        if (best == null) {
-            val why = listOf(skippedWindow to "candidate-window", skippedFewBeats to "few-overlap-beats",
-                skippedNoResidual to "residual-unknown", skippedPhase to "phase-too-large")
-                .maxByOrNull { it.first }?.second ?: "no-candidate"
-            onDecision?.invoke(why)
-        }
-        return best
+        onDecision?.invoke(lastReason)
+        return null
     }
 
     private fun valid(beatsMs: List<Long>?, bpm: Float?, confidence: Float): Boolean {

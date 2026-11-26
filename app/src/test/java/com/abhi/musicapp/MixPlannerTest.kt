@@ -44,6 +44,16 @@ class MixPlannerTest {
         assertEquals(0.0, p.maxResidualMs, 0.001)
     }
 
+    @Test fun lateDriftStillAllowsAShorterAlignedOverlap() {
+        val incoming = beats(120f, 0L, 80).mapIndexed { index, beat ->
+            if (index >= 10) beat + 100L else beat
+        }
+        val result = requireNotNull(plan(inBeats = incoming))
+        assertEquals(4_200L, result.overlapMs)
+        assertEquals(198_700L, result.outEndMs)
+        assertEquals(0.0, result.maxResidualMs, 0.001)
+    }
+
     @Test fun closeTempoNudgesIncomingAndBeatsStillAlign() {
         // 126 bpm nudged by 120/126 ~ -4.8% runs at the outgoing tempo, so the grids overlay.
         val p = plan(inBeats = beats(126f, 0L, 90), inBpm = 126f)
